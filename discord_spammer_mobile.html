@@ -1167,48 +1167,70 @@
     </div>
   </div>
 
-  <!-- Sender Bookmarklet Modal -->
+  <!-- Sender / iOS Start Modal -->
   <div class="modal-overlay" id="senderModal" style="display:none" onclick="closeSenderModal(event)">
     <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;">
       <div class="modal-handle"></div>
-      <div class="modal-title">&#x1F4E4; iOS Sender Bookmarklet</div>
-      <div class="sender-info-box">
-        &#x2139;&#xFE0F; <strong>Why this exists:</strong> Safari blocks API calls from local HTML files (CORS). This
-        bookmarklet runs directly <strong>on discord.com</strong> &mdash; same-origin, zero CORS. Keep the discord.com
-        tab open and it keeps sending.
+      <div class="modal-title">&#x1F4F1; iOS Sender Setup</div>
+      <!-- Setup pane: shown when user taps iOS Setup button -->
+      <div id="senderSetupPane">
+        <div class="sender-info-box">
+          &#x2139;&#xFE0F; <strong>One-time setup.</strong> Copy the bookmarklet below and save it as a Safari bookmark.
+          You only need to do this once.
+        </div>
+        <div id="senderTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;"></div>
+        <div class="sender-step">
+          <div class="sender-step-num">1</div><span>Tap <strong>Copy Sender BM</strong> below</span>
+        </div>
+        <div class="sender-step">
+          <div class="sender-step-num">2</div><span>In Safari, bookmark any page (Share &#x2192; Add Bookmark)</span>
+        </div>
+        <div class="sender-step">
+          <div class="sender-step-num">3</div><span>Edit that bookmark &#x2192; delete its URL &#x2192; paste &#x2192;
+            Save</span>
+        </div>
+        <div style="margin:12px 0 6px;">
+          <div class="field-label">SENDER CODE (tap to select)</div>
+        </div>
+        <div class="snippet-box" id="senderBmBox" onclick="selectSenderBm()" style="font-size:10px;max-height:90px;">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn btn-start" id="copySenderBtn" onclick="copySenderBm()" style="flex:1;">&#x1F4CB; Copy
+            Sender BM</button>
+          <button class="btn"
+            style="background:var(--card2);color:var(--muted);border:1px solid var(--border);flex:none;width:70px;"
+            onclick="closeSenderModal()">Close</button>
+        </div>
       </div>
-      <div id="senderTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;"></div>
-      <div class="sender-step">
-        <div class="sender-step-num">1</div><span>Tap <strong>Copy Sender BM</strong> below</span>
-      </div>
-      <div class="sender-step">
-        <div class="sender-step-num">2</div><span>Bookmark any page in Safari (Share &#x2192; Add Bookmark)</span>
-      </div>
-      <div class="sender-step">
-        <div class="sender-step-num">3</div><span>Edit that bookmark &#x2192; clear URL &#x2192; paste &#x2192;
-          Save</span>
-      </div>
-      <div class="sender-step">
-        <div class="sender-step-num">4</div><span>Open <strong>discord.com</strong> in Safari (stay on that tab)</span>
-      </div>
-      <div class="sender-step">
-        <div class="sender-step-num">5</div><span>Tap the bookmark &#x2192; it starts sending! Watch the tab title for
-          status</span>
-      </div>
-      <div class="sender-step">
-        <div class="sender-step-num">6</div><span>Close / navigate away from discord.com tab to stop</span>
-      </div>
-      <div style="margin:12px 0 6px;">
-        <div class="field-label">SENDER CODE (tap to select)</div>
-      </div>
-      <div class="snippet-box" id="senderBmBox" onclick="selectSenderBm()" style="font-size:10px;max-height:90px;">
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px;">
-        <button class="btn btn-start" id="copySenderBtn" onclick="copySenderBm()" style="flex:1;">&#x1F4CB; Copy Sender
-          BM</button>
-        <button class="btn"
-          style="background:var(--card2);color:var(--muted);border:1px solid var(--border);flex:none;width:70px;"
-          onclick="closeSenderModal()">Close</button>
+      <!-- Start-flow pane: shown when user taps Start (file:// mode) -->
+      <div id="senderStartPane" style="display:none;">
+        <div class="sender-info-box" style="background:rgba(88,101,242,.1);border-color:rgba(88,101,242,.3);">
+          &#x26A1; Keep this tab open. Switch to Discord, tap bookmark, come back.
+        </div>
+        <div id="senderStartTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:14px;">
+        </div>
+        <div class="sender-step" style="margin-bottom:12px;">
+          <div class="sender-step-num" style="background:var(--accent);">1</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;margin-bottom:6px;">Open Discord in a new tab</div>
+            <a id="openDiscordLink" href="https://discord.com/channels/@me" target="_blank"
+              style="display:block;text-align:center;padding:14px;border-radius:12px;font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;text-decoration:none;">
+              &#x1F517; Open Discord
+            </a>
+          </div>
+        </div>
+        <div class="sender-step" style="margin-bottom:12px;">
+          <div class="sender-step-num" style="background:var(--accent2);">2</div>
+          <span>In the Discord tab, tap your <strong>Sender</strong> bookmark &#x2192; tap OK on the alert</span>
+        </div>
+        <div class="sender-step" style="margin-bottom:16px;">
+          <div class="sender-step-num" style="background:var(--green);">3</div>
+          <span>Come back here. Sending starts automatically!</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px;" id="senderWaitStatus">
+          &#x23F3; Waiting for bookmark tap...</div>
+        <button class="btn btn-stop" onclick="closeSenderModal()" style="width:100%;margin-top:4px;">&#x2715;
+          Cancel</button>
       </div>
     </div>
   </div>
@@ -1243,6 +1265,8 @@
     var _dsWins = {};          // taskId → discord.com window ref (window.open result)
     var _bmRunning = {};       // taskId → bool: is iOS sender running for this task
     var _msgListenerSet = false; // postMessage listener installed flag
+    var _helloPings = {};      // taskId → interval handle for hello pings
+    var _currentStartId = null; // taskId being started via the step modal
 
     // iOS bookmarklet — robust for modern Discord 2025+
     // Uses fixed chunk ID, scans all module export keys, multiple fallbacks
@@ -1529,23 +1553,49 @@
       if (!t.channelId) { toast('\u26A0 Set Channel ID first!'); return; }
       if (!t.messages.length) { toast('\u26A0 Add a message first!'); return; }
       setupMsgListener();
+      _currentStartId = id;
+      // Try window.open (works if popup not blocked)
       var win = _dsWins[id];
       if (!win || win.closed) {
         win = window.open('https://discord.com/channels/@me', 'dsSender_' + id);
-        _dsWins[id] = win;
+        if (win) _dsWins[id] = win;
       } else { try { win.focus(); } catch (e) { } }
       _bmRunning[id] = true;
       var sb = document.getElementById('startbtn-' + id); if (sb) sb.disabled = true;
       var stb = document.getElementById('stopbtn-' + id); if (stb) stb.disabled = false;
       setDot(t, 'running');
       var sub = document.getElementById('tsub-' + id);
-      if (sub) sub.textContent = '\uD83D\uDCF1 Discord opened \u2014 tap Sender bookmark in that tab';
-      log('\uD83D\uDCF1 Discord tab opened. Switch to it and tap your Sender bookmark once.', 'info', t);
-      toast('\uD83D\uDCF2 Switch to Discord tab \u2192 tap Sender bookmark \u2192 come back', 3500);
+      if (sub) sub.textContent = '\uD83D\uDCF1 Open Discord \u2192 tap Sender bookmark \u2192 come back';
+      log('\uD83D\uDCF1 iOS mode: Open Discord \u2192 tap your Sender bookmark \u2192 come back here.', 'info', t);
+      // Show step-by-step modal (guaranteed way to open Discord if popup was blocked)
+      showIosStartModal(id);
+      // Start hello pings so bookmarklet can establish e.source for status replies
+      startHelloPings(id);
       updateGlobal();
+    }
+    function showIosStartModal(id) {
+      var t = tasks[id];
+      document.getElementById('senderSetupPane').style.display = 'none';
+      document.getElementById('senderStartPane').style.display = '';
+      document.getElementById('senderStartTaskName').textContent = t ? '\uD83D\uDCCC ' + t.name : '';
+      document.getElementById('senderWaitStatus').textContent = '\u23F3 Waiting for bookmark tap...';
+      document.getElementById('senderModal').style.display = 'flex';
+    }
+    function startHelloPings(id) {
+      clearInterval(_helloPings[id]);
+      var tries = 0;
+      _helloPings[id] = setInterval(function () {
+        tries++;
+        if (tries > 80 || !_bmRunning[id]) { clearInterval(_helloPings[id]); return; }
+        var win = _dsWins[id];
+        if (win && !win.closed) {
+          try { win.postMessage({ source: 'ds_app', cmd: 'hello', id: id }, 'https://discord.com'); } catch (e) { }
+        }
+      }, 1500);
     }
     function bmStop(id) {
       var win = _dsWins[id]; var t = tasks[id];
+      clearInterval(_helloPings[id]);
       if (win && !win.closed) {
         try { win.postMessage({ source: 'ds_app', cmd: 'stop' }, 'https://discord.com'); } catch (e) { }
       }
@@ -1572,17 +1622,26 @@
       window.addEventListener('message', function (e) {
         if (!e.data || e.data.type !== 'ds_status') return;
         var d = e.data;
-        // Identify which task window sent this
+        // Identify which task window sent this message
         var tid = null;
         Object.keys(_dsWins).forEach(function (id) {
           try { if (_dsWins[id] && !_dsWins[id].closed && e.source === _dsWins[id]) tid = +id; } catch (ex) { }
         });
+        // Fallback: use _currentStartId if e.source comparison doesn't work (COOP)
+        if (tid === null && _currentStartId !== null && _bmRunning[_currentStartId]) tid = _currentStartId;
         var t = tid !== null ? tasks[tid] : null;
-        // 'ready' = bookmark was just tapped, send the run command
+        // 'ready' = bookmark was just tapped, send the run command now
         if (d.st === 'ready') {
-          if (tid !== null && t && _dsWins[tid] && !_dsWins[tid].closed) {
-            _dsWins[tid].postMessage({ source: 'ds_app', cmd: 'run', cfg: buildBmCfg(tid) }, 'https://discord.com');
-            log('\uD83D\uDCF1 iOS Sender armed \u2014 sending run command', 'info', t);
+          clearInterval(_helloPings[tid]);
+          if (tid !== null && t) {
+            var win = _dsWins[tid];
+            var cfg = buildBmCfg(tid);
+            // Try via stored window ref first, fallback to e.source
+            var target = (win && !win.closed) ? win : e.source;
+            if (target) try { target.postMessage({ source: 'ds_app', cmd: 'run', cfg: cfg }, '*'); } catch (ex) { }
+            log('\uD83D\uDCF1 iOS Sender armed \u2014 run command sent!', 'ok', t);
+            var ws = document.getElementById('senderWaitStatus');
+            if (ws) ws.textContent = '\u2705 Running! You can close this popup.';
           }
           return;
         }
@@ -1645,11 +1704,15 @@
       var tok = getToken();
       if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
       var t = tasks[id];
-      // Simple, clean bookmarklet — uses postMessage, no localStorage
       var bm = 'javascript:(function(){';
-      bm += 'if(window._dsSender){alert("\uD83D\uDCF1 DS Sender already armed! Use Stop in the app.");return;}';
-      bm += 'var _cfg=null,_idx=0,_sent=0,_running=false,_t=null;';
-      bm += 'function pm(st,msg,cnt){try{window.opener&&window.opener.postMessage({type:"ds_status",st:st,msg:msg,cnt:cnt},"*");}catch(e){}}';
+      bm += 'if(window._dsSender){alert("\uD83D\uDCF1 Already armed! Use Start/Stop in DS Sender app.");return;}';
+      bm += 'var _app=null,_cfg=null,_idx=0,_sent=0,_running=false,_t=null;';
+      // pm() sends status via e.source (_app) and window.opener as fallback
+      bm += 'function pm(st,msg,cnt){';
+      bm += 'var d={type:"ds_status",st:st,msg:msg,cnt:cnt};';
+      bm += 'if(_app)try{_app.postMessage(d,"*");}catch(ex){}';
+      bm += 'if(window.opener)try{window.opener.postMessage(d,"*");}catch(ex){}';
+      bm += '}';
       bm += 'function ttl(s){document.title=s;}';
       bm += 'function pick(){return _cfg.mode==="random"?_cfg.msgs[Math.floor(Math.random()*_cfg.msgs.length)]:_cfg.msgs[_idx++%_cfg.msgs.length];}';
       bm += 'function ms(){var m=_cfg.iv;if(_cfg.ji)m+=(Math.random()*2-1)*m*0.3;return Math.max(m,800);}';
@@ -1663,21 +1726,24 @@
       bm += 'else{r.json().then(function(d){ttl("\u274C "+(d.message||r.status));pm("err",d.message||r.status,_sent);_t=setTimeout(send,ms());});}';
       bm += '}).catch(function(e){ttl("\u274C "+e.message);pm("err",e.message,_sent);_t=setTimeout(send,3000);});';
       bm += '}';
+      // Message listener: captures e.source on every app message so we can reply
       bm += 'window.addEventListener("message",function(e){';
       bm += 'if(!e.data||e.data.source!=="ds_app")return;';
-      bm += 'if(e.data.cmd==="run"){_cfg=e.data.cfg;_idx=0;_sent=0;_running=true;clearTimeout(_t);ttl("\u25CF DS Sender \u2014 running");pm("start","started",0);send();}';
-      bm += 'else if(e.data.cmd==="stop"){_running=false;clearTimeout(_t);ttl("\u23F9 DS Sender \u2014 idle");pm("stop","stopped",_sent);}';
+      bm += 'if(e.source)_app=e.source;';
+      bm += 'if(e.data.cmd==="hello"){ttl("\uD83D\uDCF1 DS armed");pm("ready","armed",0);}';
+      bm += 'else if(e.data.cmd==="run"){_cfg=e.data.cfg;_idx=0;_sent=0;_running=true;clearTimeout(_t);ttl("\u25CF Sending...");pm("start","running",0);send();}';
+      bm += 'else if(e.data.cmd==="stop"){_running=false;clearTimeout(_t);ttl("\u23F9 DS idle");pm("stop","stopped",_sent);}';
       bm += '});';
       bm += 'window._dsSender=true;';
       bm += 'ttl("\uD83D\uDCF1 DS Sender \u2014 armed");';
       bm += 'pm("ready","armed",0);';
-      bm += 'alert("\uD83D\uDCF1 DS Sender armed!\\nGo back to the DS Sender app and press Start.\\nDO NOT close this tab.");';
+      bm += 'alert("\uD83D\uDCF1 DS Sender armed!\\nGo back to the DS Sender app \u2014 sending will start automatically.\\nDO NOT close this tab.");';
       bm += '})()';
 
-      showSenderModal(bm, t ? t.name : 'Task');
-    }
-    function showSenderModal(bm, name) {
-      document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
+      // Show setup pane
+      document.getElementById('senderSetupPane').style.display = '';
+      document.getElementById('senderStartPane').style.display = 'none';
+      document.getElementById('senderTaskName').textContent = t ? '\uD83D\uDCCC Task: ' + t.name : '';
       document.getElementById('senderBmBox').textContent = bm;
       document.getElementById('copySenderBtn').textContent = '\uD83D\uDCCB Copy Sender BM';
       document.getElementById('senderModal').style.display = 'flex';
