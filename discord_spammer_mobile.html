@@ -285,43 +285,53 @@
             <div class="guide-step">
               <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
               <div class="step-body">
-                <div class="step-title">Save the Extractor as a bookmark</div>
-                <div class="step-desc">
-                  <strong>Long-press</strong> the button below &rarr; tap <strong>&ldquo;Add to Favorites&rdquo;</strong>.<br>
-                  Name it <code>DC Token</code> and save.
-                </div>
+                <div class="step-title">Copy the bookmarklet code</div>
+                <div class="step-desc">Tap the button below to copy the extractor code to your clipboard.</div>
                 <div class="bookmarklet-box" style="margin-top:10px;">
-                  <div class="bookmarklet-label">&#128071; Long-press this &rarr; Add to Favorites</div>
-                  <a class="bookmarklet-btn" id="bookmarkletLink" href="#">&#128273; DC Token</a>
+                  <div class="bookmarklet-label">Tap to copy the code</div>
+                  <button class="bookmarklet-btn" id="copyBmBtn" onclick="copyBookmarklet()">&#128203; Copy Extractor Code</button>
                 </div>
-                <div class="hint">&#9888; Do NOT tap &mdash; long-press to save it as a bookmark!</div>
               </div>
             </div>
             <div class="guide-step">
               <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
               <div class="step-body">
-                <div class="step-title">Open Discord in Safari</div>
+                <div class="step-title">Bookmark any page</div>
                 <div class="step-desc">
-                  Go to <strong>discord.com/app</strong> in Safari and log into your account.
+                  Open <strong>any webpage</strong> in Safari (e.g. google.com).<br>
+                  Tap the <strong>Share &#9650;</strong> button &rarr; tap <strong>&ldquo;Add Bookmark&rdquo;</strong>.<br>
+                  Name it <code>DC Token</code> &rarr; tap <strong>Save</strong>.
                 </div>
               </div>
             </div>
             <div class="guide-step">
               <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
               <div class="step-body">
-                <div class="step-title">Run the saved bookmark</div>
+                <div class="step-title">Edit that bookmark&rsquo;s URL</div>
                 <div class="step-desc">
-                  Tap the <strong>address bar</strong> &rarr; tap <strong>Favorites</strong> &rarr; tap <code>DC Token</code>.<br>
-                  A popup will appear with your token &mdash; tap <strong>Copy</strong>.
+                  Tap the <strong>&#128216; Bookmarks</strong> icon &rarr; find <code>DC Token</code> &rarr; <strong>swipe left</strong> &rarr; tap <strong>Edit</strong>.<br>
+                  Clear the <strong>URL field</strong> &rarr; long-press &rarr; <strong>Paste</strong> the code you copied in Step 1.<br>
+                  Tap <strong>Done</strong> to save.
                 </div>
               </div>
             </div>
             <div class="guide-step">
               <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
               <div class="step-body">
+                <div class="step-title">Run it on discord.com/app</div>
+                <div class="step-desc">
+                  Go to <strong>discord.com/app</strong> in Safari and log in.<br>
+                  Tap the address bar &rarr; tap <strong>Bookmarks</strong> &rarr; tap <code>DC Token</code>.<br>
+                  A popup shows your token &mdash; tap <strong>Copy</strong>.
+                </div>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+              <div class="step-body">
                 <div class="step-title">Return here &amp; paste</div>
                 <div class="step-desc">
-                  Come back to this app &rarr; tap the <strong>&#128203;</strong> clipboard button &rarr; tap <strong>Verify &amp; Connect</strong>.
+                  Come back to this app &rarr; tap <strong>&#128203;</strong> &rarr; tap <strong>Verify &amp; Connect</strong>.
                 </div>
               </div>
             </div>
@@ -546,23 +556,20 @@
       sent: 0, failed: 0, startTime: null
     };
 
-    /* BOOKMARKLET — build href dynamically so it survives HTML encoding */
-    (function() {
-      var js = [
-        'javascript:(function(){',
-          'try{',
-            'var t=(webpackChunkdiscord_app.push([[Math.random()],{},function(e){window.__wre=e}]),',
-            'Object.keys(window.__wre.c)',
-            '.map(function(x){return window.__wre.c[x];})',
-            '.filter(function(x){return x&&x.exports&&x.exports.default&&typeof x.exports.default.getToken==="function";})',
-            '[0].exports.default.getToken());',
-            'if(t){prompt("Copy your Discord Token:",t);}',
-            'else{alert("Token not found. Open discord.com/app and log in first.");}',
-          '}catch(err){alert("Error: "+err.message);}',
-        '})()'
-      ].join('');
-      document.getElementById('bookmarkletLink').href = js;
-    })();
+    /* BOOKMARKLET code stored globally so copyBookmarklet() can access it */
+    window.__bookmarkletCode = [
+      'javascript:(function(){',
+        'try{',
+          'var t=(webpackChunkdiscord_app.push([[Math.random()],{},function(e){window.__wre=e}]),',
+          'Object.keys(window.__wre.c)',
+          '.map(function(x){return window.__wre.c[x];})',
+          '.filter(function(x){return x&&x.exports&&x.exports.default&&typeof x.exports.default.getToken==="function";})',
+          '[0].exports.default.getToken());',
+          'if(t){prompt("Copy your Discord Token:",t);}',
+          'else{alert("Token not found. Open discord.com/app and log in first.");}',
+        '}catch(err){alert("Error: "+err.message);}',
+      '})()'
+    ].join('');
 
     /* UTILS */
     function now() {
@@ -583,6 +590,38 @@
     function clearLog() {
       document.getElementById('logOutput').innerHTML = '';
       log('Log cleared.', 'info');
+    }
+
+    /* COPY BOOKMARKLET CODE to clipboard */
+    function copyBookmarklet() {
+      var code = window.__bookmarkletCode;
+      var btn = document.getElementById('copyBmBtn');
+      function onSuccess() {
+        btn.textContent = '\u2713 Copied! Now go to Step 2';
+        btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        setTimeout(function() {
+          btn.innerHTML = '&#128203; Copy Extractor Code';
+          btn.style.background = '';
+        }, 3000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(onSuccess).catch(function() {
+          fallbackCopy(code, onSuccess);
+        });
+      } else {
+        fallbackCopy(code, onSuccess);
+      }
+    }
+
+    function fallbackCopy(text, cb) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); if (cb) cb(); }
+      catch(e) { alert('Could not auto-copy. Please manually copy the code from the Desktop method tab.'); }
+      document.body.removeChild(ta);
     }
 
     /* CLIPBOARD PASTE BUTTON */
