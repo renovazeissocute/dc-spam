@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>DS Sender</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:       #0d0d12;
+      --surface:  #18191f;
+      --card:     #1e2029;
+      --card2:    #24263a;
+      --border:   #2e3045;
+      --accent:   #5865f2;
+      --accent2:  #7289da;
+      --green:    #23a55a;
+      --red:      #ed4245;
+      --muted:    #6b7280;
+      --text:     #e8eaf0;
+      --radius:   16px;
+      --bottom-bar-height: 80px;
+    }
+
+    html { height: 100%; background: var(--bg); }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 10px);
+      padding-top: env(safe-area-inset-top);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Top Nav ── */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,18,.85);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      padding-top: calc(14px + env(safe-area-inset-top));
+    }
+    .nav-title {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .nav-logo {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 16px rgba(88,101,242,.5);
+      flex-shrink: 0;
+    }
+    .nav-title h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+    .nav-title p  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    /* Global status pill */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 12px;
+      font-size: 12px; font-weight: 500;
+    }
+    .pill-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
+      transition: background .3s;
+    }
+    .pill-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.35} }
+    .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .total-badge {
+      font-size: 12px; font-weight: 700; color: var(--accent2);
+      background: rgba(88,101,242,.15);
+      border-radius: 10px; padding: 4px 10px;
+    }
+
+    /* Token input */
+    .token-section { padding: 12px 16px 4px; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .token-wrap { position: relative; }
+    .token-wrap input {
+      width: 100%; background: var(--card);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 16px; padding: 14px 48px 14px 14px;
+      outline: none; letter-spacing: 2px;
+      transition: border-color .2s;
+    }
+    .token-wrap input:focus { border-color: var(--accent); }
+    .eye-btn {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted);
+      font-size: 18px; cursor: pointer; padding: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .token-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* ── Main content ── */
+    .main { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Task card ── */
+    .task-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .task-card.collapsed .task-body { display: none; }
+
+    .task-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      min-height: 60px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      background: var(--card2);
+    }
+    .task-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0; transition: background .3s;
+    }
+    .task-dot.running { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
+    .task-dot.error   { background: var(--red); }
+
+    .task-info { flex: 1; min-width: 0; }
+    .task-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .task-badge {
+      font-size: 13px; font-weight: 700; color: var(--accent2);
+      background: rgba(88,101,242,.15); border-radius: 10px;
+      padding: 4px 10px; white-space: nowrap;
+    }
+    .task-chevron { color: var(--muted); font-size: 13px; transition: transform .25s; flex-shrink: 0; }
+    .task-card.collapsed .task-chevron { transform: rotate(-90deg); }
+
+    .task-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Inputs inside task */
+    .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .field-input {
+      width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 16px; padding: 12px 14px;
+      outline: none; transition: border-color .2s;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    textarea.field-input { resize: none; min-height: 72px; line-height: 1.5; }
+
+    /* Message pool */
+    .msg-list { display: flex; flex-direction: column; gap: 7px; }
+    .msg-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .msg-item-text { flex: 1; font-size: 14px; word-break: break-word; line-height: 1.4; }
+    .msg-del {
+      background: rgba(237,66,69,.15); border: none; border-radius: 7px;
+      color: var(--red); font-size: 14px; font-weight: 700;
+      padding: 6px 10px; cursor: pointer; min-width: 36px;
+      min-height: 36px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .add-bar { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; }
+    .add-bar textarea { flex: 1; min-height: 48px; }
+    .add-bar .add-btn {
+      background: var(--accent); border: none; border-radius: 10px;
+      color: #fff; font-size: 20px; font-weight: 700;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* Row config */
+    .row2 { display: flex; gap: 10px; }
+    .row2 > * { flex: 1; }
+
+    /* interval */
+    .interval-row { display: flex; gap: 8px; }
+    .interval-row .field-input { flex: 1; }
+    .interval-row select.field-input { width: 110px; flex: none; }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 0;
+    }
+    .toggle-label { font-size: 14px; color: var(--text); }
+    .toggle-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .ios-toggle { position: relative; width: 51px; height: 31px; flex-shrink: 0; }
+    .ios-toggle input { display: none; }
+    .ios-track {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 20px;
+      transition: background .25s;
+    }
+    .ios-toggle input:checked ~ .ios-track { background: var(--green); }
+    .ios-thumb {
+      position: absolute; left: 2px; top: 2px;
+      width: 27px; height: 27px; border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.4);
+      transition: left .25s cubic-bezier(.4,0,.2,1);
+    }
+    .ios-toggle input:checked ~ .ios-thumb { left: 22px; }
+
+    /* Task action buttons */
+    .task-actions { display: flex; gap: 8px; }
+    .task-actions .btn { flex: 1; }
+
+    .btn {
+      border: none; border-radius: 10px; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      font-size: 14px; padding: 12px 16px;
+      transition: all .15s; white-space: nowrap;
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:disabled { opacity: .4; }
+    .btn-start   { background: var(--green); color: #fff; }
+    .btn-stop    { background: var(--red);   color: #fff; }
+    .btn-remove  { background: rgba(237,66,69,.12); color: var(--red); font-size: 13px; flex: none !important; width: 44px; padding: 12px 0; }
+
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(13,13,18,.9);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      backdrop-filter: saturate(180%) blur(24px);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex; gap: 10px;
+    }
+    .bottom-bar .bb-btn {
+      flex: 1; border: none; border-radius: 12px; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-weight: 700;
+      font-size: 15px; padding: 14px;
+      min-height: 50px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .1s, opacity .15s;
+    }
+    .bottom-bar .bb-btn:active { transform: scale(.96); }
+    .bb-start { background: var(--green); color: #fff; }
+    .bb-stop  { background: var(--red);   color: #fff; }
+    .bb-add   { background: var(--accent); color: #fff; flex: none; width: 50px; font-size: 22px; border-radius: 12px; }
+
+    /* ── Log sheet ── */
+    .log-toggle-btn {
+      width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--muted); font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 500;
+      padding: 12px; cursor: pointer;
+      text-align: left; display: flex; align-items: center; gap: 8px;
+    }
+    .log-count { background: var(--accent); color: #fff; border-radius: 8px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+
+    .log-box {
+      background: #09090d; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px;
+      max-height: 220px; overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px; line-height: 1.7;
+      display: none;
+    }
+    .log-box.open { display: block; }
+    .log-entry { display: flex; flex-wrap: wrap; gap: 4px; }
+    .log-time  { color: var(--muted); flex-shrink: 0; }
+    .log-tag   { flex-shrink: 0; }
+    .log-ok    { color: var(--green); }
+    .log-err   { color: var(--red); }
+    .log-info  { color: var(--accent2); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 48px 20px; color: var(--muted);
+    }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Animations ── */
+    .task-card { animation: cardIn .2s ease; }
+    @keyframes cardIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+  </style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<div class="top-nav">
+  <div class="nav-title">
+    <div class="nav-logo">🤖</div>
+    <div>
+      <h1>DS Multi Sender</h1>
+      <p>Discord auto-message · user token</p>
+    </div>
+  </div>
+  <div class="nav-row">
+    <div class="status-pill">
+      <div class="pill-dot" id="gDot"></div>
+      <span id="gStatusText">Idle</span>
+    </div>
+    <div class="total-badge">⚡ <span id="gTotal">0</span> sent</div>
+    <button class="log-toggle-btn" onclick="toggleLog()" style="width:auto;padding:8px 12px;">
+      📋 <span class="log-count" id="logCount">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- Token -->
+<div class="token-section">
+  <div class="section-label">User Token</div>
+  <div class="token-wrap">
+    <input type="password" id="tokenInput" placeholder="paste token here…" autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">👁</button>
+  </div>
+  <div class="token-hint">DevTools → Network → any request → Headers → <code style="color:var(--accent2);">authorization</code></div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Log (collapsible) -->
+  <div>
+    <div class="log-box" id="logBox">
+      <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info"> Ready. Add a channel below.</span></div>
+    </div>
+  </div>
+
+  <!-- Task list -->
+  <div id="taskList">
+    <div class="empty-state" id="emptyState">
+      <div class="emoji">📡</div>
+      <p>No channels yet<br/>Tap <strong style="color:var(--accent);">＋</strong> to add one</p>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+  <button class="bb-btn bb-start" onclick="startAll()">▶ Start All</button>
+  <button class="bb-btn bb-stop"  onclick="stopAll()">⏹ Stop</button>
+  <button class="bb-btn bb-add"   onclick="addTask()">＋</button>
+</div>
+
+<script>
+var tasks = {};
+var taskIdCounter = 0;
+var logEntryCount = 0;
+var logOpen = false;
+
+var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
+
+function newTask() {
+  var id = ++taskIdCounter;
+  return {
+    id: id,
+    name: 'Channel ' + id,
+    color: COLORS[(id - 1) % COLORS.length],
+    channelId: '',
+    messages: [],
+    msgIndex: 0,
+    mode: 'sequential',
+    intervalVal: 5,
+    intervalUnit: 1000,
+    jitter: false,
+    running: false,
+    timer: null,
+    sentCount: 0
+  };
+}
+
+function addTask() {
+  var t = newTask();
+  tasks[t.id] = t;
+  var es = document.getElementById('emptyState');
+  if (es) es.remove();
+  renderTask(t);
+  log('Task "' + t.name + '" added', 'info', t);
+  // auto-expand new task
+  document.getElementById('task-' + t.id).classList.remove('collapsed');
+  // scroll to it
+  setTimeout(function() {
+    var el = document.getElementById('task-' + t.id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function renderTask(t) {
+  var list = document.getElementById('taskList');
+  var existing = document.getElementById('task-' + t.id);
+
+  var el = document.createElement('div');
+  el.className = 'task-card collapsed';
+  el.id = 'task-' + t.id;
+
+  el.innerHTML =
+    '<div class="task-head" onclick="toggleCollapse(' + t.id + ')">' +
+      '<div class="task-dot" id="dot-' + t.id + '"></div>' +
+      '<div class="task-info">' +
+        '<div class="task-name" style="color:' + t.color + '" id="tname-' + t.id + '">' + escHtml(t.name) + '</div>' +
+        '<div class="task-sub" id="tsub-' + t.id + '">tap to configure</div>' +
+      '</div>' +
+      '<div class="task-badge" id="tbadge-' + t.id + '">' + t.sentCount + ' sent</div>' +
+      '<div class="task-chevron">▾</div>' +
+    '</div>' +
+
+    '<div class="task-body">' +
+
+      // Name + channel
+      '<div>' +
+        '<div class="field-label">TASK NAME</div>' +
+        '<input class="field-input" type="text" id="tnameinp-' + t.id + '" value="' + escHtml(t.name) + '" oninput="syncName(' + t.id + ',this.value)" autocorrect="off" spellcheck="false"/>' +
+      '</div>' +
+
+      '<div>' +
+        '<div class="field-label">CHANNEL ID</div>' +
+        '<input class="field-input" type="text" id="chid-' + t.id + '" placeholder="e.g. 123456789012345678" value="' + escHtml(t.channelId) + '" oninput="syncF(' + t.id + ',\'channelId\',this.value)" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="numeric"/>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Right-click channel → Copy Channel ID (need Dev Mode)</div>' +
+      '</div>' +
+
+      // Message pool
+      '<div>' +
+        '<div class="field-label">MESSAGE POOL &nbsp;<span id="modespan-' + t.id + '" style="color:var(--accent2);font-weight:400;text-transform:none;letter-spacing:0;">' + (t.mode==='random'?'Random':'Sequential') + '</span></div>' +
+        '<div class="msg-list" id="pool-' + t.id + '"></div>' +
+        '<div class="add-bar">' +
+          '<textarea class="field-input" id="newmsg-' + t.id + '" placeholder="Type message…" rows="2"></textarea>' +
+          '<button class="add-btn" onclick="addMsg(' + t.id + ')">＋</button>' +
+        '</div>' +
+        '<div class="toggle-row" style="margin-top:10px;">' +
+          '<div><div class="toggle-label">Random mode</div><div class="toggle-sub">Pick random from pool</div></div>' +
+          '<label class="ios-toggle"><input type="checkbox" id="modtog-' + t.id + '" ' + (t.mode==='random'?'checked':'') + ' onchange="toggleMode(' + t.id + ')"/><div class="ios-track"></div><div class="ios-thumb"></div></label>' +
+        '</div>' +
+      '</div>' +
+
+      // Interval
+      '<div>' +
+        '<div class="field-label">INTERVAL</div>' +
+        '<div class="interval-row">' +
+          '<input class="field-input" type="number" id="ival-' + t.id + '" value="' + t.intervalVal + '" min="1" oninput="syncF(' + t.id + ',\'intervalVal\',+this.value)" inputmode="decimal"/>' +
+          '<select class="field-input" id="iunit-' + t.id + '" onchange="syncF(' + t.id + ',\'intervalUnit\',+this.value)">' +
+            '<option value="1000">Seconds</option>' +
+            '<option value="60000">Minutes</option>' +
+            '<option value="3600000">Hours</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="toggle-row" style="margin-top:10px;">' +
+          '<div><div class="toggle-label">Jitter</div><div class="toggle-sub">±30% random variance</div></div>' +
+          '<label class="ios-toggle"><input type="checkbox" id="jittog-' + t.id + '" ' + (t.jitter?'checked':'') + ' onchange="syncF(' + t.id + ',\'jitter\',this.checked)"/><div class="ios-track"></div><div class="ios-thumb"></div></label>' +
+        '</div>' +
+      '</div>' +
+
+      // Controls
+      '<div class="task-actions">' +
+        '<button class="btn btn-start" id="startbtn-' + t.id + '" onclick="startTask(' + t.id + ')">▶ Start</button>' +
+        '<button class="btn btn-stop"  id="stopbtn-'  + t.id + '" onclick="stopTask('  + t.id + ')" disabled>⏹</button>' +
+        '<button class="btn btn-remove" onclick="removeTask(' + t.id + ')">✕</button>' +
+      '</div>' +
+
+    '</div>';
+
+  if (existing) {
+    list.replaceChild(el, existing);
+  } else {
+    list.appendChild(el);
+  }
+  renderPool(t);
+}
+
+function renderPool(t) {
+  var pool = document.getElementById('pool-' + t.id);
+  if (!pool) return;
+  pool.innerHTML = '';
+  if (!t.messages.length) {
+    pool.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px 0 8px;">No messages yet</div>';
+    return;
+  }
+  t.messages.forEach(function(m, i) {
+    var d = document.createElement('div');
+    d.className = 'msg-item';
+    d.innerHTML = '<span class="msg-item-text">' + escHtml(m) + '</span>' +
+      '<button class="msg-del" onclick="delMsg(' + t.id + ',' + i + ')">✕</button>';
+    pool.appendChild(d);
+  });
+}
+
+function toggleCollapse(id) {
+  var c = document.getElementById('task-' + id);
+  c.classList.toggle('collapsed');
+}
+
+function syncF(id, field, val) { tasks[id][field] = val; }
+
+function syncName(id, val) {
+  tasks[id].name = val || ('Channel ' + id);
+  var n = document.getElementById('tname-' + id);
+  if (n) n.textContent = tasks[id].name;
+}
+
+function toggleMode(id) {
+  tasks[id].mode = document.getElementById('modtog-' + id).checked ? 'random' : 'sequential';
+  var s = document.getElementById('modespan-' + id);
+  if (s) s.textContent = tasks[id].mode === 'random' ? 'Random' : 'Sequential';
+}
+
+function addMsg(id) {
+  var inp = document.getElementById('newmsg-' + id);
+  var txt = inp.value.trim();
+  if (!txt) return;
+  tasks[id].messages.push(txt);
+  inp.value = '';
+  renderPool(tasks[id]);
+}
+
+function delMsg(id, i) {
+  tasks[id].messages.splice(i, 1);
+  if (tasks[id].msgIndex >= tasks[id].messages.length) tasks[id].msgIndex = 0;
+  renderPool(tasks[id]);
+}
+
+function removeTask(id) {
+  stopTask(id);
+  var el = document.getElementById('task-' + id);
+  if (el) el.remove();
+  delete tasks[id];
+  if (!Object.keys(tasks).length) {
+    var list = document.getElementById('taskList');
+    var es = document.createElement('div');
+    es.className = 'empty-state';
+    es.id = 'emptyState';
+    es.innerHTML = '<div class="emoji">📡</div><p>No channels yet<br/>Tap <strong style="color:var(--accent);">＋</strong> to add one</p>';
+    list.appendChild(es);
+  }
+  updateGlobal();
+}
+
+// ── Send logic ────────────────────────────────────────────
+function getToken() { return document.getElementById('tokenInput').value.trim(); }
+
+async function doSend(t) {
+  var content = pickMsg(t);
+  if (!content) { log('No messages in pool', 'err', t); return; }
+  try {
+    var res = await fetch('https://discord.com/api/v9/channels/' + t.channelId + '/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': getToken(),
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
+      },
+      body: JSON.stringify({ content: content })
+    });
+
+    if (res.status === 429) {
+      var d = await res.json().catch(function(){ return {}; });
+      throw new Error('Rate limited — retry after ' + (d.retry_after||1).toFixed(1) + 's');
+    }
+    if (!res.ok) {
+      var d2 = await res.json().catch(function(){ return {}; });
+      throw new Error('HTTP ' + res.status + ': ' + (d2.message || res.statusText));
+    }
+
+    t.sentCount++;
+    var badge = document.getElementById('tbadge-' + t.id);
+    if (badge) badge.textContent = t.sentCount + ' sent';
+    log('Sent: "' + (content.length > 45 ? content.slice(0,42)+'…' : content) + '"', 'ok', t);
+    updateGlobal();
+
+  } catch(e) {
+    log(e.message, 'err', t);
+    setDot(t, 'error');
+    var sub = document.getElementById('tsub-' + t.id);
+    if (sub) sub.textContent = '⚠ ' + e.message.slice(0, 40);
+  }
+}
+
+function pickMsg(t) {
+  if (!t.messages.length) return null;
+  if (t.mode === 'random') return t.messages[Math.floor(Math.random() * t.messages.length)];
+  var m = t.messages[t.msgIndex % t.messages.length];
+  t.msgIndex++;
+  return m;
+}
+
+function getMs(t) {
+  var ms = t.intervalVal * t.intervalUnit;
+  if (t.jitter) ms += (Math.random() * 2 - 1) * ms * 0.3;
+  return Math.max(ms, 500);
+}
+
+function scheduleNext(t) {
+  if (!t.running) return;
+  t.timer = setTimeout(async function() {
+    if (!t.running) return;
+    await doSend(t);
+    scheduleNext(t);
+  }, getMs(t));
+}
+
+function startTask(id) {
+  var t = tasks[id];
+  if (!t || t.running) return;
+  if (!getToken()) { log('Token is empty!', 'err', t); return; }
+  if (!t.channelId){ log('Channel ID empty', 'err', t); return; }
+  if (!t.messages.length){ log('No messages in pool', 'err', t); return; }
+
+  t.running = true;
+  t.sentCount = 0;
+  t.msgIndex = 0;
+  var badge = document.getElementById('tbadge-' + id);
+  if (badge) badge.textContent = '0 sent';
+  document.getElementById('startbtn-' + id).disabled = true;
+  document.getElementById('stopbtn-' + id).disabled = false;
+  setDot(t, 'running');
+  var sub = document.getElementById('tsub-' + id);
+  if (sub) sub.textContent = '● Sending every ' + t.intervalVal + ['s','m','h'][['1000','60000','3600000'].indexOf(String(t.intervalUnit))] + (t.jitter?' ±jitter':'');
+  var unitL = {1000:'s',60000:'m',3600000:'h'}[t.intervalUnit]||'s';
+  log('Started — ~' + t.intervalVal + unitL, 'info', t);
+
+  t.timer = setTimeout(async function() {
+    await doSend(t);
+    scheduleNext(t);
+  }, 150);
+
+  updateGlobal();
+}
+
+function stopTask(id) {
+  var t = tasks[id];
+  if (!t) return;
+  clearTimeout(t.timer);
+  t.timer = null;
+  t.running = false;
+  var sb = document.getElementById('startbtn-' + id);
+  var stb = document.getElementById('stopbtn-' + id);
+  if (sb)  sb.disabled = false;
+  if (stb) stb.disabled = true;
+  setDot(t, 'idle');
+  var sub = document.getElementById('tsub-' + id);
+  if (sub) sub.textContent = 'Stopped · ' + t.sentCount + ' sent';
+  log('Stopped · ' + t.sentCount + ' sent', 'info', t);
+  updateGlobal();
+}
+
+function startAll() {
+  Object.values(tasks).forEach(function(t) { if (!t.running) startTask(t.id); });
+}
+
+function stopAll() {
+  Object.values(tasks).forEach(function(t) { if (t.running) stopTask(t.id); });
+}
+
+function setDot(t, state) {
+  var d = document.getElementById('dot-' + t.id);
+  if (d) d.className = 'task-dot' + (state==='running'?' running':state==='error'?' error':'');
+}
+
+function updateGlobal() {
+  var running = Object.values(tasks).filter(function(t){ return t.running; }).length;
+  var total   = Object.values(tasks).reduce(function(a,t){ return a + t.sentCount; }, 0);
+  var dot = document.getElementById('gDot');
+  dot.className = 'pill-dot' + (running > 0 ? ' active' : '');
+  document.getElementById('gStatusText').textContent = running > 0 ? running + ' running' : 'Idle';
+  document.getElementById('gTotal').textContent = total;
+}
+
+// ── Log ───────────────────────────────────────────────────
+function log(msg, type, task) {
+  logEntryCount++;
+  var box = document.getElementById('logBox');
+  var now = new Date().toLocaleTimeString('en-GB');
+  var div = document.createElement('div');
+  div.className = 'log-entry';
+  var tag = task ? '<span class="log-tag" style="color:' + task.color + '">[' + escHtml(task.name) + '] </span>' : '';
+  div.innerHTML = '<span class="log-time">' + now + ' </span>' + tag + '<span class="log-' + (type||'info') + '">' + escHtml(String(msg)) + '</span>';
+  box.appendChild(div);
+  if (logOpen) box.scrollTop = box.scrollHeight;
+  document.getElementById('logCount').textContent = logEntryCount;
+}
+
+function toggleLog() {
+  logOpen = !logOpen;
+  var box = document.getElementById('logBox');
+  box.classList.toggle('open', logOpen);
+  if (logOpen) box.scrollTop = box.scrollHeight;
+}
+
+// ── Util ─────────────────────────────────────────────────
+function toggleEye() {
+  var inp = document.getElementById('tokenInput');
+  var btn = document.getElementById('eyeBtn');
+  if (inp.type === 'password') { inp.type = 'text'; inp.style.letterSpacing = 'normal'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; inp.style.letterSpacing = '3px'; btn.textContent = '👁'; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
