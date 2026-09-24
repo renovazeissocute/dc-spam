@@ -334,11 +334,99 @@ var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
 var saveTimer = null, toastTimer = null, _mfaTicket = null;
 var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
 
-// 4-strategy iOS bookmarklet: webpack -> localStorage -> React fiber -> cookie
-// Uses prompt() to show token (copy() blocked in iOS Safari)
-var IOS_BOOKMARKLET = "javascript:(function(){var t=null;try{if(window.webpackChunkdiscord_app){webpackChunkdiscord_app.push([[Math.random()],{},function(e){var ms=Object.values(e.c);for(var i=0;i<ms.length;i++){try{var m=ms[i]&&ms[i].exports;if(!m)continue;if(m.default&&typeof m.default.getToken==='function'){t=m.default.getToken();if(t)break;}if(typeof m.getToken==='function'){t=m.getToken();if(t)break;}if(m.Z&&typeof m.Z.getToken==='function'){t=m.Z.getToken();if(t)break;}if(m.ZP&&typeof m.ZP.getToken==='function'){t=m.ZP.getToken();if(t)break;}}catch(x){}}}]);webpackChunkdiscord_app.pop();}}catch(e1){}if(!t){try{var ls=localStorage.getItem('token');if(ls&&ls.length>20)t=ls.replace(/\"/g,'');}catch(e2){}}if(!t){try{var root=document.getElementById('app-mount');if(root){var fk=Object.keys(root).find(function(k){return k.startsWith('__reactFiber')||k.startsWith('__reactInternalInstance');});if(fk){var fb=root[fk],d=0;while(fb&&d<200){try{var ps=fb.pendingProps||fb.memoizedProps;if(ps&&ps.token&&typeof ps.token==='string'&&ps.token.length>20){t=ps.token;break;}}catch(fe){}fb=fb.child||fb.sibling||fb.return;d++;}}}}catch(e3){}}if(t&&t.length>20){prompt('SELECT ALL then COPY your token:',t);}else{alert('Token not found.\\nMake sure you are on discord.com and logged in.');}})();";
+// iOS bookmarklet — robust for modern Discord 2025+
+// Uses fixed chunk ID, scans all module export keys, multiple fallbacks
+// prompt() is used because copy() is blocked in iOS Safari
+var IOS_BOOKMARKLET = (function(){
+  var code = 'javascript:(function(){';
+  code += 'var tk=null;';
+  // Strategy 1: webpackChunkdiscord_app with fixed int chunk ID
+  code += 'try{';
+  code += 'if(window.webpackChunkdiscord_app){';
+  code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
+  code += 'var mods=Object.values(r.c||{});';
+  code += 'for(var i=0;i<mods.length&&!tk;i++){';
+  code += 'try{';
+  code += 'var ex=mods[i]&&mods[i].exports;';
+  code += 'if(!ex)continue;';
+  // check the export itself and all its own keys
+  code += 'var toCheck=[ex];';
+  code += 'Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
+  code += 'for(var j=0;j<toCheck.length&&!tk;j++){';
+  code += 'var o=toCheck[j];';
+  code += 'if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}';
+  code += '}';
+  code += '}catch(xe){}';
+  code += '}';
+  code += '}]);';
+  code += 'webpackChunkdiscord_app.pop();';
+  code += '}';
+  code += '}catch(e1){}';
+  // Strategy 2: localStorage (Discord PWA sometimes stores raw token)
+  code += 'if(!tk){try{';
+  code += 'var raw=localStorage.getItem("token");';
+  code += 'if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");';
+  code += '}catch(e2){}}';
+  // Strategy 3: React fiber walk on #app-mount
+  code += 'if(!tk){try{';
+  code += 'var root=document.getElementById("app-mount");';
+  code += 'if(root){';
+  code += 'var rk=Object.keys(root).find(function(k){return/^__react(Fiber|InternalInstance|Container)/.test(k);});';
+  code += 'if(rk){';
+  code += 'var fb=root[rk],dep=0;';
+  code += 'while(fb&&dep<500&&!tk){';
+  code += 'try{';
+  code += 'var pr=(fb.memoizedProps||fb.pendingProps||{});';
+  code += 'if(pr.token&&typeof pr.token==="string"&&pr.token.length>50)tk=pr.token;';
+  // also check memoizedState chain
+  code += 'var st=fb.memoizedState;';
+  code += 'while(st&&!tk){if(st.memoizedState&&typeof st.memoizedState==="string"&&st.memoizedState.length>50)tk=st.memoizedState;st=st.next;}';
+  code += '}catch(fe){}';
+  code += 'fb=fb.child||fb.sibling||(fb.return&&fb.return.sibling)||null;';
+  code += 'dep++;';
+  code += '}';
+  code += '}';
+  code += '}';
+  code += '}catch(e3){}}';
+  // Strategy 4: scan all localStorage keys for JWT-shaped values
+  code += 'if(!tk){try{';
+  code += 'for(var ki=0;ki<localStorage.length&&!tk;ki++){';
+  code += 'var kv=localStorage.getItem(localStorage.key(ki));';
+  code += 'if(kv&&kv.length>50&&kv.split(".").length===3){tk=kv.replace(/^"|"$/g,"");}';
+  code += '}';
+  code += '}catch(e4){}}';
+  // Show result
+  code += 'if(tk&&tk.length>20){';
+  code += 'prompt("SELECT ALL then COPY your token:",tk);';
+  code += '}else{';
+  code += 'alert("Token not found.\\nTry: make sure discord.com is fully loaded, you are logged in, then tap the bookmark again.");';
+  code += '}';
+  code += '})()';
+  return code;
+})();
 
-var TOKEN_SNIPPET = "(function(){var t=null;try{webpackChunkdiscord_app.push([[Math.random()],{},function(e){var ms=Object.values(e.c);for(var i=0;i<ms.length;i++){try{var m=ms[i]&&ms[i].exports;if(!m)continue;if(m.default&&typeof m.default.getToken==='function'){t=m.default.getToken();if(t)break;}if(typeof m.getToken==='function'){t=m.getToken();if(t)break;}if(m.Z&&typeof m.Z.getToken==='function'){t=m.Z.getToken();if(t)break;}if(m.ZP&&typeof m.ZP.getToken==='function'){t=m.ZP.getToken();if(t)break;}}catch(x){}}}]);webpackChunkdiscord_app.pop();}catch(e){}if(!t){try{var ls=localStorage.getItem('token');if(ls&&ls.length>20)t=ls.replace(/\"/g,'');}catch(e2){}}if(t&&t.length>20){copy(t);alert('Token copied!');}else{alert('Failed. Make sure you are logged in to discord.com.');}})();";
+// Desktop snippet — copy() works in Chrome/Firefox DevTools
+var TOKEN_SNIPPET = (function(){
+  var code = '(function(){';
+  code += 'var tk=null;';
+  code += 'try{';
+  code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
+  code += 'var mods=Object.values(r.c||{});';
+  code += 'for(var i=0;i<mods.length&&!tk;i++){';
+  code += 'try{';
+  code += 'var ex=mods[i]&&mods[i].exports;if(!ex)continue;';
+  code += 'var toCheck=[ex];Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
+  code += 'for(var j=0;j<toCheck.length&&!tk;j++){var o=toCheck[j];if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}}';
+  code += '}catch(xe){}';
+  code += '}';
+  code += '}]);webpackChunkdiscord_app.pop();';
+  code += '}catch(e){}';
+  code += 'if(!tk){try{var raw=localStorage.getItem("token");if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");}catch(e2){}}';
+  code += 'if(!tk){try{for(var ki=0;ki<localStorage.length&&!tk;ki++){var kv=localStorage.getItem(localStorage.key(ki));if(kv&&kv.length>50&&kv.split(".").length===3)tk=kv.replace(/^"|"$/g,"");}}catch(e3){}}';
+  code += 'if(tk&&tk.length>20){copy(tk);alert("Token copied to clipboard!");}else{alert("Failed. Open discord.com, log in, then try again.");}';
+  code += '})()';
+  return code;
+})();
 
 function toast(msg,dur){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},dur||2200);}
 
