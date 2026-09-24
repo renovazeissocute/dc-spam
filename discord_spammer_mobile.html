@@ -365,6 +365,9 @@ var STORE_KEY = 'ds_sender_v2';
 var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
 var saveTimer = null, toastTimer = null, _mfaTicket = null;
 var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
+var BM_STATUS_PREFIX = 'ds_bm_status_';   // localStorage key prefix for bookmarklet → app bridge
+var _bmPollTimer = null;                   // single interval that watches all BM sessions
+var _bmLastTs = {};                        // last seen timestamp per taskId to deduplicate
 
 // iOS bookmarklet — robust for modern Discord 2025+
 // Uses fixed chunk ID, scans all module export keys, multiple fallbacks
@@ -503,6 +506,12 @@ window.addEventListener('DOMContentLoaded',function(){
   if(!loaded)log('Ready. Add a channel below.','info');
   document.getElementById('snippetBox').textContent=TOKEN_SNIPPET;
   var bm=document.getElementById('bmSnippetBox');if(bm)bm.textContent=IOS_BOOKMARKLET;
+  // Auto-start BM poll if there are any stored BM status keys (previous session running)
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      if((localStorage.key(i)||'').indexOf(BM_STATUS_PREFIX)===0){startBmPoll();break;}
+    }
+  }catch(e){}
 });
 
 function newTask(){var id=++taskIdCounter;return{id:id,name:'Channel '+id,color:COLORS[(id-1)%COLORS.length],channelId:'',messages:[],msgIndex:0,mode:'sequential',intervalVal:5,intervalUnit:1000,jitter:false,running:false,timer:null,sentCount:0};}
@@ -639,38 +648,80 @@ function generateSenderBookmarklet(id) {
   if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
   if (!t.channelId) { toast('\u26A0 Set a Channel ID first!'); return; }
   if (!t.messages.length) { toast('\u26A0 Add at least one message!'); return; }
-  // Embed config as JSON inside the bookmarklet
-  // Using relative URL /api/v9/... so it's always same-origin on discord.com
+
+  // Embed config — include taskId so the app can correlate status updates
   var cfg = JSON.stringify({
     tok: tok,
     ch: t.channelId,
     msgs: t.messages,
     mode: t.mode,
     iv: Math.max(t.intervalVal * t.intervalUnit, 1000),
-    ji: t.jitter
+    ji: t.jitter,
+    tid: id          // ← task ID for localStorage bridge
   });
+
+  // Helper that writes a status record into localStorage so the main app can read it
+  // Key: ds_bm_status_<tid>  Value: JSON {st,msg,cnt,ts}
+  var writeSt = [
+    'function wst(st,msg,cnt){',
+    'try{localStorage.setItem("ds_bm_status_"+c.tid,JSON.stringify({st:st,msg:msg,cnt:cnt,ts:Date.now()}));}',
+    'catch(e){}',
+    '}'
+  ].join('');
+
   var bm = 'javascript:(function(){';
   bm += 'var c=' + cfg + ',';
-  bm += 'idx=0,running=true;';
+  bm += 'idx=0,sent=0;';
+  bm += writeSt;
   bm += 'function pick(){if(c.mode==="random")return c.msgs[Math.floor(Math.random()*c.msgs.length)];return c.msgs[idx++%c.msgs.length];}';
   bm += 'function getMs(){var ms=c.iv;if(c.ji)ms+=((Math.random()*2-1)*ms*0.3);return Math.max(ms,800);}';
   bm += 'function send(){';
-  bm += 'if(!running)return;';
+  bm += 'if(!window._dsSender)return;';
   bm += 'var msg=pick();';
   bm += 'fetch("/api/v9/channels/"+c.ch+"/messages",{method:"POST",headers:{"Authorization":c.tok,"Content-Type":"application/json"},body:JSON.stringify({content:msg})})';
   bm += '.then(function(r){';
-  bm += 'if(r.status===429){r.json().then(function(d){document.title="\u23F3 RL "+d.retry_after+"s";setTimeout(send,(d.retry_after||5)*1000);});}';
-  bm += 'else if(r.ok){document.title="\u2705 Sent! "+new Date().toLocaleTimeString();setTimeout(send,getMs());}';
-  bm += 'else{r.json().then(function(d){document.title="\u274C "+d.message;setTimeout(send,getMs());});}';
-  bm += '}).catch(function(e){document.title="\u274C "+e.message;setTimeout(send,getMs());});';
+  bm += 'if(r.status===429){';
+  bm +=   'r.json().then(function(d){';
+  bm +=     'var ra=(d.retry_after||5);';
+  bm +=     'document.title="\u23F3 RL "+ra+"s";';
+  bm +=     'wst("rl","Rate limited \u2014 retry after "+ra+"s",sent);';
+  bm +=     'setTimeout(send,ra*1000);';
+  bm +=   '});';
+  bm += '} else if(r.ok){';
+  bm +=   'sent++;';
+  bm +=   'document.title="\u2705 Sent! "+new Date().toLocaleTimeString();';
+  bm +=   'wst("ok",msg,sent);';
+  bm +=   'setTimeout(send,getMs());';
+  bm += '} else {';
+  bm +=   'r.json().then(function(d){';
+  bm +=     'document.title="\u274C "+d.message;';
+  bm +=     'wst("err","HTTP error: "+(d.message||r.status),sent);';
+  bm +=     'setTimeout(send,getMs());';
+  bm +=   '});';
   bm += '}';
-  bm += 'if(window._dsSender){window._dsSender=false;document.title="\u23F9 Sender stopped";return;}';
+  bm += '}).catch(function(e){';
+  bm +=   'document.title="\u274C "+e.message;';
+  bm +=   'wst("err",e.message,sent);';
+  bm +=   'setTimeout(send,getMs());';
+  bm += '});';
+  bm += '}';
+  // Toggle on second tap
+  bm += 'if(window._dsSender){';
+  bm +=   'window._dsSender=false;';
+  bm +=   'document.title="\u23F9 Sender stopped";';
+  bm +=   'wst("stop","Sender stopped. "+sent+" sent.",sent);';
+  bm +=   'return;';
+  bm += '}';
   bm += 'window._dsSender=true;';
   bm += 'document.title="\u25CF Sender started...";';
+  bm += 'wst("start","Sender started",0);';
   bm += 'send();';
-  bm += 'alert("\u25CF Sender running (\'" + c.msgs.length + " msg(s), every ~"+(c.iv/1000)+"s).\\nTab title = status.\\nTap bookmark again to STOP.");';
+  bm += 'alert("\u25CF Sender running ("+c.msgs.length+" msg(s), every ~"+(c.iv/1000)+"s).\\nTab title = live status.\\nStatus also syncs to DS Sender app.\\nTap bookmark again to STOP.");';
   bm += '})()';
+
   showSenderModal(bm, t.name);
+  // Start polling for this task's status updates
+  startBmPoll();
 }
 function showSenderModal(bm, name) {
   document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
@@ -700,9 +751,64 @@ function log(msg,type,task){
   var now=new Date().toLocaleTimeString('en-GB');var div=document.createElement('div');div.className='log-entry';
   var tag=task?'<span class="log-tag" style="color:'+task.color+'">['+escHtml(task.name)+'] </span>':'';
   div.innerHTML='<span class="log-time">'+now+' </span>'+tag+'<span class="log-'+(type||'info')+'">'+escHtml(String(msg))+'</span>';
-  box.appendChild(div);if(logOpen)box.scrollTop=box.scrollHeight;document.getElementById('logCount').textContent=logEntryCount;
+  box.appendChild(div);
+  // Auto-open log on first real event so user notices activity
+  if(!logOpen){logOpen=true;box.classList.add('open');}
+  box.scrollTop=box.scrollHeight;
+  document.getElementById('logCount').textContent=logEntryCount;
 }
 function toggleLog(){logOpen=!logOpen;var box=document.getElementById('logBox');box.classList.toggle('open',logOpen);if(logOpen)box.scrollTop=box.scrollHeight;}
+
+// ─────────────────────────────────────────────────────────────────
+// iOS BM STATUS BRIDGE  (localStorage polling every 1.5 s)
+// Bookmarklet writes ds_bm_status_<tid> = {st,msg,cnt,ts}
+// We read it here and push into the log + update task badge
+// ─────────────────────────────────────────────────────────────────
+function startBmPoll(){
+  if(_bmPollTimer)return;   // already running
+  _bmPollTimer=setInterval(pollBmStatus,1500);
+}
+function pollBmStatus(){
+  // Scan all ds_bm_status_* keys
+  var keys=[];
+  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(BM_STATUS_PREFIX)===0)keys.push(k);}}
+  catch(e){return;}
+  keys.forEach(function(k){
+    try{
+      var raw=localStorage.getItem(k);if(!raw)return;
+      var d=JSON.parse(raw);
+      var tid=parseInt(k.replace(BM_STATUS_PREFIX,''),10);
+      var t=tasks[tid];
+      // Deduplicate by timestamp
+      if(_bmLastTs[tid]&&_bmLastTs[tid]>=d.ts)return;
+      _bmLastTs[tid]=d.ts;
+      var tag=t?'[iOS BM] ':'[iOS BM #'+tid+'] ';
+      var typeMap={ok:'ok',err:'err',rl:'info',start:'info',stop:'info'};
+      var type=typeMap[d.st]||'info';
+      // Pick a user-friendly message
+      var display='';
+      if(d.st==='ok')display='\u2705 Sent ('+d.cnt+' total): "'+(d.msg&&d.msg.length>45?d.msg.slice(0,42)+'\u2026':d.msg)+'"';
+      else if(d.st==='rl')display='\u23F3 '+d.msg;
+      else if(d.st==='err')display='\u274C '+d.msg;
+      else if(d.st==='start')display='\uD83D\uDCF1 iOS BM sender started';
+      else if(d.st==='stop')display='\u23F9 iOS BM stopped \xB7 '+d.cnt+' sent';
+      else display=d.msg;
+      log(tag+display, type, t||null);
+      // Update task badge & sub-text
+      if(t){
+        var badge=document.getElementById('tbadge-'+tid);
+        if(badge)badge.textContent=(d.cnt||0)+' sent (iOS)';
+        var sub=document.getElementById('tsub-'+tid);
+        if(d.st==='ok'&&sub)sub.textContent='\uD83D\uDCF1 iOS BM \u25CF running \xB7 '+(d.cnt||0)+' sent';
+        if(d.st==='stop'&&sub)sub.textContent='\uD83D\uDCF1 iOS BM stopped \xB7 '+(d.cnt||0)+' sent';
+        if(d.st==='err'&&sub)sub.textContent='\u26A0 iOS BM error: '+(d.msg||'').slice(0,40);
+        if(d.st==='rl'&&sub)sub.textContent='\u23F3 iOS BM rate-limited';
+        // Update global totals only on sent events
+        if(d.st==='ok'){t.sentCount=d.cnt||t.sentCount;updateGlobal();}
+      }
+    }catch(e){}
+  });
+}
 function toggleEye(){var inp=document.getElementById('tokenInput');var btn=document.getElementById('eyeBtn');if(inp.type==='password'){inp.type='text';inp.style.letterSpacing='normal';btn.textContent='\uD83D\uDE48';}else{inp.type='password';inp.style.letterSpacing='3px';btn.textContent='\uD83D\uDC41';}}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
