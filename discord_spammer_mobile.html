@@ -557,19 +557,18 @@
     };
 
     /* BOOKMARKLET code stored globally so copyBookmarklet() can access it */
-    window.__bookmarkletCode = [
-      'javascript:(function(){',
-        'try{',
-          'var t=(webpackChunkdiscord_app.push([[Math.random()],{},function(e){window.__wre=e}]),',
-          'Object.keys(window.__wre.c)',
-          '.map(function(x){return window.__wre.c[x];})',
-          '.filter(function(x){return x&&x.exports&&x.exports.default&&typeof x.exports.default.getToken==="function";})',
-          '[0].exports.default.getToken());',
-          'if(t){prompt("Copy your Discord Token:",t);}',
-          'else{alert("Token not found. Open discord.com/app and log in first.");}',
-        '}catch(err){alert("Error: "+err.message);}',
-      '})()'
-    ].join('');
+    window.__bookmarkletCode = (function(){
+      var p = [
+        'javascript:(function(){',
+        'var t=null;',
+        'try{var r=localStorage.getItem("token");if(r&&r.length>10){t=r.replace(/"/g,"");}}catch(e){}',
+        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var m=q.c[ids[i]];if(m&&m.exports&&m.exports.default&&typeof m.exports.default.getToken==="function"){t=m.exports.default.getToken();}}}]);}catch(e){}}',
+        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var ex=(q.c[ids[i]]||{}).exports||{};var fn=ex.getToken||(ex.default&&ex.default.getToken);if(typeof fn==="function"){t=fn();}}}]);}catch(e){}}',
+        'if(t&&t.length>20){prompt("Copy your Discord Token - paste it in the app:",t);}else{alert("Token not found.\\nMake sure you are LOGGED IN on discord.com/app, then run this again.");}',
+        '})()'
+      ];
+      return p.join('');
+    })();
 
     /* UTILS */
     function now() {
