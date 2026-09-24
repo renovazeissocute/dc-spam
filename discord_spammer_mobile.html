@@ -1478,12 +1478,19 @@
     function getMs(t) { var ms = t.intervalVal * t.intervalUnit; if (t.jitter) ms += (Math.random() * 2 - 1) * ms * 0.3; return Math.max(ms, 500); }
     function scheduleNext(t) { if (!t.running) return; t.timer = setTimeout(async function () { if (!t.running) return; await doSend(t); scheduleNext(t); }, getMs(t)); }
     function startTask(id) {
-      var t = tasks[id]; if (!t || t.running) return;
+      var t = tasks[id]; if (!t || t.running || _bmRunning[id]) return;
       var tok = getToken();
       if (!tok) { log('Token is empty!', 'err', t); return; }
       if (tok.length < 50) { log('Token too short \u2014 re-copy from Discord', 'err', t); return; }
       if (!t.channelId) { log('Channel ID empty', 'err', t); return; }
       if (!t.messages.length) { log('No messages in pool', 'err', t); return; }
+      // file:// origin will ALWAYS get CORS-blocked by Discord.
+      // Call bmOpenAndStart() NOW, while we're still inside the user's click event,
+      // so Safari's popup blocker allows window.open() to work.
+      if (location.protocol === 'file:') {
+        bmOpenAndStart(id);
+        return;
+      }
       t.running = true; t.sentCount = 0; t.msgIndex = 0;
       var badge = document.getElementById('tbadge-' + id); if (badge) badge.textContent = '0 sent';
       document.getElementById('startbtn-' + id).disabled = true; document.getElementById('stopbtn-' + id).disabled = false;
