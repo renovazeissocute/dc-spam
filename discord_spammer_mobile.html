@@ -11,213 +11,175 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #0a0a14;
-      --surface: #13131f;
-      --surface2: #1a1a2e;
-      --surface3: #20203a;
-      --border: rgba(99,102,241,0.18);
-      --border-active: rgba(99,102,241,0.65);
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --primary-glow: rgba(99,102,241,0.38);
-      --discord: #5865f2;
-      --green: #22c55e;
-      --green-dim: rgba(34,197,94,0.12);
-      --green-glow: rgba(34,197,94,0.3);
-      --red: #ef4444;
-      --red-dim: rgba(239,68,68,0.12);
-      --red-glow: rgba(239,68,68,0.3);
-      --yellow: #f59e0b;
-      --yellow-dim: rgba(245,158,11,0.12);
-      --text: #e2e8f0;
-      --text-muted: #64748b;
-      --text-dim: #94a3b8;
-      --radius: 16px;
-      --radius-sm: 10px;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: "Inter", sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100dvh; overflow-x: hidden;
-      padding-top: var(--safe-top);
-      padding-bottom: calc(var(--safe-bottom) + 74px);
-    }
-    body::before {
-      content: ""; position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 70% 50% at 5% 0%, rgba(99,102,241,0.15) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 60% at 95% 90%, rgba(88,101,242,0.12) 0%, transparent 55%);
-      pointer-events: none; z-index: 0;
-    }
-    .app-wrapper { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 16px; }
-    /* HEADER */
-    .header { display: flex; align-items: center; gap: 12px; padding: 18px 0 14px; }
-    .header-icon {
-      width: 46px; height: 46px;
-      background: linear-gradient(135deg, var(--discord), var(--primary));
-      border-radius: 13px; display: flex; align-items: center; justify-content: center;
-      font-size: 22px; box-shadow: 0 4px 22px rgba(88,101,242,0.45); flex-shrink: 0;
-    }
-    .header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-    .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .badge { margin-left: auto; padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; }
-    .badge-idle { background: rgba(100,116,139,0.18); color: var(--text-muted); border: 1px solid rgba(100,116,139,0.28); }
-    .badge-running { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.4); animation: pulse-badge 2s ease-in-out infinite; }
-    .badge-error { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
-    .badge-ok { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.4); }
-    @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:0.55} }
-    /* TABS */
-    .tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius); padding: 4px; margin-bottom: 18px; border: 1px solid var(--border); }
-    .tab { flex: 1; padding: 9px 0; border-radius: 12px; border: none; background: transparent; color: var(--text-muted); font-family: "Inter", sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.22s ease; }
-    .tab.active { background: linear-gradient(135deg, var(--primary), var(--discord)); color: #fff; box-shadow: 0 2px 14px var(--primary-glow); }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; animation: fadeIn 0.22s ease; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-    /* CARDS */
-    .section { margin-bottom: 14px; }
-    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 7px; padding-left: 4px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-    /* INPUTS */
-    .input-group { position: relative; margin-bottom: 12px; }
-    .input-group:last-child { margin-bottom: 0; }
-    .input-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    input[type="text"], input[type="password"], input[type="number"], textarea {
-      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text);
-      font-family: "Inter", sans-serif; font-size: 15px; padding: 12px 14px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
-    }
-    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, textarea:focus {
-      border-color: var(--border-active); box-shadow: 0 0 0 3px rgba(99,102,241,0.13);
-    }
-    textarea { resize: none; min-height: 90px; line-height: 1.55; }
-    input::placeholder, textarea::placeholder { color: var(--text-muted); }
-    .token-input { font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0.3px; }
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-    /* TOGGLE */
-    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
-    .toggle-label { font-size: 14px; font-weight: 500; }
-    .toggle-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .toggle { position: relative; width: 50px; height: 28px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; inset: 0; background: rgba(100,116,139,0.28); border-radius: 14px; cursor: pointer; transition: background 0.25s; }
-    .toggle-slider::before { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
-    .toggle input:checked + .toggle-slider { background: var(--primary); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
-    /* BUTTONS */
-    .btn { width: 100%; padding: 14px; border-radius: var(--radius); border: none; font-family: "Inter", sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; -webkit-appearance: none; letter-spacing: 0.2px; }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--discord)); color: #fff; box-shadow: 0 4px 22px var(--primary-glow); }
-    .btn-primary:active { transform: scale(0.97); }
-    .btn-success { background: linear-gradient(135deg, #16a34a, var(--green)); color: #fff; box-shadow: 0 4px 20px var(--green-glow); }
-    .btn-success:active { transform: scale(0.97); }
-    .btn-danger { background: linear-gradient(135deg, #b91c1c, var(--red)); color: #fff; box-shadow: 0 4px 20px var(--red-glow); }
-    .btn-danger:active { transform: scale(0.97); }
-    .btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1.5px solid var(--border); }
-    .btn-ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--border-active); font-size: 13px; padding: 10px; }
-    .btn-ghost:active, .btn-secondary:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none !important; }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 8px; }
-    .btn-row .btn { flex: 1; }
-    /* DELAY */
-    .delay-row { display: flex; gap: 8px; align-items: flex-end; }
-    .delay-row input { flex: 1; }
-    .delay-unit { padding: 12px 14px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-dim); white-space: nowrap; }
-    /* LOG */
-    .log-container { background: #070710; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .log-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
-    .log-title { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
-    .log-clear { font-size: 11px; cursor: pointer; padding: 4px 10px; border-radius: 6px; background: transparent; border: none; color: var(--text-muted); font-family: "Inter", sans-serif; font-weight: 500; }
-    #logOutput { height: 230px; overflow-y: auto; padding: 10px 14px; font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.75; }
-    #logOutput::-webkit-scrollbar { width: 3px; }
-    #logOutput::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
-    .log-line { display: flex; gap: 8px; align-items: flex-start; }
-    .log-time { color: #2d3748; flex-shrink: 0; }
-    .log-msg-ok { color: var(--green); }
-    .log-msg-err { color: var(--red); }
-    .log-msg-info { color: #818cf8; }
-    .log-msg-warn { color: var(--yellow); }
-    /* STATS */
-    .stats-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 10px; text-align: center; }
-    .stat-value { font-size: 24px; font-weight: 800; color: var(--primary); line-height: 1; }
-    .stat-label { font-size: 9px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
-    /* USER CHIP */
-    #userChip { display: none; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.04)); border: 1.5px solid rgba(34,197,94,0.35); border-radius: 12px; padding: 11px 14px; margin-bottom: 14px; }
-    .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--discord), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; overflow: hidden; }
-    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .user-name { font-size: 14px; font-weight: 700; }
-    .user-tag { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-    .user-dot { width: 9px; height: 9px; background: var(--green); border-radius: 50%; margin-left: auto; box-shadow: 0 0 10px var(--green); flex-shrink: 0; }
-    /* STEP GUIDE */
-    .guide-steps { display: flex; flex-direction: column; }
-    .guide-step { display: flex; }
-    .step-left { display: flex; flex-direction: column; align-items: center; width: 36px; flex-shrink: 0; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--discord)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; box-shadow: 0 2px 10px var(--primary-glow); flex-shrink: 0; z-index: 1; }
-    .step-line { width: 2px; flex: 1; min-height: 16px; background: linear-gradient(to bottom, rgba(99,102,241,0.4), rgba(99,102,241,0.05)); margin: 4px 0; }
-    .guide-step:last-child .step-line { display: none; }
-    .step-body { padding: 2px 0 20px 10px; flex: 1; }
-    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .step-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
-    .step-desc strong { color: var(--text); }
-    .step-desc code { background: var(--surface3); padding: 1px 6px; border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 11px; color: #a5b4fc; }
-    /* METHOD TABS */
-    .method-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-    .method-tab { flex: 1; padding: 9px 6px; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; color: var(--text-muted); font-family: "Inter", sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: center; line-height: 1.4; }
-    .method-tab.active { background: var(--surface2); border-color: var(--border-active); color: var(--text); }
-    .method-panel { display: none; }
-    .method-panel.active { display: block; animation: fadeIn 0.2s ease; }
-    /* BOOKMARKLET */
-    .bookmarklet-box { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(88,101,242,0.06)); border: 1.5px dashed rgba(99,102,241,0.4); border-radius: var(--radius-sm); padding: 14px; text-align: center; margin: 10px 0; }
-    .bookmarklet-label { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
-    .bookmarklet-btn { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--discord)); color: #fff; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: 0 3px 14px var(--primary-glow); user-select: none; -webkit-user-select: none; }
-    /* CODE BOX */
-    .code-box { background: #07070f; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-family: "JetBrains Mono", monospace; font-size: 11px; color: #a5b4fc; line-height: 1.7; word-break: break-all; margin: 8px 0; position: relative; padding-right: 56px; }
-    .copy-overlay { position: absolute; top: 6px; right: 6px; }
-    .copy-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 600; color: var(--primary); cursor: pointer; font-family: "Inter", sans-serif; white-space: nowrap; }
-    /* ALERTS */
-    .alert-strip { border-radius: var(--radius-sm); padding: 11px 14px; font-size: 12px; line-height: 1.55; margin-bottom: 12px; display: flex; gap: 9px; align-items: flex-start; }
-    .alert-info { background: rgba(99,102,241,0.09); border: 1px solid rgba(99,102,241,0.22); color: #a5b4fc; }
-    .alert-warn { background: var(--yellow-dim); border: 1px solid rgba(245,158,11,0.3); color: #fbbf24; }
-    .alert-ok { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.28); color: #4ade80; }
-    .divider { height: 1px; background: var(--border); margin: 14px 0; }
-    /* TOKEN PASTE */
-    .token-paste-area { position: relative; }
-    .token-paste-area input { padding-right: 50px; }
-    .paste-quick-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--primary); border: none; border-radius: 7px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #fff; }
-    .paste-quick-btn:active { opacity: 0.7; }
-    /* BOTTOM NAV */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,20,0.93); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-top: 1px solid var(--border); padding: 6px 0 calc(var(--safe-bottom) + 6px); z-index: 100; }
-    .nav-inner { max-width: 480px; margin: 0 auto; display: flex; }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-family: "Inter", sans-serif; font-size: 10px; font-weight: 600; transition: color 0.2s; }
-    .nav-btn.active { color: var(--primary); }
-    .nav-icon { font-size: 22px; line-height: 1; }
-    #channelInfo { margin-top: 10px; font-size: 12px; display: none; }
-    .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; padding-left: 2px; line-height: 1.5; }
-    .info-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; line-height: 2.2; color: var(--text-dim); }
-    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
-    .shake { animation: shake 0.4s ease; }
+    :root{--bg:#0a0a14;--surface:#13131f;--surface2:#1a1a2e;--surface3:#20203a;--border:rgba(99,102,241,0.18);--border-active:rgba(99,102,241,0.65);--primary:#6366f1;--primary-glow:rgba(99,102,241,0.38);--discord:#5865f2;--green:#22c55e;--green-dim:rgba(34,197,94,0.12);--green-glow:rgba(34,197,94,0.3);--red:#ef4444;--red-dim:rgba(239,68,68,0.12);--red-glow:rgba(239,68,68,0.3);--yellow:#f59e0b;--yellow-dim:rgba(245,158,11,0.12);--text:#e2e8f0;--text-muted:#64748b;--text-dim:#94a3b8;--radius:16px;--radius-sm:10px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    body{font-family:"Inter",sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom) + 74px);}
+    body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 5% 0%,rgba(99,102,241,0.15) 0%,transparent 55%),radial-gradient(ellipse 50% 60% at 95% 90%,rgba(88,101,242,0.12) 0%,transparent 55%);pointer-events:none;z-index:0;}
+    .app-wrapper{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 16px;}
+    .header{display:flex;align-items:center;gap:12px;padding:18px 0 14px;}
+    .header-icon{width:46px;height:46px;background:linear-gradient(135deg,var(--discord),var(--primary));border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 22px rgba(88,101,242,0.45);flex-shrink:0;}
+    .header-title{font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+    .header-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .badge{margin-left:auto;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.6px;}
+    .badge-idle{background:rgba(100,116,139,0.18);color:var(--text-muted);border:1px solid rgba(100,116,139,0.28);}
+    .badge-running{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.4);animation:pulse-badge 2s ease-in-out infinite;}
+    .badge-error{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.4);}
+    .badge-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.4);}
+    @keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:0.55}}
+    .tabs{display:flex;gap:4px;background:var(--surface);border-radius:var(--radius);padding:4px;margin-bottom:18px;border:1px solid var(--border);}
+    .tab{flex:1;padding:9px 0;border-radius:12px;border:none;background:transparent;color:var(--text-muted);font-family:"Inter",sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.22s ease;}
+    .tab.active{background:linear-gradient(135deg,var(--primary),var(--discord));color:#fff;box-shadow:0 2px 14px var(--primary-glow);}
+    .tab-panel{display:none;}.tab-panel.active{display:block;animation:fadeIn 0.22s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    .section{margin-bottom:14px;}
+    .section-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px;padding-left:4px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+    .input-group{position:relative;margin-bottom:12px;}.input-group:last-child{margin-bottom:0;}
+    .input-label{font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:7px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:0.5px;}
+    input[type="text"],input[type="password"],input[type="number"],textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:"Inter",sans-serif;font-size:15px;padding:12px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;}
+    input[type="text"]:focus,input[type="password"]:focus,input[type="number"]:focus,textarea:focus{border-color:var(--border-active);box-shadow:0 0 0 3px rgba(99,102,241,0.13);}
+    textarea{resize:none;min-height:70px;line-height:1.55;}
+    input::placeholder,textarea::placeholder{color:var(--text-muted);}
+    .token-input{font-family:"JetBrains Mono",monospace;font-size:13px;letter-spacing:0.3px;}
+    input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+    .toggle-label{font-size:14px;font-weight:500;}
+    .toggle{position:relative;width:50px;height:28px;}.toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:rgba(100,116,139,0.28);border-radius:14px;cursor:pointer;transition:background 0.25s;}
+    .toggle-slider::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 5px rgba(0,0,0,0.4);}
+    .toggle input:checked+.toggle-slider{background:var(--primary);}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(22px);}
+    .btn{width:100%;padding:14px;border-radius:var(--radius);border:none;font-family:"Inter",sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s ease;-webkit-appearance:none;letter-spacing:0.2px;}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--discord));color:#fff;box-shadow:0 4px 22px var(--primary-glow);}
+    .btn-primary:active{transform:scale(0.97);}
+    .btn-success{background:linear-gradient(135deg,#16a34a,var(--green));color:#fff;box-shadow:0 4px 20px var(--green-glow);}
+    .btn-success:active{transform:scale(0.97);}
+    .btn-danger{background:linear-gradient(135deg,#b91c1c,var(--red));color:#fff;box-shadow:0 4px 20px var(--red-glow);}
+    .btn-danger:active{transform:scale(0.97);}
+    .btn-secondary{background:var(--surface2);color:var(--text-dim);border:1.5px solid var(--border);}
+    .btn-ghost{background:transparent;color:var(--primary);border:1.5px solid var(--border-active);font-size:13px;padding:10px;}
+    .btn-ghost:active,.btn-secondary:active{transform:scale(0.97);}
+    .btn:disabled{opacity:0.38;cursor:not-allowed;transform:none !important;}
+    .btn-row{display:flex;gap:10px;margin-bottom:8px;}.btn-row .btn{flex:1;}
+    .btn-sm{padding:8px 14px;font-size:13px;border-radius:10px;}
+    .log-container{background:#070710;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+    .log-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);}
+    .log-title{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.8px;text-transform:uppercase;}
+    .log-clear{font-size:11px;cursor:pointer;padding:4px 10px;border-radius:6px;background:transparent;border:none;color:var(--text-muted);font-family:"Inter",sans-serif;font-weight:500;}
+    #logOutput{height:240px;overflow-y:auto;padding:10px 14px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.75;}
+    #logOutput::-webkit-scrollbar{width:3px;}
+    #logOutput::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.3);border-radius:2px;}
+    .log-line{display:flex;gap:8px;align-items:flex-start;}
+    .log-time{color:#2d3748;flex-shrink:0;}
+    .log-msg-ok{color:var(--green);}.log-msg-err{color:var(--red);}.log-msg-info{color:#818cf8;}.log-msg-warn{color:var(--yellow);}
+    .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 10px;text-align:center;}
+    .stat-value{font-size:24px;font-weight:800;color:var(--primary);line-height:1;}
+    .stat-label{font-size:9px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.8px;}
+    #userChip{display:none;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(34,197,94,0.04));border:1.5px solid rgba(34,197,94,0.35);border-radius:12px;padding:11px 14px;margin-bottom:14px;}
+    .user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--discord),var(--primary));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;}
+    .user-avatar img{width:100%;height:100%;object-fit:cover;}
+    .user-name{font-size:14px;font-weight:700;}.user-tag{font-size:11px;color:var(--text-muted);margin-top:1px;}
+    .user-dot{width:9px;height:9px;background:var(--green);border-radius:50%;margin-left:auto;box-shadow:0 0 10px var(--green);flex-shrink:0;}
+    .guide-steps{display:flex;flex-direction:column;}
+    .guide-step{display:flex;}
+    .step-left{display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0;}
+    .step-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--discord));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;box-shadow:0 2px 10px var(--primary-glow);flex-shrink:0;z-index:1;}
+    .step-line{width:2px;flex:1;min-height:16px;background:linear-gradient(to bottom,rgba(99,102,241,0.4),rgba(99,102,241,0.05));margin:4px 0;}
+    .guide-step:last-child .step-line{display:none;}
+    .step-body{padding:2px 0 20px 10px;flex:1;}
+    .step-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+    .step-desc{font-size:12px;color:var(--text-dim);line-height:1.6;}
+    .step-desc strong{color:var(--text);}
+    .step-desc code{background:var(--surface3);padding:1px 6px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#a5b4fc;}
+    .method-tabs{display:flex;gap:6px;margin-bottom:14px;}
+    .method-tab{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:"Inter",sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s ease;text-align:center;line-height:1.4;}
+    .method-tab.active{background:var(--surface2);border-color:var(--border-active);color:var(--text);}
+    .method-panel{display:none;}.method-panel.active{display:block;animation:fadeIn 0.2s ease;}
+    .bookmarklet-box{background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(88,101,242,0.06));border:1.5px dashed rgba(99,102,241,0.4);border-radius:var(--radius-sm);padding:14px;text-align:center;margin:10px 0;}
+    .bookmarklet-label{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
+    .bookmarklet-btn{display:inline-block;background:linear-gradient(135deg,var(--primary),var(--discord));color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 3px 14px var(--primary-glow);user-select:none;-webkit-user-select:none;}
+    .code-box{background:#07070f;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#a5b4fc;line-height:1.7;word-break:break-all;margin:8px 0;position:relative;padding-right:56px;}
+    .copy-overlay{position:absolute;top:6px;right:6px;}
+    .copy-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--primary);cursor:pointer;font-family:"Inter",sans-serif;white-space:nowrap;}
+    .alert-strip{border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;line-height:1.55;margin-bottom:12px;display:flex;gap:9px;align-items:flex-start;}
+    .alert-info{background:rgba(99,102,241,0.09);border:1px solid rgba(99,102,241,0.22);color:#a5b4fc;}
+    .alert-warn{background:var(--yellow-dim);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;}
+    .alert-ok{background:var(--green-dim);border:1px solid rgba(34,197,94,0.28);color:#4ade80;}
+    .divider{height:1px;background:var(--border);margin:14px 0;}
+    .token-paste-area{position:relative;}.token-paste-area input{padding-right:50px;}
+    .paste-quick-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--primary);border:none;border-radius:7px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;}
+    .paste-quick-btn:active{opacity:0.7;}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,20,0.93);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);padding:6px 0 calc(var(--safe-bottom) + 6px);z-index:100;}
+    .nav-inner{max-width:480px;margin:0 auto;display:flex;}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;background:transparent;border:none;cursor:pointer;color:var(--text-muted);font-family:"Inter",sans-serif;font-size:10px;font-weight:600;transition:color 0.2s;}
+    .nav-btn.active{color:var(--primary);}
+    .nav-icon{font-size:22px;line-height:1;}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+    .shake{animation:shake 0.4s ease;}
+    /* JOBS */
+    .global-bar{display:flex;gap:8px;margin-bottom:16px;}
+    .add-job-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--primary),var(--discord));color:#fff;font-family:"Inter",sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px var(--primary-glow);transition:all 0.2s;flex:1;}
+    .add-job-btn:active{transform:scale(0.96);}
+    .global-stop-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 16px;border-radius:12px;border:none;background:linear-gradient(135deg,#b91c1c,var(--red));color:#fff;font-family:"Inter",sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px var(--red-glow);transition:all 0.2s;}
+    .global-stop-btn:active{transform:scale(0.96);}
+    .no-jobs{text-align:center;padding:40px 20px;color:var(--text-muted);}
+    .no-jobs .nj-icon{font-size:48px;margin-bottom:14px;opacity:0.5;}
+    .no-jobs .nj-text{font-size:14px;font-weight:600;margin-bottom:6px;}
+    .no-jobs .nj-sub{font-size:12px;}
+    .job-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;transition:border-color 0.25s;}
+    .job-card.jrunning{border-color:rgba(34,197,94,0.5);}
+    .job-card.jerror{border-color:rgba(239,68,68,0.5);}
+    .job-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);cursor:pointer;user-select:none;-webkit-user-select:none;}
+    .job-num{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--discord));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+    .job-title-lbl{font-size:13px;font-weight:700;flex:1;}
+    .jdot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;transition:background 0.3s;}
+    .jdot.jrunning{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-badge 1.5s infinite;}
+    .jdot.jerror{background:var(--red);}
+    .jcaret{font-size:11px;color:var(--text-muted);transition:transform 0.25s;}
+    .job-card.collapsed .jcaret{transform:rotate(-90deg);}
+    .job-body{padding:14px;display:flex;flex-direction:column;gap:10px;}
+    .job-card.collapsed .job-body{display:none;}
+    .jfield{display:flex;flex-direction:column;gap:5px;}
+    .jfield label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--text-muted);}
+    .jfield input,.jfield textarea{font-size:14px;padding:10px 12px;}
+    .jfield textarea{min-height:60px;}
+    .jrow{display:flex;gap:8px;}.jrow .jfield{flex:1;}
+    .jcontrols{display:flex;gap:8px;}
+    .jcontrols .btn{padding:10px 0;font-size:13px;border-radius:10px;}
+    .jstats{display:flex;gap:6px;}
+    .jstat{flex:1;background:var(--surface3);border-radius:8px;padding:7px 6px;text-align:center;}
+    .jstat-val{font-size:18px;font-weight:800;color:var(--primary);line-height:1;}
+    .jstat-val.red{color:var(--red);}.jstat-val.yellow{color:var(--yellow);}
+    .jstat-lbl{font-size:9px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.7px;}
+    .jtok-wrap{position:relative;}.jtok-wrap input{padding-right:46px;}
+    .jtok-paste{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--primary);border:none;border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:#fff;}
+    .jtok-paste:active{opacity:0.7;}
+    .job-chips{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .job-chip{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+    .job-chip.jrunning{border-color:rgba(34,197,94,0.4);}
+    .job-chip.jerror{border-color:rgba(239,68,68,0.4);}
+    .chip-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
+    .chip-dot.jrunning{background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse-badge 1.5s infinite;}
+    .chip-dot.jerror{background:var(--red);}
+    .chip-lbl{font-size:12px;font-weight:700;flex:1;}
+    .chip-stats{font-size:11px;color:var(--text-muted);font-family:"JetBrains Mono",monospace;}
   </style>
 </head>
 <body>
   <div class="app-wrapper">
-    <!-- HEADER -->
     <div class="header">
       <div class="header-icon">&#9889;</div>
       <div>
         <div class="header-title">Discord Sender</div>
-        <div class="header-sub">Auto Message Tool &middot; iOS Edition</div>
+        <div class="header-sub">Multi-Job Auto Message &middot; iOS Edition</div>
       </div>
       <div class="badge badge-idle" id="statusBadge">IDLE</div>
     </div>
 
-    <!-- TOP TABS -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('auth')" id="tab-auth">&#128273; Auth</button>
-      <button class="tab" onclick="switchTab('send')" id="tab-send">&#128232; Send</button>
+      <button class="tab" onclick="switchTab('jobs')" id="tab-jobs">&#9889; Jobs</button>
       <button class="tab" onclick="switchTab('monitor')" id="tab-monitor">&#128202; Monitor</button>
     </div>
 
@@ -231,661 +193,389 @@
         </div>
         <div class="user-dot"></div>
       </div>
-
       <div class="section">
-        <div class="section-label">Your Token</div>
+        <div class="section-label">Default Token</div>
         <div class="card">
           <div class="input-group">
             <div class="input-label">&#128272; Paste Token Here</div>
             <div class="token-paste-area">
-              <input type="password" id="tokenInput" class="token-input"
-                placeholder="Paste your Discord token..."
-                autocomplete="off" autocorrect="off" spellcheck="false" />
-              <button class="paste-quick-btn" onclick="pasteFromClipboard()" title="Paste from clipboard">&#128203;</button>
+              <input type="password" id="tokenInput" class="token-input" placeholder="Paste your Discord token..." autocomplete="off" autocorrect="off" spellcheck="false" />
+              <button class="paste-quick-btn" onclick="pasteClip('tokenInput')">&#128203;</button>
             </div>
           </div>
           <div class="toggle-row" style="margin-top:10px;">
             <div class="toggle-label" style="font-size:13px;">Show token</div>
             <label class="toggle">
-              <input type="checkbox" id="showToken" onchange="toggleTokenVisibility()" />
+              <input type="checkbox" id="showToken" onchange="document.getElementById('tokenInput').type=this.checked?'text':'password'" />
               <span class="toggle-slider"></span>
             </label>
           </div>
         </div>
-        <button class="btn btn-primary" id="verifyBtn" onclick="verifyToken()" style="margin-top:10px;">
-          &#10003; Verify &amp; Connect
-        </button>
+        <button class="btn btn-primary" id="verifyBtn" onclick="verifyToken()" style="margin-top:10px;">&#10003; Verify &amp; Connect</button>
       </div>
-
-      <!-- HOW TO GET TOKEN -->
       <div class="section">
         <div class="section-label">How to get your token</div>
         <div class="method-tabs">
-          <button class="method-tab active" onclick="switchMethod('bookmarklet')" id="mtab-bookmarklet">
-            &#128204; Bookmarklet<br>
-            <span style="font-size:10px;font-weight:400;color:#4ade80;">&#10003; Easiest (iPhone)</span>
-          </button>
-          <button class="method-tab" onclick="switchMethod('safari')" id="mtab-safari">
-            &#63743; Safari Dev<br>
-            <span style="font-size:10px;font-weight:400;color:var(--text-muted);">Mac needed</span>
-          </button>
-          <button class="method-tab" onclick="switchMethod('desktop')" id="mtab-desktop">
-            &#128421; Desktop<br>
-            <span style="font-size:10px;font-weight:400;color:var(--text-muted);">PC/Mac</span>
-          </button>
+          <button class="method-tab active" onclick="switchMethod('bookmarklet')" id="mtab-bookmarklet">&#128204; Bookmarklet<br><span style="font-size:10px;font-weight:400;color:#4ade80;">&#10003; Easiest (iPhone)</span></button>
+          <button class="method-tab" onclick="switchMethod('safari')" id="mtab-safari">&#63743; Safari Dev<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">Mac needed</span></button>
+          <button class="method-tab" onclick="switchMethod('desktop')" id="mtab-desktop">&#128421; Desktop<br><span style="font-size:10px;font-weight:400;color:var(--text-muted);">PC/Mac</span></button>
         </div>
-
-        <!-- METHOD 1: BOOKMARKLET (EASIEST FOR iOS) -->
         <div class="method-panel active card" id="mpanel-bookmarklet">
-          <div class="alert-strip alert-ok" style="margin-bottom:14px;">
-            <span>&#9989;</span>
-            <div>Works 100% on iPhone Safari &mdash; no Mac or PC needed!</div>
-          </div>
+          <div class="alert-strip alert-ok" style="margin-bottom:14px;"><span>&#9989;</span><div>Works 100% on iPhone Safari — no Mac or PC needed!</div></div>
           <div class="guide-steps">
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Copy the bookmarklet code</div>
-                <div class="step-desc">Tap the button below to copy the extractor code to your clipboard.</div>
-                <div class="bookmarklet-box" style="margin-top:10px;">
-                  <div class="bookmarklet-label">Tap to copy the code</div>
-                  <button class="bookmarklet-btn" id="copyBmBtn" onclick="copyBookmarklet()">&#128203; Copy Extractor Code</button>
-                </div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Bookmark any page</div>
-                <div class="step-desc">
-                  Open <strong>any webpage</strong> in Safari (e.g. google.com).<br>
-                  Tap the <strong>Share &#9650;</strong> button &rarr; tap <strong>&ldquo;Add Bookmark&rdquo;</strong>.<br>
-                  Name it <code>DC Token</code> &rarr; tap <strong>Save</strong>.
-                </div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Edit that bookmark&rsquo;s URL</div>
-                <div class="step-desc">
-                  Tap the <strong>&#128216; Bookmarks</strong> icon &rarr; find <code>DC Token</code> &rarr; <strong>swipe left</strong> &rarr; tap <strong>Edit</strong>.<br>
-                  Clear the <strong>URL field</strong> &rarr; long-press &rarr; <strong>Paste</strong> the code you copied in Step 1.<br>
-                  Tap <strong>Done</strong> to save.
-                </div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Run it on discord.com/app</div>
-                <div class="step-desc">
-                  Go to <strong>discord.com/app</strong> in Safari and log in.<br>
-                  Tap the address bar &rarr; tap <strong>Bookmarks</strong> &rarr; tap <code>DC Token</code>.<br>
-                  A popup shows your token &mdash; tap <strong>Copy</strong>.
-                </div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Return here &amp; paste</div>
-                <div class="step-desc">
-                  Come back to this app &rarr; tap <strong>&#128203;</strong> &rarr; tap <strong>Verify &amp; Connect</strong>.
-                </div>
-              </div>
-            </div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Copy the bookmarklet code</div><div class="step-desc">Tap the button below to copy the extractor code to your clipboard.</div><div class="bookmarklet-box" style="margin-top:10px;"><div class="bookmarklet-label">Tap to copy the code</div><button class="bookmarklet-btn" id="copyBmBtn" onclick="copyBookmarklet()">&#128203; Copy Extractor Code</button></div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Bookmark any page</div><div class="step-desc">Open <strong>any webpage</strong> in Safari (e.g. google.com). Tap <strong>Share &#9650;</strong> &rarr; <strong>Add Bookmark</strong>. Name it <code>DC Token</code> &rarr; Save.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Edit that bookmark URL</div><div class="step-desc">Tap <strong>&#128216; Bookmarks</strong> &rarr; find <code>DC Token</code> &rarr; swipe left &rarr; <strong>Edit</strong>. Clear the URL field &rarr; long-press &rarr; <strong>Paste</strong>. Tap <strong>Done</strong>.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Run it on discord.com/app</div><div class="step-desc">Go to <strong>discord.com/app</strong> in Safari and log in. Tap the address bar &rarr; Bookmarks &rarr; <code>DC Token</code>. A popup shows your token — tap <strong>Copy</strong>.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Return here &amp; paste</div><div class="step-desc">Tap &#128203; in the token field above &rarr; <strong>Verify &amp; Connect</strong>.</div></div></div>
           </div>
-          <div class="alert-strip alert-warn" style="margin-top:4px;margin-bottom:0;">
-            <span>&#9888;</span>
-            <div>Never share your token. It gives full access to your Discord account.</div>
-          </div>
+          <div class="alert-strip alert-warn" style="margin-top:4px;margin-bottom:0;"><span>&#9888;</span><div>Never share your token. It gives full access to your Discord account.</div></div>
         </div>
-
-        <!-- METHOD 2: SAFARI WEB INSPECTOR -->
         <div class="method-panel card" id="mpanel-safari">
-          <div class="alert-strip alert-info" style="margin-bottom:14px;">
-            <span>&#8505;</span>
-            <div>Requires a Mac. Connect iPhone via USB first.</div>
-          </div>
+          <div class="alert-strip alert-info" style="margin-bottom:14px;"><span>&#8505;</span><div>Requires a Mac. Connect iPhone via USB first.</div></div>
           <div class="guide-steps">
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Enable Web Inspector on iPhone</div>
-                <div class="step-desc"><strong>Settings</strong> &rarr; <strong>Safari</strong> &rarr; <strong>Advanced</strong> &rarr; turn on <strong>Web Inspector</strong>.</div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Connect via Mac Safari</div>
-                <div class="step-desc">On Mac: <strong>Safari</strong> &rarr; <strong>Develop</strong> &rarr; select your iPhone &rarr; select the <strong>discord.com</strong> tab.</div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Paste in Console tab</div>
-                <div class="step-desc">Click <strong>Console</strong>, paste this and hit Enter:</div>
-                <div class="code-box" id="consoleCode">(webpackChunkdiscord_app.push([[Math.random()],{},e=>{window.__wre=e}]),Object.keys(window.__wre.c).map(x=>window.__wre.c[x]).find(x=>x?.exports?.default?.getToken?.())?.exports?.default?.getToken?.())<div class="copy-overlay"><button class="copy-btn" onclick="copyCode('consoleCode',this)">Copy</button></div></div>
-                <div class="step-desc">The string that appears is your token.</div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Send token to iPhone</div>
-                <div class="step-desc">AirDrop or iMessage it to yourself &rarr; copy &rarr; paste in token field above.</div>
-              </div>
-            </div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Enable Web Inspector on iPhone</div><div class="step-desc"><strong>Settings</strong> &rarr; <strong>Safari</strong> &rarr; <strong>Advanced</strong> &rarr; turn on <strong>Web Inspector</strong>.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Connect via Mac Safari</div><div class="step-desc">On Mac: <strong>Safari</strong> &rarr; <strong>Develop</strong> &rarr; select your iPhone &rarr; select the <strong>discord.com</strong> tab.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Paste in Console tab</div><div class="code-box" id="consoleCode">(webpackChunkdiscord_app.push([[Math.random()],{},e=>{window.__wre=e}]),Object.keys(window.__wre.c).map(x=>window.__wre.c[x]).find(x=>x?.exports?.default?.getToken?.())?.exports?.default?.getToken?.())<div class="copy-overlay"><button class="copy-btn" onclick="copyCode('consoleCode',this)">Copy</button></div></div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Send token to iPhone</div><div class="step-desc">AirDrop or iMessage it to yourself &rarr; copy on iPhone &rarr; paste in token field above.</div></div></div>
           </div>
         </div>
-
-        <!-- METHOD 3: DESKTOP -->
         <div class="method-panel card" id="mpanel-desktop">
           <div class="guide-steps">
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Open discord.com/app on PC/Mac</div>
-                <div class="step-desc">Use Chrome or Firefox. Log in to your account.</div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Open DevTools Console</div>
-                <div class="step-desc">Press <code>F12</code> (Windows) or <code>Cmd+Option+J</code> (Mac) &rarr; click <strong>Console</strong> tab.</div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Run the token extractor</div>
-                <div class="code-box" id="desktopCode">(webpackChunkdiscord_app.push([[Math.random()],{},e=>{window.__wre=e}]),Object.keys(window.__wre.c).map(x=>window.__wre.c[x]).find(x=>x?.exports?.default?.getToken?.())?.exports?.default?.getToken?.())<div class="copy-overlay"><button class="copy-btn" onclick="copyCode('desktopCode',this)">Copy</button></div></div>
-              </div>
-            </div>
-            <div class="guide-step">
-              <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
-              <div class="step-body">
-                <div class="step-title">Transfer token to your iPhone</div>
-                <div class="step-desc">Send via iMessage or WhatsApp to yourself &rarr; copy it on iPhone &rarr; paste in the token field above.</div>
-              </div>
-            </div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Open discord.com/app on PC/Mac</div><div class="step-desc">Use Chrome or Firefox. Log in to your account.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Open DevTools Console</div><div class="step-desc">Press <code>F12</code> (Windows) or <code>Cmd+Option+J</code> (Mac) &rarr; click <strong>Console</strong> tab.</div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Run the token extractor</div><div class="code-box" id="desktopCode">(webpackChunkdiscord_app.push([[Math.random()],{},e=>{window.__wre=e}]),Object.keys(window.__wre.c).map(x=>window.__wre.c[x]).find(x=>x?.exports?.default?.getToken?.())?.exports?.default?.getToken?.())<div class="copy-overlay"><button class="copy-btn" onclick="copyCode('desktopCode',this)">Copy</button></div></div></div></div>
+            <div class="guide-step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Transfer token to iPhone</div><div class="step-desc">Send via iMessage or WhatsApp to yourself &rarr; copy it on iPhone &rarr; paste in the token field above.</div></div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- SEND TAB -->
-    <div class="tab-panel" id="panel-send">
-      <div class="section">
-        <div class="section-label">Target Channel</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#128226; Channel ID</div>
-            <input type="text" id="channelIdInput" placeholder="e.g. 1234567890123456789"
-              inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />
-          </div>
-          <button class="btn btn-ghost" style="margin-top:6px;" onclick="fetchChannelInfo()">Verify Channel</button>
-          <div id="channelInfo"></div>
-          <div class="hint">&#128161; Enable Developer Mode in Discord &rarr; long-press any channel &rarr; Copy ID</div>
-        </div>
+    <!-- JOBS TAB -->
+    <div class="tab-panel" id="panel-jobs">
+      <div class="global-bar">
+        <button class="add-job-btn" onclick="addJob()">&#43; Add Job</button>
+        <button class="global-stop-btn" onclick="stopAllJobs()">&#9209; Stop All</button>
       </div>
-
-      <div class="section">
-        <div class="section-label">Message</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#128172; Content</div>
-            <textarea id="messageContent" placeholder="Type your message here..." maxlength="2000"></textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px;" id="charCount">0 / 2000</div>
-          </div>
-          <div class="divider"></div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Randomize suffix</div>
-              <div class="toggle-sub">Appends random 4-char string each send</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="randomizeMsg" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
+      <div id="jobsContainer">
+        <div class="no-jobs" id="noJobsMsg">
+          <div class="nj-icon">&#9889;</div>
+          <div class="nj-text">No jobs yet</div>
+          <div class="nj-sub">Tap "+ Add Job" to create a send job</div>
         </div>
-      </div>
-
-      <div class="section">
-        <div class="section-label">Timing</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#9201; Delay between sends</div>
-            <div class="delay-row">
-              <input type="number" id="delayInput" value="5" min="1" max="86400" inputmode="numeric" />
-              <div class="delay-unit">seconds</div>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Limit total sends</div>
-              <div class="toggle-sub">Stop after N messages</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="limitToggle" onchange="toggleLimit()" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div id="limitRow" style="margin-top:12px;display:none;">
-            <div class="input-label">Max messages</div>
-            <input type="number" id="limitCount" value="10" min="1" max="99999" inputmode="numeric" />
-          </div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-success" id="startBtn" onclick="startSending()">&#9654; Start</button>
-        <button class="btn btn-danger" id="stopBtn" onclick="stopSending()" disabled>&#9209; Stop</button>
       </div>
     </div>
 
     <!-- MONITOR TAB -->
     <div class="tab-panel" id="panel-monitor">
       <div class="stats-bar">
-        <div class="stat-card">
-          <div class="stat-value" id="statSent">0</div>
-          <div class="stat-label">Sent</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statFailed" style="color:var(--red);">0</div>
-          <div class="stat-label">Failed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statNext" style="color:var(--yellow);">---</div>
-          <div class="stat-label">Next (s)</div>
+        <div class="stat-card"><div class="stat-value" id="statSent">0</div><div class="stat-label">Total Sent</div></div>
+        <div class="stat-card"><div class="stat-value" id="statFailed" style="color:var(--red);">0</div><div class="stat-label">Failed</div></div>
+        <div class="stat-card"><div class="stat-value" id="statJobs" style="color:var(--yellow);">0</div><div class="stat-label">Active Jobs</div></div>
+      </div>
+      <div class="section">
+        <div class="section-label">Job Overview</div>
+        <div id="jobChips" class="job-chips">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px 0;">No jobs yet</div>
         </div>
       </div>
       <div class="section">
         <div class="log-container">
-          <div class="log-header">
-            <span class="log-title">Live Log</span>
-            <button class="log-clear" onclick="clearLog()">Clear</button>
-          </div>
+          <div class="log-header"><span class="log-title">Live Log</span><button class="log-clear" onclick="clearLog()">Clear</button></div>
           <div id="logOutput">
-            <div class="log-line">
-              <span class="log-time">--:--:--</span>
-              <span class="log-msg-info">Ready &mdash; connect token to begin.</span>
-            </div>
+            <div class="log-line"><span class="log-time">--:--:--</span><span class="log-msg-info">Ready — add a job to begin.</span></div>
           </div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-label">Session Info</div>
-        <div class="card">
-          <div class="info-row"><span>Status</span><span id="infoStatus" style="color:var(--text);">Idle</span></div>
-          <div class="info-row"><span>Channel</span><span id="infoChannel" style="color:var(--text);">---</span></div>
-          <div class="info-row"><span>Session start</span><span id="infoStart" style="color:var(--text);">---</span></div>
-          <div class="info-row"><span>Elapsed</span><span id="infoElapsed" style="color:var(--text);">---</span></div>
-          <div class="info-row"><span>Success rate</span><span id="infoRate" style="color:var(--green);">---</span></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <div class="nav-inner">
-      <button class="nav-btn active" onclick="switchTab('auth')" id="nav-auth">
-        <span class="nav-icon">&#128273;</span> Auth
-      </button>
-      <button class="nav-btn" onclick="switchTab('send')" id="nav-send">
-        <span class="nav-icon">&#128232;</span> Send
-      </button>
-      <button class="nav-btn" onclick="switchTab('monitor')" id="nav-monitor">
-        <span class="nav-icon">&#128202;</span> Monitor
-      </button>
+      <button class="nav-btn active" onclick="switchTab('auth')" id="nav-auth"><span class="nav-icon">&#128273;</span>Auth</button>
+      <button class="nav-btn" onclick="switchTab('jobs')" id="nav-jobs"><span class="nav-icon">&#9889;</span>Jobs</button>
+      <button class="nav-btn" onclick="switchTab('monitor')" id="nav-monitor"><span class="nav-icon">&#128202;</span>Monitor</button>
     </div>
   </nav>
 
   <script>
-    /* STATE */
-    var state = {
-      token: null, running: false,
-      timer: null, countdownTimer: null, elapsedTimer: null,
-      sent: 0, failed: 0, startTime: null
-    };
+    var defaultToken=null,jobs=[],jobIdSeq=0;
 
-    /* BOOKMARKLET code stored globally so copyBookmarklet() can access it */
-    window.__bookmarkletCode = (function(){
-      var p = [
-        'javascript:(function(){',
-        'var t=null;',
-        'try{var r=localStorage.getItem("token");if(r&&r.length>10){t=r.replace(/"/g,"");}}catch(e){}',
-        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var m=q.c[ids[i]];if(m&&m.exports&&m.exports.default&&typeof m.exports.default.getToken==="function"){t=m.exports.default.getToken();}}}]);}catch(e){}}',
-        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var ex=(q.c[ids[i]]||{}).exports||{};var fn=ex.getToken||(ex.default&&ex.default.getToken);if(typeof fn==="function"){t=fn();}}}]);}catch(e){}}',
-        'if(t&&t.length>20){prompt("Copy your Discord Token - paste it in the app:",t);}else{alert("Token not found.\\nMake sure you are LOGGED IN on discord.com/app, then run this again.");}',
+    // bookmarklet stored split to avoid issues
+    window.__bookmarkletCode=(function(){
+      var p=[
+        'javascript:(function(){var t=null;',
+        'try{var r=localStorage.getItem(\'token\');if(r&&r.length>20){t=r.replace(/"/g,"");}}catch(e){}',
+        'if(!t){try{var re=/[A-Za-z0-9]{24,26}\\.[A-Za-z0-9_-]{6}\\.[A-Za-z0-9_-]{25,45}/;',
+        'for(var k in localStorage){var v=localStorage[k];if(typeof v===\'string\'&&re.test(v)){t=v.match(re)[0];break;}}}catch(e){}}',
+        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){',
+        'var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var m=q.c[ids[i]];',
+        'if(m&&m.exports&&m.exports.default&&typeof m.exports.default.getToken===\'function\'){t=m.exports.default.getToken();}}}]);}catch(e){}}',
+        'if(t&&t.length>20){try{navigator.clipboard.writeText(t);}catch(e){}',
+        'document.location=\'data:text/html,<meta name=viewport content=width=device-width,initial-scale=1>\'',
+        '+\'<style>body{font-family:sans-serif;background:%230a0a14;color:%23e2e8f0;padding:20px}\'',
+        '+\'h2{color:%236366f1}.box{background:%2307070f;border:1px solid %236366f1;border-radius:10px;padding:14px;font-family:monospace;font-size:13px;word-break:break-all;color:%23a5b4fc;margin:12px 0}\'',
+        '+\'p{font-size:13px;color:%2394a3b8;line-height:1.6}.ok{color:%2322c55e}</style>\'',
+        '+\'<h2>Token Found!</h2><div class=box>\'+encodeURIComponent(t)+\'</div>\'',
+        '+\'<p class=ok>Copied to clipboard</p><p>Long-press token to copy, go back to app, paste and verify.</p>\';}',
+        'else{alert("Token not found. Make sure you are logged in on discord.com/app.");}',
         '})()'
       ];
       return p.join('');
     })();
 
-    /* UTILS */
-    function now() {
-      return new Date().toLocaleTimeString('en-GB', { hour12: false });
+    function nowStr(){return new Date().toLocaleTimeString('en-GB',{hour12:false});}
+
+    function log(msg,type,lbl){
+      type=type||'info';
+      var el=document.getElementById('logOutput');
+      var ln=document.createElement('div');ln.className='log-line';
+      var prefix=lbl?'['+lbl+'] ':'';
+      ln.innerHTML='<span class="log-time">'+nowStr()+'</span><span class="log-msg-'+type+'">'+prefix+msg+'</span>';
+      el.appendChild(ln);el.scrollTop=el.scrollHeight;
+      while(el.children.length>500)el.removeChild(el.children[0]);
+    }
+    function clearLog(){document.getElementById('logOutput').innerHTML='';log('Log cleared.','info');}
+
+    function updateGlobalStats(){
+      var sent=0,failed=0,active=0;
+      jobs.forEach(function(j){sent+=j.sent;failed+=j.failed;if(j.running)active++;});
+      document.getElementById('statSent').textContent=sent;
+      document.getElementById('statFailed').textContent=failed;
+      document.getElementById('statJobs').textContent=active;
+      var b=document.getElementById('statusBadge');
+      if(active>0){b.className='badge badge-running';b.textContent=active+' RUNNING';}
+      else if(defaultToken){b.className='badge badge-ok';b.textContent='OK';}
+      else{b.className='badge badge-idle';b.textContent='IDLE';}
+      renderChips();
     }
 
-    function log(msg, type) {
-      type = type || 'info';
-      var el = document.getElementById('logOutput');
-      var line = document.createElement('div');
-      line.className = 'log-line';
-      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-' + type + '">' + msg + '</span>';
-      el.appendChild(line);
-      el.scrollTop = el.scrollHeight;
-      while (el.children.length > 300) el.removeChild(el.children[0]);
-    }
-
-    function clearLog() {
-      document.getElementById('logOutput').innerHTML = '';
-      log('Log cleared.', 'info');
-    }
-
-    /* COPY BOOKMARKLET CODE to clipboard */
-    function copyBookmarklet() {
-      var code = window.__bookmarkletCode;
-      var btn = document.getElementById('copyBmBtn');
-      function onSuccess() {
-        btn.textContent = '\u2713 Copied! Now go to Step 2';
-        btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
-        setTimeout(function() {
-          btn.innerHTML = '&#128203; Copy Extractor Code';
-          btn.style.background = '';
-        }, 3000);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(onSuccess).catch(function() {
-          fallbackCopy(code, onSuccess);
-        });
-      } else {
-        fallbackCopy(code, onSuccess);
-      }
-    }
-
-    function fallbackCopy(text, cb) {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      try { document.execCommand('copy'); if (cb) cb(); }
-      catch(e) { alert('Could not auto-copy. Please manually copy the code from the Desktop method tab.'); }
-      document.body.removeChild(ta);
-    }
-
-    /* CLIPBOARD PASTE BUTTON */
-    function pasteFromClipboard() {
-      var field = document.getElementById('tokenInput');
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        navigator.clipboard.readText()
-          .then(function(text) {
-            if (text && text.trim()) {
-              field.value = text.trim();
-              log('Pasted token from clipboard.', 'info');
-            } else {
-              alert('Clipboard appears to be empty. Copy your token first.');
-            }
-          })
-          .catch(function() {
-            field.focus();
-            alert('Clipboard permission denied.\nTap the token field and long-press \u2192 Paste.');
-          });
-      } else {
-        field.focus();
-        alert('Tap the token field and long-press \u2192 Paste');
-      }
-    }
-
-    /* COPY CODE SNIPPETS */
-    function copyCode(elId, btn) {
-      var el = document.getElementById(elId);
-      var text = '';
-      for (var i = 0; i < el.childNodes.length; i++) {
-        if (el.childNodes[i].nodeType === 3) text += el.childNodes[i].textContent;
-      }
-      text = text.trim();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-          btn.textContent = 'Copied!';
-          btn.style.color = 'var(--green)';
-          setTimeout(function() { btn.textContent = 'Copy'; btn.style.color = ''; }, 2200);
-        });
-      } else {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = 'Copy'; }, 2200);
-      }
-    }
-
-    /* TAB SWITCHING */
-    function switchTab(name) {
-      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-      document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-      document.getElementById('panel-' + name).classList.add('active');
-      document.getElementById('tab-' + name).classList.add('active');
-      document.getElementById('nav-' + name).classList.add('active');
-    }
-
-    function switchMethod(name) {
-      document.querySelectorAll('.method-tab').forEach(function(t) { t.classList.remove('active'); });
-      document.querySelectorAll('.method-panel').forEach(function(p) { p.classList.remove('active'); });
-      document.getElementById('mtab-' + name).classList.add('active');
-      document.getElementById('mpanel-' + name).classList.add('active');
-    }
-
-    function toggleTokenVisibility() {
-      document.getElementById('tokenInput').type =
-        document.getElementById('showToken').checked ? 'text' : 'password';
-    }
-
-    /* AUTH */
-    function verifyToken() {
-      var t = document.getElementById('tokenInput').value.trim();
-      if (!t) { alert('Please paste a token first.'); return; }
-      var btn = document.getElementById('verifyBtn');
-      btn.textContent = 'Verifying...';
-      btn.disabled = true;
-      fetch('https://discord.com/api/v10/users/@me', { headers: { Authorization: t } })
-        .then(function(res) {
-          if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'HTTP ' + res.status); });
-          return res.json();
-        })
-        .then(function(user) {
-          state.token = t;
-          document.getElementById('userChip').style.display = 'flex';
-          document.getElementById('userNameEl').textContent = user.global_name || user.username;
-          document.getElementById('userTagEl').textContent = '@' + user.username +
-            (user.discriminator && user.discriminator !== '0' ? '#' + user.discriminator : '');
-          if (user.avatar) {
-            document.getElementById('avatarEl').innerHTML =
-              '<img src="https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.webp?size=80" alt="av">';
-          }
-          log('Connected as ' + (user.global_name || user.username) + ' (' + user.id + ')', 'ok');
-          setBadge('ok', 'OK');
-          btn.textContent = 'Connected!';
-          btn.className = 'btn btn-success';
-          btn.disabled = false;
-          setTimeout(function() { switchTab('send'); }, 900);
-        })
-        .catch(function(e) {
-          log('Auth failed: ' + e.message, 'err');
-          setBadge('error', 'ERROR');
-          btn.textContent = 'Retry';
-          btn.className = 'btn btn-primary';
-          btn.disabled = false;
-          btn.classList.add('shake');
-          setTimeout(function() { btn.classList.remove('shake'); }, 500);
-        });
-    }
-
-    function setBadge(type, text) {
-      var b = document.getElementById('statusBadge');
-      b.className = 'badge';
-      var map = { running: 'badge-running', error: 'badge-error', ok: 'badge-ok', idle: 'badge-idle' };
-      b.classList.add(map[type] || 'badge-idle');
-      b.textContent = text || type.toUpperCase();
-      var sm = { running: 'Running', error: 'Error', ok: 'Connected', idle: 'Idle' };
-      document.getElementById('infoStatus').textContent = sm[type] || 'Idle';
-    }
-
-    /* CHANNEL */
-    function fetchChannelInfo() {
-      var chId = document.getElementById('channelIdInput').value.trim();
-      if (!chId) { alert('Enter a channel ID first.'); return; }
-      if (!state.token) { alert('Connect your token first.'); switchTab('auth'); return; }
-      var el = document.getElementById('channelInfo');
-      el.style.display = 'block'; el.style.color = 'var(--text-muted)'; el.textContent = 'Checking...';
-      fetch('https://discord.com/api/v10/channels/' + chId, { headers: { Authorization: state.token } })
-        .then(function(res) {
-          if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'HTTP ' + res.status); });
-          return res.json();
-        })
-        .then(function(data) {
-          el.style.color = 'var(--green)';
-          el.textContent = '\u2713 #' + (data.name || chId) + (data.guild_id ? ' \u00b7 Server channel' : ' \u00b7 DM');
-          log('Channel verified: #' + (data.name || chId), 'ok');
-        })
-        .catch(function(e) {
-          el.style.color = 'var(--red)';
-          el.textContent = '\u2717 ' + e.message;
-          log('Channel check failed: ' + e.message, 'err');
-        });
-    }
-
-    /* SENDING */
-    function doSend() {
-      var channelId = document.getElementById('channelIdInput').value.trim();
-      var content = document.getElementById('messageContent').value;
-      if (document.getElementById('randomizeMsg').checked) {
-        content += ' ' + Math.random().toString(36).slice(2, 6);
-      }
-      return fetch('https://discord.com/api/v10/channels/' + channelId + '/messages', {
-        method: 'POST',
-        headers: { Authorization: state.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
-      }).then(function(res) {
-        if (res.status === 429) {
-          return res.json().then(function(data) {
-            var wait = (data.retry_after || 1) * 1000;
-            log('Rate limited \u2014 waiting ' + (wait / 1000).toFixed(1) + 's', 'warn');
-            return new Promise(function(r) { setTimeout(r, wait); }).then(doSend);
-          });
-        }
-        if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'HTTP ' + res.status); });
-        state.sent++;
-        updateStats();
-        var preview = content.length > 40 ? content.slice(0, 40) + '\u2026' : content;
-        log('Sent #' + state.sent + ': "' + preview + '"', 'ok');
-        var limited = document.getElementById('limitToggle').checked;
-        var maxCount = parseInt(document.getElementById('limitCount').value) || 10;
-        if (limited && state.sent >= maxCount) {
-          log('Limit of ' + maxCount + ' reached. Stopping.', 'info');
-          stopSending();
-        }
-      }).catch(function(e) {
-        state.failed++;
-        updateStats();
-        log('Failed: ' + e.message, 'err');
+    function renderChips(){
+      var el=document.getElementById('jobChips');
+      if(jobs.length===0){el.innerHTML='<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px 0;">No jobs yet</div>';return;}
+      el.innerHTML='';
+      jobs.forEach(function(j){
+        var sc=j.running?'jrunning':(j.errored?'jerror':'');
+        var st=j.running?'Running':(j.errored?'Error':'Idle');
+        var chEl=document.getElementById('jchannel-'+j.id);
+        var ch=chEl?chEl.value.trim():'—';
+        var d=document.createElement('div');d.className='job-chip '+sc;
+        d.innerHTML='<div class="chip-dot '+sc+'"></div><div class="chip-lbl">J#'+j.displayNum+' &mdash; '+ch+'</div><div class="chip-stats">&#9650;'+j.sent+' &#9660;'+j.failed+' '+st+'</div>';
+        el.appendChild(d);
       });
     }
 
-    function startCountdown(seconds) {
-      var remaining = seconds;
-      document.getElementById('statNext').textContent = remaining;
-      if (state.countdownTimer) clearInterval(state.countdownTimer);
-      state.countdownTimer = setInterval(function() {
-        remaining--;
-        document.getElementById('statNext').textContent = Math.max(0, remaining);
-        if (remaining <= 0) clearInterval(state.countdownTimer);
-      }, 1000);
+    function switchTab(name){
+      document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+      document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+      document.getElementById('panel-'+name).classList.add('active');
+      document.getElementById('tab-'+name).classList.add('active');
+      document.getElementById('nav-'+name).classList.add('active');
+    }
+    function switchMethod(name){
+      document.querySelectorAll('.method-tab').forEach(function(t){t.classList.remove('active');});
+      document.querySelectorAll('.method-panel').forEach(function(p){p.classList.remove('active');});
+      document.getElementById('mtab-'+name).classList.add('active');
+      document.getElementById('mpanel-'+name).classList.add('active');
     }
 
-    function startElapsedTimer() {
-      if (state.elapsedTimer) clearInterval(state.elapsedTimer);
-      state.elapsedTimer = setInterval(function() {
-        if (!state.startTime) return;
-        var secs = Math.floor((Date.now() - state.startTime) / 1000);
-        var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
-        document.getElementById('infoElapsed').textContent =
-          (h ? h + 'h ' : '') + (m ? m + 'm ' : '') + s + 's';
-      }, 1000);
+    function copyBookmarklet(){
+      var code=window.__bookmarkletCode;
+      var btn=document.getElementById('copyBmBtn');
+      function ok(){btn.textContent='\u2713 Copied!';btn.style.background='linear-gradient(135deg,#16a34a,#22c55e)';setTimeout(function(){btn.innerHTML='&#128203; Copy Extractor Code';btn.style.background='';},3000);}
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(ok).catch(function(){fbCopy(code,ok);});
+      else fbCopy(code,ok);
+    }
+    function fbCopy(text,cb){
+      var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      try{document.execCommand('copy');if(cb)cb();}catch(e){alert('Could not auto-copy.');}
+      document.body.removeChild(ta);
+    }
+    function pasteClip(fid){
+      var f=document.getElementById(fid);
+      if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(function(t){if(t&&t.trim())f.value=t.trim();else alert('Clipboard empty.');}).catch(function(){f.focus();alert('Long-press the field \u2192 Paste.');});
+      else{f.focus();alert('Long-press the field \u2192 Paste');}
+    }
+    function pasteJobToken(id){pasteClip('jtoken-'+id);}
+    function copyCode(elId,btn){
+      var el=document.getElementById(elId);var text='';
+      for(var i=0;i<el.childNodes.length;i++){if(el.childNodes[i].nodeType===3)text+=el.childNodes[i].textContent;}
+      text=text.trim();
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){btn.textContent='Copied!';btn.style.color='var(--green)';setTimeout(function(){btn.textContent='Copy';btn.style.color='';},2200);});
+      else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy';},2200);}
     }
 
-    function updateStats() {
-      document.getElementById('statSent').textContent = state.sent;
-      document.getElementById('statFailed').textContent = state.failed;
-      var total = state.sent + state.failed;
-      document.getElementById('infoRate').textContent = total > 0 ? Math.round((state.sent / total) * 100) + '%' : '---';
-      document.getElementById('infoChannel').textContent = document.getElementById('channelIdInput').value.trim() || '---';
+    function verifyToken(){
+      var t=document.getElementById('tokenInput').value.trim();
+      if(!t){alert('Paste a token first.');return;}
+      var btn=document.getElementById('verifyBtn');btn.textContent='Verifying...';btn.disabled=true;
+      fetch('https://discord.com/api/v10/users/@me',{headers:{Authorization:t}})
+        .then(function(res){if(!res.ok)return res.json().then(function(e){throw new Error(e.message||'HTTP '+res.status);});return res.json();})
+        .then(function(user){
+          defaultToken=t;
+          document.getElementById('userChip').style.display='flex';
+          document.getElementById('userNameEl').textContent=user.global_name||user.username;
+          document.getElementById('userTagEl').textContent='@'+user.username+(user.discriminator&&user.discriminator!=='0'?'#'+user.discriminator:'');
+          if(user.avatar)document.getElementById('avatarEl').innerHTML='<img src="https://cdn.discordapp.com/avatars/'+user.id+'/'+user.avatar+'.webp?size=80" alt="av">';
+          log('Connected as '+(user.global_name||user.username)+' ('+user.id+')','ok');
+          updateGlobalStats();
+          btn.textContent='Connected!';btn.className='btn btn-success';btn.disabled=false;
+          setTimeout(function(){switchTab('jobs');},900);
+        })
+        .catch(function(e){
+          log('Auth failed: '+e.message,'err');
+          btn.textContent='Retry';btn.className='btn btn-primary';btn.disabled=false;
+          btn.classList.add('shake');setTimeout(function(){btn.classList.remove('shake');},500);
+        });
     }
 
-    function startSending() {
-      if (!state.token) { alert('Connect your Discord token first (Auth tab).'); switchTab('auth'); return; }
-      var channelId = document.getElementById('channelIdInput').value.trim();
-      if (!channelId) { alert('Enter a channel ID in the Send tab.'); return; }
-      var content = document.getElementById('messageContent').value.trim();
-      if (!content) { alert('Enter a message to send.'); return; }
-      var delay = Math.max(1, parseInt(document.getElementById('delayInput').value) || 5);
-      state.running = true;
-      state.startTime = Date.now();
-      state.sent = 0;
-      state.failed = 0;
-      updateStats();
-      setBadge('running');
-      document.getElementById('startBtn').disabled = true;
-      document.getElementById('stopBtn').disabled = false;
-      document.getElementById('infoStart').textContent = new Date().toLocaleTimeString();
-      log('\u25b6 Started \u2014 channel ' + channelId + ', delay: ' + delay + 's', 'info');
-      switchTab('monitor');
-      startElapsedTimer();
-      function tick() {
-        if (!state.running) return;
-        doSend().then(function() {
-          if (state.running) {
-            startCountdown(delay);
-            state.timer = setTimeout(tick, delay * 1000);
-          }
+    function getJob(id){for(var i=0;i<jobs.length;i++)if(jobs[i].id===id)return jobs[i];return null;}
+
+    function addJob(){
+      jobIdSeq++;
+      var id=jobIdSeq;
+      jobs.push({id:id,displayNum:id,running:false,errored:false,sent:0,failed:0,timer:null,countdownTimer:null,collapsed:false});
+      var nm=document.getElementById('noJobsMsg');if(nm)nm.style.display='none';
+      var container=document.getElementById('jobsContainer');
+      var card=document.createElement('div');
+      card.className='job-card';card.id='jcard-'+id;
+      card.innerHTML=
+        '<div class="job-header" onclick="toggleCollapse('+id+')">' +
+          '<div class="job-num">'+id+'</div>' +
+          '<div class="job-title-lbl">Job #'+id+'</div>' +
+          '<div class="jdot" id="jdot-'+id+'"></div>' +
+          '<div class="jcaret" id="jcaret-'+id+'">&#9660;</div>' +
+        '</div>' +
+        '<div class="job-body" id="jbody-'+id+'">' +
+          '<div class="jfield"><label>&#128272; Token (blank = default)</label>' +
+            '<div class="jtok-wrap"><input type="password" id="jtoken-'+id+'" class="token-input" placeholder="Leave blank to use default token" autocomplete="off" spellcheck="false"/>' +
+            '<button class="jtok-paste" onclick="pasteJobToken('+id+')">&#128203;</button></div></div>' +
+          '<div class="jfield"><label>&#128226; Channel ID</label>' +
+            '<input type="text" id="jchannel-'+id+'" placeholder="e.g. 1234567890" inputmode="numeric" autocomplete="off" spellcheck="false"/></div>' +
+          '<div class="jfield"><label>&#128172; Message</label>' +
+            '<textarea id="jmsg-'+id+'" placeholder="Message to send..." maxlength="2000"></textarea></div>' +
+          '<div class="jrow">' +
+            '<div class="jfield"><label>&#9201; Delay (s)</label><input type="number" id="jdelay-'+id+'" value="5" min="1" max="86400" inputmode="numeric"/></div>' +
+            '<div class="jfield"><label>&#128257; Max (0=inf)</label><input type="number" id="jlimit-'+id+'" value="0" min="0" max="99999" inputmode="numeric"/></div>' +
+          '</div>' +
+          '<div class="toggle-row"><div><div class="toggle-label" style="font-size:13px;">Randomize suffix</div></div>' +
+            '<label class="toggle"><input type="checkbox" id="jrand-'+id+'"/><span class="toggle-slider"></span></label></div>' +
+          '<div class="jstats">' +
+            '<div class="jstat"><div class="jstat-val" id="jsent-'+id+'">0</div><div class="jstat-lbl">Sent</div></div>' +
+            '<div class="jstat"><div class="jstat-val red" id="jfailed-'+id+'">0</div><div class="jstat-lbl">Failed</div></div>' +
+            '<div class="jstat"><div class="jstat-val yellow" id="jnext-'+id+'">---</div><div class="jstat-lbl">Next(s)</div></div>' +
+          '</div>' +
+          '<div class="jcontrols btn-row">' +
+            '<button class="btn btn-success btn-sm" id="jstart-'+id+'" onclick="startJob('+id+')">&#9654; Start</button>' +
+            '<button class="btn btn-danger btn-sm" id="jstop-'+id+'" onclick="stopJob('+id+')" disabled>&#9209; Stop</button>' +
+            '<button class="btn btn-secondary btn-sm" style="flex:0;padding:10px 14px;font-size:18px;" onclick="removeJob('+id+')" title="Delete">&#128465;</button>' +
+          '</div>' +
+        '</div>';
+      container.appendChild(card);
+      updateGlobalStats();
+    }
+
+    function toggleCollapse(id){
+      var card=document.getElementById('jcard-'+id);if(!card)return;
+      var job=getJob(id);if(!job)return;
+      job.collapsed=!job.collapsed;card.classList.toggle('collapsed',job.collapsed);
+    }
+    function removeJob(id){
+      var job=getJob(id);if(!job)return;
+      if(job.running)stopJob(id);
+      jobs=jobs.filter(function(j){return j.id!==id;});
+      var card=document.getElementById('jcard-'+id);if(card)card.remove();
+      if(jobs.length===0){var nm=document.getElementById('noJobsMsg');if(nm)nm.style.display='';}
+      updateGlobalStats();log('Job #'+id+' removed.','info');
+    }
+    function setDot(job,state){
+      var dot=document.getElementById('jdot-'+job.id);
+      var card=document.getElementById('jcard-'+job.id);
+      if(dot)dot.className='jdot'+(state?' '+state:'');
+      if(card){card.classList.remove('jrunning','jerror');if(state)card.classList.add(state);}
+    }
+    function updateJobStats(job){
+      var e=document.getElementById('jsent-'+job.id);if(e)e.textContent=job.sent;
+      e=document.getElementById('jfailed-'+job.id);if(e)e.textContent=job.failed;
+      updateGlobalStats();
+    }
+
+    function doJobSend(job){
+      var tokEl=document.getElementById('jtoken-'+job.id);
+      var tok=tokEl?(tokEl.value.trim()||defaultToken):defaultToken;
+      var chEl=document.getElementById('jchannel-'+job.id);
+      var channelId=chEl?chEl.value.trim():'';
+      var msgEl=document.getElementById('jmsg-'+job.id);
+      var content=msgEl?msgEl.value:'';
+      var randEl=document.getElementById('jrand-'+job.id);
+      if(randEl&&randEl.checked)content+=' '+Math.random().toString(36).slice(2,6);
+      if(!tok){log('No token — stopping.','err','J'+job.displayNum);stopJob(job.id);return Promise.resolve();}
+      if(!channelId){log('No channel — stopping.','err','J'+job.displayNum);stopJob(job.id);return Promise.resolve();}
+      return fetch('https://discord.com/api/v10/channels/'+channelId+'/messages',{
+        method:'POST',headers:{Authorization:tok,'Content-Type':'application/json'},
+        body:JSON.stringify({content:content})
+      }).then(function(res){
+        if(res.status===429){
+          return res.json().then(function(data){
+            var wait=(data.retry_after||1)*1000;
+            log('Rate limited — wait '+(wait/1000).toFixed(1)+'s','warn','J'+job.displayNum);
+            return new Promise(function(r){setTimeout(r,wait);}).then(function(){return doJobSend(job);});
+          });
+        }
+        if(!res.ok)return res.json().then(function(e){throw new Error(e.message||'HTTP '+res.status);});
+        job.sent++;updateJobStats(job);
+        var preview=content.length>35?content.slice(0,35)+'\u2026':content;
+        log('#'+job.sent+': "'+preview+'"','ok','J'+job.displayNum);
+        var limEl=document.getElementById('jlimit-'+job.id);
+        var maxC=limEl?parseInt(limEl.value):0;
+        if(maxC>0&&job.sent>=maxC){log('Limit '+maxC+' reached.','info','J'+job.displayNum);stopJob(job.id);}
+      }).catch(function(e){
+        job.failed++;job.errored=true;setDot(job,'jerror');updateJobStats(job);
+        log('Failed: '+e.message,'err','J'+job.displayNum);
+      });
+    }
+
+    function startJob(id){
+      var job=getJob(id);if(!job)return;
+      var delayEl=document.getElementById('jdelay-'+id);
+      var delay=delayEl?Math.max(1,parseInt(delayEl.value)||5):5;
+      job.running=true;job.errored=false;job.sent=0;job.failed=0;
+      updateJobStats(job);setDot(job,'jrunning');
+      var s=document.getElementById('jstart-'+id),st=document.getElementById('jstop-'+id);
+      if(s)s.disabled=true;if(st)st.disabled=false;
+      log('Started — delay: '+delay+'s','info','J'+job.displayNum);
+      updateGlobalStats();
+      function tick(){
+        if(!job.running)return;
+        doJobSend(job).then(function(){
+          if(!job.running)return;
+          var rem=delay;
+          var nextEl=document.getElementById('jnext-'+id);
+          if(nextEl)nextEl.textContent=rem;
+          if(job.countdownTimer)clearInterval(job.countdownTimer);
+          job.countdownTimer=setInterval(function(){rem--;if(nextEl)nextEl.textContent=Math.max(0,rem);if(rem<=0)clearInterval(job.countdownTimer);},1000);
+          job.timer=setTimeout(tick,delay*1000);
         });
       }
       tick();
     }
 
-    function stopSending() {
-      state.running = false;
-      if (state.timer) { clearTimeout(state.timer); state.timer = null; }
-      if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
-      if (state.elapsedTimer) { clearInterval(state.elapsedTimer); state.elapsedTimer = null; }
-      document.getElementById('startBtn').disabled = false;
-      document.getElementById('stopBtn').disabled = true;
-      document.getElementById('statNext').textContent = '---';
-      setBadge('idle');
-      log('\u23f9 Stopped. Sent: ' + state.sent + ' \u00b7 Failed: ' + state.failed, 'warn');
+    function stopJob(id){
+      var job=getJob(id);if(!job)return;
+      job.running=false;
+      if(job.timer){clearTimeout(job.timer);job.timer=null;}
+      if(job.countdownTimer){clearInterval(job.countdownTimer);job.countdownTimer=null;}
+      var nextEl=document.getElementById('jnext-'+id);if(nextEl)nextEl.textContent='---';
+      var s=document.getElementById('jstart-'+id),st=document.getElementById('jstop-'+id);
+      if(s)s.disabled=false;if(st)st.disabled=true;
+      setDot(job,job.errored?'jerror':'');
+      log('Stopped. Sent: '+job.sent+' \u00b7 Failed: '+job.failed,'warn','J'+job.displayNum);
+      updateGlobalStats();
     }
 
-    function toggleLimit() {
-      document.getElementById('limitRow').style.display =
-        document.getElementById('limitToggle').checked ? 'block' : 'none';
-    }
-
-    document.getElementById('messageContent').addEventListener('input', function() {
-      document.getElementById('charCount').textContent = this.value.length + ' / 2000';
-    });
+    function stopAllJobs(){jobs.forEach(function(j){if(j.running)stopJob(j.id);});log('All jobs stopped.','warn');}
   </script>
 </body>
 </html>
