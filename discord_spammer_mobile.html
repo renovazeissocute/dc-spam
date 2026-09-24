@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -570,6 +570,281 @@
       font-size: 9px;
       color: var(--text-muted);
       margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* MULTI-INSTANCE JOB CARDS */
+    .jobs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .jobs-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .btn-add-job {
+      background: linear-gradient(135deg, var(--primary), var(--discord));
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 2px 10px var(--primary-glow);
+    }
+
+    .btn-add-job:active { opacity: 0.8; }
+
+    .job-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .job-card.job-running {
+      border-color: rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.08);
+    }
+
+    .job-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .job-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--discord));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .job-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .job-status-dot.running {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .job-label {
+      font-size: 12px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .job-stats-inline {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .job-stats-inline .jstat-ok { color: var(--green); }
+    .job-stats-inline .jstat-err { color: var(--red); }
+
+    .job-remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+
+    .job-remove-btn:active { color: var(--red); }
+
+    .job-body {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .job-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .job-field-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .job-input {
+      width: 100%;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .job-input:focus {
+      border-color: var(--border-active);
+    }
+
+    .job-input.mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .job-input-row {
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .job-input-row .job-input { flex: 1; }
+
+    .job-delay-unit {
+      padding: 8px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .job-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .job-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .job-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .job-btn:active:not(:disabled) { transform: scale(0.97); }
+
+    .job-btn-start {
+      background: linear-gradient(135deg, #16a34a, var(--green));
+      color: #fff;
+      box-shadow: 0 2px 10px var(--green-glow);
+    }
+
+    .job-btn-stop {
+      background: linear-gradient(135deg, #b91c1c, var(--red));
+      color: #fff;
+      box-shadow: 0 2px 10px var(--red-glow);
+    }
+
+    .job-use-auth {
+      font-size: 11px;
+      color: var(--primary);
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      text-decoration: underline;
+      margin-top: 2px;
+      align-self: flex-start;
+    }
+
+    /* BG KEEP-ALIVE BANNER */
+    .bg-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 197, 94, 0.07);
+      border: 1px solid rgba(34, 197, 94, 0.22);
+      border-radius: 10px;
+      padding: 9px 13px;
+      margin-bottom: 14px;
+      font-size: 11px;
+      color: #4ade80;
+    }
+
+    .bg-banner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    .global-stats-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .gstat {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .gstat-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .gstat-lbl {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 3px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
@@ -1249,92 +1524,31 @@
 
     <!-- SEND TAB -->
     <div class="tab-panel" id="panel-send">
-      <div class="section">
-        <div class="section-label">Target Channel</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#128226; Channel ID</div>
-            <input type="text" id="channelIdInput" placeholder="e.g. 1234567890123456789" inputmode="numeric"
-              autocomplete="off" autocorrect="off" spellcheck="false" />
-          </div>
-          <button class="btn btn-ghost" style="margin-top:6px;" onclick="fetchChannelInfo()">Verify Channel</button>
-          <div id="channelInfo"></div>
-          <div class="hint">&#128161; Enable Developer Mode in Discord &rarr; long-press any channel &rarr; Copy ID
-          </div>
-        </div>
+      <div class="bg-banner" id="bgBanner" style="display:none;">
+        <div class="bg-banner-dot"></div>
+        <span>Background keep-alive active &mdash; runs even when you leave Safari</span>
       </div>
-
-      <div class="section">
-        <div class="section-label">Message</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#128172; Content</div>
-            <textarea id="messageContent" placeholder="Type your message here..." maxlength="2000"></textarea>
-            <div style="text-align:right;font-size:11px;color:var(--text-muted);margin-top:4px;" id="charCount">0 / 2000
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Randomize suffix</div>
-              <div class="toggle-sub">Appends random 4-char string each send</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="randomizeMsg" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+      <div class="jobs-header">
+        <div class="jobs-title">&#9889; Active Jobs</div>
+        <button class="btn-add-job" onclick="addJob()">+ Add Job</button>
       </div>
-
-      <div class="section">
-        <div class="section-label">Timing</div>
-        <div class="card">
-          <div class="input-group">
-            <div class="input-label">&#9201; Delay between sends</div>
-            <div class="delay-row">
-              <input type="number" id="delayInput" value="5" min="1" max="86400" inputmode="numeric" />
-              <div class="delay-unit">seconds</div>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Limit total sends</div>
-              <div class="toggle-sub">Stop after N messages</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="limitToggle" onchange="toggleLimit()" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div id="limitRow" style="margin-top:12px;display:none;">
-            <div class="input-label">Max messages</div>
-            <input type="number" id="limitCount" value="10" min="1" max="99999" inputmode="numeric" />
-          </div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-success" id="startBtn" onclick="startSending()">&#9654; Start</button>
-        <button class="btn btn-danger" id="stopBtn" onclick="stopSending()" disabled>&#9209; Stop</button>
-      </div>
+      <div id="jobsContainer"></div>
     </div>
 
     <!-- MONITOR TAB -->
     <div class="tab-panel" id="panel-monitor">
-      <div class="stats-bar">
-        <div class="stat-card">
-          <div class="stat-value" id="statSent">0</div>
-          <div class="stat-label">Sent</div>
+      <div class="global-stats-bar">
+        <div class="gstat">
+          <div class="gstat-val" id="gTotalSent">0</div>
+          <div class="gstat-lbl">Total Sent</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statFailed" style="color:var(--red);">0</div>
-          <div class="stat-label">Failed</div>
+        <div class="gstat">
+          <div class="gstat-val" style="color:var(--red);" id="gTotalFailed">0</div>
+          <div class="gstat-lbl">Total Failed</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statNext" style="color:var(--yellow);">---</div>
-          <div class="stat-label">Next (s)</div>
+        <div class="gstat">
+          <div class="gstat-val" style="color:var(--yellow);" id="gActiveJobs">0</div>
+          <div class="gstat-lbl">Running</div>
         </div>
       </div>
       <div class="section">
@@ -1346,20 +1560,8 @@
           <div id="logOutput">
             <div class="log-line">
               <span class="log-time">--:--:--</span>
-              <span class="log-msg-info">Ready &mdash; connect token to begin.</span>
+              <span class="log-msg-info">Ready &mdash; add a job and start.</span>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-label">Session Info</div>
-        <div class="card">
-          <div class="info-row"><span>Status</span><span id="infoStatus" style="color:var(--text);">Idle</span></div>
-          <div class="info-row"><span>Channel</span><span id="infoChannel" style="color:var(--text);">---</span></div>
-          <div class="info-row"><span>Session start</span><span id="infoStart" style="color:var(--text);">---</span>
-          </div>
-          <div class="info-row"><span>Elapsed</span><span id="infoElapsed" style="color:var(--text);">---</span></div>
-          <div class="info-row"><span>Success rate</span><span id="infoRate" style="color:var(--green);">---</span>
           </div>
         </div>
       </div>
@@ -1382,28 +1584,237 @@
   </nav>
 
   <script>
-    /* STATE */
-    var state = {
-      token: null, running: false,
-      timer: null, countdownTimer: null, elapsedTimer: null,
-      sent: 0, failed: 0, startTime: null
-    };
+    /* ── BACKGROUND KEEP-ALIVE (Web Audio API silent oscillator) ── */
+    var _audioCtx = null;
+    var _silentNode = null;
 
-    /* BOOKMARKLET code stored globally so copyBookmarklet() can access it */
-    window.__bookmarkletCode = (function () {
-      var p = [
-        'javascript:(function(){',
-        'var t=null;',
-        'try{var r=localStorage.getItem("token");if(r&&r.length>10){t=r.replace(/"/g,"");}}catch(e){}',
-        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var m=q.c[ids[i]];if(m&&m.exports&&m.exports.default&&typeof m.exports.default.getToken==="function"){t=m.exports.default.getToken();}}}]);}catch(e){}}',
-        'if(!t){try{webpackChunkdiscord_app.push([[Math.random()],{},function(q){var ids=Object.keys(q.c);for(var i=0;i<ids.length&&!t;i++){var ex=(q.c[ids[i]]||{}).exports||{};var fn=ex.getToken||(ex.default&&ex.default.getToken);if(typeof fn==="function"){t=fn();}}}]);}catch(e){}}',
-        'if(t&&t.length>20){prompt("Copy your Discord Token - paste it in the app:",t);}else{alert("Token not found.\\nMake sure you are LOGGED IN on discord.com/app, then run this again.");}',
-        '})()'
-      ];
-      return p.join('');
-    })();
+    function startKeepAlive() {
+      try {
+        if (_audioCtx && _audioCtx.state !== 'closed') return;
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Create a near-silent oscillator — keeps audio session alive
+        var osc = _audioCtx.createOscillator();
+        var gain = _audioCtx.createGain();
+        gain.gain.value = 0.001; // inaudible
+        osc.connect(gain);
+        gain.connect(_audioCtx.destination);
+        osc.start();
+        _silentNode = osc;
+        document.getElementById('bgBanner').style.display = 'flex';
+      } catch (e) { /* audio not available */ }
+    }
 
-    /* UTILS */
+    function resumeKeepAlive() {
+      if (_audioCtx && _audioCtx.state === 'suspended') {
+        _audioCtx.resume();
+      } else if (!_audioCtx || _audioCtx.state === 'closed') {
+        startKeepAlive();
+      }
+    }
+
+    // Resume audio when page becomes visible again (Safari resumes it)
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') resumeKeepAlive();
+    });
+
+    /* ── MULTI-INSTANCE JOB MANAGER ── */
+    var jobs = {};   // keyed by jobId
+    var jobCounter = 0;
+    var globalToken = null; // filled by verifyToken()
+
+    // Kept for auth tab compat
+    var state = { token: null };
+
+    function addJob() {
+      var id = ++jobCounter;
+      jobs[id] = {
+        id: id,
+        running: false,
+        timer: null, countdownTimer: null,
+        sent: 0, failed: 0, startTime: null
+      };
+      renderJob(id);
+    }
+
+    function removeJob(id) {
+      if (jobs[id] && jobs[id].running) {
+        stopJob(id);
+      }
+      delete jobs[id];
+      var el = document.getElementById('job-' + id);
+      if (el) el.remove();
+      updateGlobalStats();
+    }
+
+    function renderJob(id) {
+      var container = document.getElementById('jobsContainer');
+      var div = document.createElement('div');
+      div.className = 'job-card';
+      div.id = 'job-' + id;
+      div.innerHTML = [
+        '<div class="job-header">',
+          '<div class="job-num">' + id + '</div>',
+          '<div class="job-status-dot" id="jdot-' + id + '"></div>',
+          '<div class="job-label">Job #' + id + '</div>',
+          '<div class="job-stats-inline" id="jstats-' + id + '">',
+            '<span class="jstat-ok" id="jsent-' + id + '">0</span>&#8593;',
+            ' <span class="jstat-err" id="jfail-' + id + '">0</span>&#8595;',
+          '</div>',
+          '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
+        '</div>',
+        '<div class="job-body">',
+          '<div class="job-field">',
+            '<div class="job-field-label">&#128272; Token</div>',
+            '<input class="job-input mono" id="jtoken-' + id + '" type="password" placeholder="Paste token or use auth tab token" autocomplete="off" autocorrect="off" spellcheck="false" />',
+            '<button class="job-use-auth" onclick="useAuthToken(' + id + ')">&#10003; Use connected token from Auth tab</button>',
+          '</div>',
+          '<div class="job-field">',
+            '<div class="job-field-label">&#128226; Channel ID</div>',
+            '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="e.g. 123456789012345678" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
+          '</div>',
+          '<div class="job-field">',
+            '<div class="job-field-label">&#128172; Message</div>',
+            '<input class="job-input" id="jmsg-' + id + '" type="text" placeholder="Your message..." />',
+          '</div>',
+          '<div class="job-field">',
+            '<div class="job-field-label">&#9201; Delay (seconds)</div>',
+            '<div class="job-input-row">',
+              '<input class="job-input" id="jdelay-' + id + '" type="number" value="5" min="1" max="86400" inputmode="numeric" />',
+              '<div class="job-delay-unit">sec</div>',
+            '</div>',
+          '</div>',
+          '<div class="job-btn-row">',
+            '<button class="job-btn job-btn-start" id="jstart-' + id + '" onclick="startJob(' + id + ')">&#9654; Start</button>',
+            '<button class="job-btn job-btn-stop" id="jstop-' + id + '" onclick="stopJob(' + id + ')" disabled>&#9209; Stop</button>',
+          '</div>',
+        '</div>'
+      ].join('');
+      container.appendChild(div);
+    }
+
+    function useAuthToken(id) {
+      var tok = globalToken || state.token;
+      if (!tok) { alert('No connected token found. Go to Auth tab and verify first.'); return; }
+      var inp = document.getElementById('jtoken-' + id);
+      if (inp) inp.value = tok;
+      log('[Job #' + id + '] Loaded token from Auth tab.', 'info');
+    }
+
+    function startJob(id) {
+      var job = jobs[id];
+      if (!job) return;
+      var token = document.getElementById('jtoken-' + id).value.trim();
+      var channelId = document.getElementById('jchannel-' + id).value.trim();
+      var msg = document.getElementById('jmsg-' + id).value.trim();
+      var delay = Math.max(1, parseInt(document.getElementById('jdelay-' + id).value) || 5);
+      if (!token) { alert('Job #' + id + ': Paste a token or use the Auth tab token.'); return; }
+      if (!channelId) { alert('Job #' + id + ': Enter a channel ID.'); return; }
+      if (!msg) { alert('Job #' + id + ': Enter a message.'); return; }
+
+      // Start keep-alive audio on first job start (requires user gesture)
+      startKeepAlive();
+
+      job.running = true;
+      job.sent = 0;
+      job.failed = 0;
+      job.startTime = Date.now();
+
+      document.getElementById('jstart-' + id).disabled = true;
+      document.getElementById('jstop-' + id).disabled = false;
+      document.getElementById('jdot-' + id).classList.add('running');
+      document.getElementById('job-' + id).classList.add('job-running');
+
+      log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delay + 's', 'info');
+      switchTab('monitor');
+      updateGlobalStats();
+
+      function tick() {
+        if (!job.running) return;
+        jobSend(id, token, channelId, msg).then(function () {
+          if (job.running) {
+            job.timer = setTimeout(tick, delay * 1000);
+          }
+        });
+      }
+      tick();
+    }
+
+    function stopJob(id) {
+      var job = jobs[id];
+      if (!job) return;
+      job.running = false;
+      if (job.timer) { clearTimeout(job.timer); job.timer = null; }
+      document.getElementById('jstart-' + id).disabled = false;
+      document.getElementById('jstop-' + id).disabled = true;
+      document.getElementById('jdot-' + id).classList.remove('running');
+      document.getElementById('job-' + id).classList.remove('job-running');
+      log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
+      updateGlobalStats();
+      // Stop keep-alive if no jobs running
+      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+      if (!anyRunning && _audioCtx) {
+        try { _silentNode && _silentNode.stop(); _audioCtx.close(); } catch(e){}
+        _audioCtx = null; _silentNode = null;
+        document.getElementById('bgBanner').style.display = 'none';
+      }
+    }
+
+    function jobSend(id, token, channelId, msg) {
+      var job = jobs[id];
+      if (!job) return Promise.resolve();
+      return fetch('https://discord.com/api/v10/channels/' + channelId + '/messages', {
+        method: 'POST',
+        headers: { Authorization: token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: msg })
+      }).then(function (res) {
+        if (res.status === 429) {
+          return res.json().then(function (data) {
+            var wait = (data.retry_after || 1) * 1000;
+            log('[Job #' + id + '] Rate limited \u2014 wait ' + (wait/1000).toFixed(1) + 's', 'warn');
+            return new Promise(function (r) { setTimeout(r, wait); }).then(function(){
+              return jobSend(id, token, channelId, msg);
+            });
+          });
+        }
+        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
+        job.sent++;
+        updateJobStats(id);
+        var preview = msg.length > 35 ? msg.slice(0, 35) + '\u2026' : msg;
+        log('[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
+      }).catch(function (e) {
+        if (!job) return;
+        job.failed++;
+        updateJobStats(id);
+        log('[Job #' + id + '] Failed: ' + e.message, 'err');
+      });
+    }
+
+    function updateJobStats(id) {
+      var job = jobs[id];
+      if (!job) return;
+      var sentEl = document.getElementById('jsent-' + id);
+      var failEl = document.getElementById('jfail-' + id);
+      if (sentEl) sentEl.textContent = job.sent;
+      if (failEl) failEl.textContent = job.failed;
+      updateGlobalStats();
+    }
+
+    function updateGlobalStats() {
+      var totalSent = 0, totalFailed = 0, activeCount = 0;
+      Object.values(jobs).forEach(function (j) {
+        totalSent += j.sent;
+        totalFailed += j.failed;
+        if (j.running) activeCount++;
+      });
+      document.getElementById('gTotalSent').textContent = totalSent;
+      document.getElementById('gTotalFailed').textContent = totalFailed;
+      document.getElementById('gActiveJobs').textContent = activeCount;
+      // Update header badge
+      if (activeCount > 0) setBadge('running', activeCount + ' Running');
+      else setBadge('idle');
+    }
+
+    /* ── UTILS ── */
     function now() {
       return new Date().toLocaleTimeString('en-GB', { hour12: false });
     }
@@ -1541,6 +1952,7 @@
         })
         .then(function (user) {
           state.token = t;
+          globalToken = t; // store for job "use auth token" button
           document.getElementById('userChip').style.display = 'flex';
           document.getElementById('userNameEl').textContent = user.global_name || user.username;
           document.getElementById('userTagEl').textContent = '@' + user.username +
@@ -1573,153 +1985,8 @@
       var map = { running: 'badge-running', error: 'badge-error', ok: 'badge-ok', idle: 'badge-idle' };
       b.classList.add(map[type] || 'badge-idle');
       b.textContent = text || type.toUpperCase();
-      var sm = { running: 'Running', error: 'Error', ok: 'Connected', idle: 'Idle' };
-      document.getElementById('infoStatus').textContent = sm[type] || 'Idle';
     }
 
-    /* CHANNEL */
-    function fetchChannelInfo() {
-      var chId = document.getElementById('channelIdInput').value.trim();
-      if (!chId) { alert('Enter a channel ID first.'); return; }
-      if (!state.token) { alert('Connect your token first.'); switchTab('auth'); return; }
-      var el = document.getElementById('channelInfo');
-      el.style.display = 'block'; el.style.color = 'var(--text-muted)'; el.textContent = 'Checking...';
-      fetch('https://discord.com/api/v10/channels/' + chId, { headers: { Authorization: state.token } })
-        .then(function (res) {
-          if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
-          return res.json();
-        })
-        .then(function (data) {
-          el.style.color = 'var(--green)';
-          el.textContent = '\u2713 #' + (data.name || chId) + (data.guild_id ? ' \u00b7 Server channel' : ' \u00b7 DM');
-          log('Channel verified: #' + (data.name || chId), 'ok');
-        })
-        .catch(function (e) {
-          el.style.color = 'var(--red)';
-          el.textContent = '\u2717 ' + e.message;
-          log('Channel check failed: ' + e.message, 'err');
-        });
-    }
-
-    /* SENDING */
-    function doSend() {
-      var channelId = document.getElementById('channelIdInput').value.trim();
-      var content = document.getElementById('messageContent').value;
-      if (document.getElementById('randomizeMsg').checked) {
-        content += ' ' + Math.random().toString(36).slice(2, 6);
-      }
-      return fetch('https://discord.com/api/v10/channels/' + channelId + '/messages', {
-        method: 'POST',
-        headers: { Authorization: state.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
-      }).then(function (res) {
-        if (res.status === 429) {
-          return res.json().then(function (data) {
-            var wait = (data.retry_after || 1) * 1000;
-            log('Rate limited \u2014 waiting ' + (wait / 1000).toFixed(1) + 's', 'warn');
-            return new Promise(function (r) { setTimeout(r, wait); }).then(doSend);
-          });
-        }
-        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
-        state.sent++;
-        updateStats();
-        var preview = content.length > 40 ? content.slice(0, 40) + '\u2026' : content;
-        log('Sent #' + state.sent + ': "' + preview + '"', 'ok');
-        var limited = document.getElementById('limitToggle').checked;
-        var maxCount = parseInt(document.getElementById('limitCount').value) || 10;
-        if (limited && state.sent >= maxCount) {
-          log('Limit of ' + maxCount + ' reached. Stopping.', 'info');
-          stopSending();
-        }
-      }).catch(function (e) {
-        state.failed++;
-        updateStats();
-        log('Failed: ' + e.message, 'err');
-      });
-    }
-
-    function startCountdown(seconds) {
-      var remaining = seconds;
-      document.getElementById('statNext').textContent = remaining;
-      if (state.countdownTimer) clearInterval(state.countdownTimer);
-      state.countdownTimer = setInterval(function () {
-        remaining--;
-        document.getElementById('statNext').textContent = Math.max(0, remaining);
-        if (remaining <= 0) clearInterval(state.countdownTimer);
-      }, 1000);
-    }
-
-    function startElapsedTimer() {
-      if (state.elapsedTimer) clearInterval(state.elapsedTimer);
-      state.elapsedTimer = setInterval(function () {
-        if (!state.startTime) return;
-        var secs = Math.floor((Date.now() - state.startTime) / 1000);
-        var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
-        document.getElementById('infoElapsed').textContent =
-          (h ? h + 'h ' : '') + (m ? m + 'm ' : '') + s + 's';
-      }, 1000);
-    }
-
-    function updateStats() {
-      document.getElementById('statSent').textContent = state.sent;
-      document.getElementById('statFailed').textContent = state.failed;
-      var total = state.sent + state.failed;
-      document.getElementById('infoRate').textContent = total > 0 ? Math.round((state.sent / total) * 100) + '%' : '---';
-      document.getElementById('infoChannel').textContent = document.getElementById('channelIdInput').value.trim() || '---';
-    }
-
-    function startSending() {
-      if (!state.token) { alert('Connect your Discord token first (Auth tab).'); switchTab('auth'); return; }
-      var channelId = document.getElementById('channelIdInput').value.trim();
-      if (!channelId) { alert('Enter a channel ID in the Send tab.'); return; }
-      var content = document.getElementById('messageContent').value.trim();
-      if (!content) { alert('Enter a message to send.'); return; }
-      var delay = Math.max(1, parseInt(document.getElementById('delayInput').value) || 5);
-      state.running = true;
-      state.startTime = Date.now();
-      state.sent = 0;
-      state.failed = 0;
-      updateStats();
-      setBadge('running');
-      document.getElementById('startBtn').disabled = true;
-      document.getElementById('stopBtn').disabled = false;
-      document.getElementById('infoStart').textContent = new Date().toLocaleTimeString();
-      log('\u25b6 Started \u2014 channel ' + channelId + ', delay: ' + delay + 's', 'info');
-      switchTab('monitor');
-      startElapsedTimer();
-      function tick() {
-        if (!state.running) return;
-        doSend().then(function () {
-          if (state.running) {
-            startCountdown(delay);
-            state.timer = setTimeout(tick, delay * 1000);
-          }
-        });
-      }
-      tick();
-    }
-
-    function stopSending() {
-      state.running = false;
-      if (state.timer) { clearTimeout(state.timer); state.timer = null; }
-      if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
-      if (state.elapsedTimer) { clearInterval(state.elapsedTimer); state.elapsedTimer = null; }
-      document.getElementById('startBtn').disabled = false;
-      document.getElementById('stopBtn').disabled = true;
-      document.getElementById('statNext').textContent = '---';
-      setBadge('idle');
-      log('\u23f9 Stopped. Sent: ' + state.sent + ' \u00b7 Failed: ' + state.failed, 'warn');
-    }
-
-    function toggleLimit() {
-      document.getElementById('limitRow').style.display =
-        document.getElementById('limitToggle').checked ? 'block' : 'none';
-    }
-
-    document.getElementById('messageContent').addEventListener('input', function () {
-      document.getElementById('charCount').textContent = this.value.length + ' / 2000';
-    });
+    /* Init: add one default job */
+    addJob();
   </script>
-</body>
-
-</html>
