@@ -9,1249 +9,561 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
     :root {
-      --bg:       #0d0d12;
-      --surface:  #18191f;
-      --card:     #1e2029;
-      --card2:    #24263a;
-      --border:   #2e3045;
-      --accent:   #5865f2;
-      --accent2:  #7289da;
-      --green:    #23a55a;
-      --red:      #ed4245;
-      --muted:    #6b7280;
-      --text:     #e8eaf0;
-      --radius:   16px;
-      --bottom-bar-height: 80px;
+      --bg:#0d0d12; --surface:#18191f; --card:#1e2029; --card2:#24263a;
+      --border:#2e3045; --accent:#5865f2; --accent2:#7289da;
+      --green:#23a55a; --red:#ed4245; --muted:#6b7280; --text:#e8eaf0;
+      --radius:16px; --bottom-bar-height:80px;
     }
-
-    html { height: 100%; background: var(--bg); }
-
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100%;
-      padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 10px);
-      padding-top: env(safe-area-inset-top);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── Top Nav ── */
-    .top-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(13,13,18,.85);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 16px 12px;
-      padding-top: calc(14px + env(safe-area-inset-top));
-    }
-    .nav-title {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
-    }
-    .nav-logo {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 16px rgba(88,101,242,.5);
-      flex-shrink: 0;
-    }
-    .nav-title h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
-    .nav-title p  { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-    /* Global status pill */
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 12px;
-      font-size: 12px; font-weight: 500;
-    }
-    .pill-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--muted); flex-shrink: 0;
-      transition: background .3s;
-    }
-    .pill-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.35} }
-    .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .total-badge {
-      font-size: 12px; font-weight: 700; color: var(--accent2);
-      background: rgba(88,101,242,.15);
-      border-radius: 10px; padding: 4px 10px;
-    }
-
-    /* Token input */
-    .token-section { padding: 12px 16px 4px; }
-    .section-label { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    .token-wrap { position: relative; }
-    .token-wrap input {
-      width: 100%; background: var(--card);
-      border: 1px solid var(--border); border-radius: 12px;
-      color: var(--text); font-family: 'Inter', sans-serif;
-      font-size: 16px; padding: 14px 48px 14px 14px;
-      outline: none; letter-spacing: 2px;
-      transition: border-color .2s;
-    }
-    .token-wrap input:focus { border-color: var(--accent); }
-    .eye-btn {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; color: var(--muted);
-      font-size: 18px; cursor: pointer; padding: 6px;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .token-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
-
-    /* ── Main content ── */
-    .main { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
-
-    /* ── Task card ── */
-    .task-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .task-card.collapsed .task-body { display: none; }
-
-    .task-head {
-      display: flex; align-items: center; gap: 10px;
-      padding: 14px 16px;
-      min-height: 60px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      background: var(--card2);
-    }
-    .task-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--muted); flex-shrink: 0; transition: background .3s;
-    }
-    .task-dot.running { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
-    .task-dot.error   { background: var(--red); }
-
-    .task-info { flex: 1; min-width: 0; }
-    .task-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .task-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    .task-badge {
-      font-size: 13px; font-weight: 700; color: var(--accent2);
-      background: rgba(88,101,242,.15); border-radius: 10px;
-      padding: 4px 10px; white-space: nowrap;
-    }
-    .task-chevron { color: var(--muted); font-size: 13px; transition: transform .25s; flex-shrink: 0; }
-    .task-card.collapsed .task-chevron { transform: rotate(-90deg); }
-
-    .task-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-
-    /* Inputs inside task */
-    .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-    .field-input {
-      width: 100%; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 10px;
-      color: var(--text); font-family: 'Inter', sans-serif;
-      font-size: 16px; padding: 12px 14px;
-      outline: none; transition: border-color .2s;
-    }
-    .field-input:focus { border-color: var(--accent); }
-    textarea.field-input { resize: none; min-height: 72px; line-height: 1.5; }
-
-    /* Message pool */
-    .msg-list { display: flex; flex-direction: column; gap: 7px; }
-    .msg-item {
-      display: flex; align-items: flex-start; gap: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 10px 12px;
-    }
-    .msg-item-text { flex: 1; font-size: 14px; word-break: break-word; line-height: 1.4; }
-    .msg-del {
-      background: rgba(237,66,69,.15); border: none; border-radius: 7px;
-      color: var(--red); font-size: 14px; font-weight: 700;
-      padding: 6px 10px; cursor: pointer; min-width: 36px;
-      min-height: 36px; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .add-bar { display: flex; gap: 8px; align-items: flex-end; margin-top: 4px; }
-    .add-bar textarea { flex: 1; min-height: 48px; }
-    .add-bar .add-btn {
-      background: var(--accent); border: none; border-radius: 10px;
-      color: #fff; font-size: 20px; font-weight: 700;
-      width: 48px; height: 48px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; flex-shrink: 0;
-    }
-
-    /* Row config */
-    .row2 { display: flex; gap: 10px; }
-    .row2 > * { flex: 1; }
-
-    /* interval */
-    .interval-row { display: flex; gap: 8px; }
-    .interval-row .field-input { flex: 1; }
-    .interval-row select.field-input { width: 110px; flex: none; }
-
-    /* Toggle */
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 2px 0;
-    }
-    .toggle-label { font-size: 14px; color: var(--text); }
-    .toggle-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-    .ios-toggle { position: relative; width: 51px; height: 31px; flex-shrink: 0; }
-    .ios-toggle input { display: none; }
-    .ios-track {
-      position: absolute; inset: 0;
-      background: var(--border); border-radius: 20px;
-      transition: background .25s;
-    }
-    .ios-toggle input:checked ~ .ios-track { background: var(--green); }
-    .ios-thumb {
-      position: absolute; left: 2px; top: 2px;
-      width: 27px; height: 27px; border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,.4);
-      transition: left .25s cubic-bezier(.4,0,.2,1);
-    }
-    .ios-toggle input:checked ~ .ios-thumb { left: 22px; }
-
-    /* Task action buttons */
-    .task-actions { display: flex; gap: 8px; }
-    .task-actions .btn { flex: 1; }
-
-    .btn {
-      border: none; border-radius: 10px; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-weight: 600;
-      font-size: 14px; padding: 12px 16px;
-      transition: all .15s; white-space: nowrap;
-      min-height: 44px;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn:disabled { opacity: .4; }
-    .btn-start   { background: var(--green); color: #fff; }
-    .btn-stop    { background: var(--red);   color: #fff; }
-    .btn-remove  { background: rgba(237,66,69,.12); color: var(--red); font-size: 13px; flex: none !important; width: 44px; padding: 12px 0; }
-
-    /* ── Bottom bar ── */
-    .bottom-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 100;
-      background: rgba(13,13,18,.9);
-      -webkit-backdrop-filter: saturate(180%) blur(24px);
-      backdrop-filter: saturate(180%) blur(24px);
-      border-top: 1px solid var(--border);
-      padding: 10px 16px;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom));
-      display: flex; gap: 10px;
-    }
-    .bottom-bar .bb-btn {
-      flex: 1; border: none; border-radius: 12px; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-weight: 700;
-      font-size: 15px; padding: 14px;
-      min-height: 50px;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform .1s, opacity .15s;
-    }
-    .bottom-bar .bb-btn:active { transform: scale(.96); }
-    .bb-start { background: var(--green); color: #fff; }
-    .bb-stop  { background: var(--red);   color: #fff; }
-    .bb-add   { background: var(--accent); color: #fff; flex: none; width: 50px; font-size: 22px; border-radius: 12px; }
-
-    /* ── Log sheet ── */
-    .log-toggle-btn {
-      width: 100%; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 12px;
-      color: var(--muted); font-family: 'Inter', sans-serif;
-      font-size: 13px; font-weight: 500;
-      padding: 12px; cursor: pointer;
-      text-align: left; display: flex; align-items: center; gap: 8px;
-    }
-    .log-count { background: var(--accent); color: #fff; border-radius: 8px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
-
-    .log-box {
-      background: #09090d; border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px;
-      max-height: 220px; overflow-y: auto;
-      font-family: 'Courier New', monospace;
-      font-size: 12px; line-height: 1.7;
-      display: none;
-    }
-    .log-box.open { display: block; }
-    .log-entry { display: flex; flex-wrap: wrap; gap: 4px; }
-    .log-time  { color: var(--muted); flex-shrink: 0; }
-    .log-tag   { flex-shrink: 0; }
-    .log-ok    { color: var(--green); }
-    .log-err   { color: var(--red); }
-    .log-info  { color: var(--accent2); }
-
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center; padding: 48px 20px; color: var(--muted);
-    }
-    .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 14px; }
-
-    /* ── Animations ── */
-    .task-card { animation: cardIn .2s ease; }
+    html { height:100%; background:var(--bg); }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text);
+           min-height:100%; padding-bottom:calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 10px);
+           padding-top:env(safe-area-inset-top); -webkit-font-smoothing:antialiased; }
+    .top-nav { position:sticky; top:0; z-index:100; background:rgba(13,13,18,.85);
+               -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
+               border-bottom:1px solid var(--border); padding:14px 16px 12px;
+               padding-top:calc(14px + env(safe-area-inset-top)); }
+    .nav-title { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .nav-logo { width:34px; height:34px; border-radius:50%; background:var(--accent);
+                display:flex; align-items:center; justify-content:center; font-size:18px;
+                box-shadow:0 0 16px rgba(88,101,242,.5); flex-shrink:0; }
+    .nav-title h1 { font-size:17px; font-weight:700; letter-spacing:-.3px; }
+    .nav-title p  { font-size:11px; color:var(--muted); margin-top:1px; }
+    .save-indicator { font-size:11px; color:var(--green); font-weight:600;
+                      opacity:0; transition:opacity .4s; display:flex; align-items:center;
+                      gap:4px; margin-left:auto; pointer-events:none; }
+    .save-indicator.show { opacity:1; }
+    .status-pill { display:inline-flex; align-items:center; gap:6px; background:var(--surface);
+                   border:1px solid var(--border); border-radius:20px; padding:6px 12px;
+                   font-size:12px; font-weight:500; }
+    .pill-dot { width:7px; height:7px; border-radius:50%; background:var(--muted);
+                flex-shrink:0; transition:background .3s; }
+    .pill-dot.active { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .nav-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .total-badge { font-size:12px; font-weight:700; color:var(--accent2);
+                   background:rgba(88,101,242,.15); border-radius:10px; padding:4px 10px; }
+    .token-section { padding:12px 16px 4px; }
+    .section-label { font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase;
+                     color:var(--muted); margin-bottom:8px; }
+    .token-wrap { position:relative; }
+    .token-wrap input { width:100%; background:var(--card); border:1px solid var(--border);
+                        border-radius:12px; color:var(--text); font-family:'Inter',sans-serif;
+                        font-size:16px; padding:14px 48px 14px 14px; outline:none;
+                        letter-spacing:2px; transition:border-color .2s; }
+    .token-wrap input:focus { border-color:var(--accent); }
+    .eye-btn { position:absolute; right:14px; top:50%; transform:translateY(-50%);
+               background:none; border:none; color:var(--muted); font-size:18px;
+               cursor:pointer; padding:6px; -webkit-tap-highlight-color:transparent; }
+    .token-hint { font-size:11px; margin-top:6px; }
+    .main { padding:12px 16px; display:flex; flex-direction:column; gap:12px; }
+    .task-card { background:var(--card); border:1px solid var(--border);
+                 border-radius:var(--radius); overflow:hidden; animation:cardIn .2s ease; }
     @keyframes cardIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
-
-    /* ── Auto-grab modal ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 999;
-      background: rgba(0,0,0,.75);
-      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-      display: flex; align-items: flex-end;
-      animation: fadeIn .2s ease;
-    }
+    .task-card.collapsed .task-body { display:none; }
+    .task-head { display:flex; align-items:center; gap:10px; padding:14px 16px; min-height:60px;
+                 cursor:pointer; -webkit-tap-highlight-color:transparent; background:var(--card2); }
+    .task-dot { width:10px; height:10px; border-radius:50%; background:var(--muted);
+                flex-shrink:0; transition:background .3s; }
+    .task-dot.running { background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.5s infinite; }
+    .task-dot.error   { background:var(--red); }
+    .task-info { flex:1; min-width:0; }
+    .task-name { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .task-sub  { font-size:11px; color:var(--muted); margin-top:2px; }
+    .task-badge { font-size:13px; font-weight:700; color:var(--accent2);
+                  background:rgba(88,101,242,.15); border-radius:10px; padding:4px 10px; white-space:nowrap; }
+    .task-chevron { color:var(--muted); font-size:13px; transition:transform .25s; flex-shrink:0; }
+    .task-card.collapsed .task-chevron { transform:rotate(-90deg); }
+    .task-body { padding:16px; display:flex; flex-direction:column; gap:14px; }
+    .field-label { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px; }
+    .field-input { width:100%; background:var(--surface); border:1px solid var(--border);
+                   border-radius:10px; color:var(--text); font-family:'Inter',sans-serif;
+                   font-size:16px; padding:12px 14px; outline:none; transition:border-color .2s; }
+    .field-input:focus { border-color:var(--accent); }
+    textarea.field-input { resize:none; min-height:72px; line-height:1.5; }
+    .msg-list { display:flex; flex-direction:column; gap:7px; }
+    .msg-item { display:flex; align-items:flex-start; gap:8px; background:var(--surface);
+                border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+    .msg-item-text { flex:1; font-size:14px; word-break:break-word; line-height:1.4; }
+    .msg-del { background:rgba(237,66,69,.15); border:none; border-radius:7px; color:var(--red);
+               font-size:14px; font-weight:700; padding:6px 10px; cursor:pointer;
+               min-width:36px; min-height:36px; display:flex; align-items:center;
+               justify-content:center; flex-shrink:0; }
+    .add-bar { display:flex; gap:8px; align-items:flex-end; margin-top:4px; }
+    .add-bar textarea { flex:1; min-height:48px; }
+    .add-bar .add-btn { background:var(--accent); border:none; border-radius:10px; color:#fff;
+                        font-size:20px; font-weight:700; width:48px; height:48px;
+                        display:flex; align-items:center; justify-content:center;
+                        cursor:pointer; flex-shrink:0; }
+    .interval-row { display:flex; gap:8px; }
+    .interval-row .field-input { flex:1; }
+    .interval-row select.field-input { width:110px; flex:none; }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:2px 0; }
+    .toggle-label { font-size:14px; color:var(--text); }
+    .toggle-sub   { font-size:11px; color:var(--muted); margin-top:1px; }
+    .ios-toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
+    .ios-toggle input { display:none; }
+    .ios-track { position:absolute; inset:0; background:var(--border); border-radius:20px; transition:background .25s; }
+    .ios-toggle input:checked ~ .ios-track { background:var(--green); }
+    .ios-thumb { position:absolute; left:2px; top:2px; width:27px; height:27px; border-radius:50%;
+                 background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.4);
+                 transition:left .25s cubic-bezier(.4,0,.2,1); }
+    .ios-toggle input:checked ~ .ios-thumb { left:22px; }
+    .task-actions { display:flex; gap:8px; }
+    .task-actions .btn { flex:1; }
+    .btn { border:none; border-radius:10px; cursor:pointer; font-family:'Inter',sans-serif;
+           font-weight:600; font-size:14px; padding:12px 16px; transition:all .15s;
+           white-space:nowrap; min-height:44px; -webkit-tap-highlight-color:transparent; }
+    .btn:disabled { opacity:.4; }
+    .btn-start  { background:var(--green); color:#fff; }
+    .btn-stop   { background:var(--red);   color:#fff; }
+    .btn-remove { background:rgba(237,66,69,.12); color:var(--red); font-size:13px;
+                  flex:none !important; width:44px; padding:12px 0; }
+    .bottom-bar { position:fixed; bottom:0; left:0; right:0; z-index:100;
+                  background:rgba(13,13,18,.9); -webkit-backdrop-filter:saturate(180%) blur(24px);
+                  backdrop-filter:saturate(180%) blur(24px); border-top:1px solid var(--border);
+                  padding:10px 16px; padding-bottom:calc(10px + env(safe-area-inset-bottom));
+                  display:flex; gap:10px; }
+    .bottom-bar .bb-btn { flex:1; border:none; border-radius:12px; cursor:pointer;
+                          font-family:'Inter',sans-serif; font-weight:700; font-size:15px;
+                          padding:14px; min-height:50px; -webkit-tap-highlight-color:transparent;
+                          transition:transform .1s, opacity .15s; }
+    .bottom-bar .bb-btn:active { transform:scale(.96); }
+    .bb-start { background:var(--green); color:#fff; }
+    .bb-stop  { background:var(--red);   color:#fff; }
+    .bb-add   { background:var(--accent); color:#fff; flex:none; width:50px; font-size:22px; border-radius:12px; }
+    .bb-save  { background:var(--card2); color:var(--accent2); border:1px solid var(--border);
+                flex:none; width:50px; font-size:20px; border-radius:12px; }
+    .log-toggle-btn { width:100%; background:var(--surface); border:1px solid var(--border);
+                      border-radius:12px; color:var(--muted); font-family:'Inter',sans-serif;
+                      font-size:13px; font-weight:500; padding:12px; cursor:pointer;
+                      text-align:left; display:flex; align-items:center; gap:8px; }
+    .log-count { background:var(--accent); color:#fff; border-radius:8px; padding:1px 7px; font-size:11px; font-weight:700; }
+    .log-box { background:#09090d; border:1px solid var(--border); border-radius:12px; padding:12px;
+               max-height:220px; overflow-y:auto; font-family:'Courier New',monospace;
+               font-size:12px; line-height:1.7; display:none; }
+    .log-box.open { display:block; }
+    .log-entry { display:flex; flex-wrap:wrap; gap:4px; }
+    .log-time  { color:var(--muted); flex-shrink:0; }
+    .log-tag   { flex-shrink:0; }
+    .log-ok    { color:var(--green); }
+    .log-err   { color:var(--red); }
+    .log-info  { color:var(--accent2); }
+    .empty-state { text-align:center; padding:48px 20px; color:var(--muted); }
+    .empty-state .emoji { font-size:48px; margin-bottom:12px; }
+    .empty-state p { font-size:14px; }
+    .modal-overlay { position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.75);
+                     -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+                     display:flex; align-items:flex-end; animation:fadeIn .2s ease; }
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-    .modal-sheet {
-      width: 100%; background: var(--card);
-      border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border);
-      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-      animation: slideUp .25s cubic-bezier(.4,0,.2,1);
-    }
+    .modal-sheet { width:100%; background:var(--card); border-radius:24px 24px 0 0;
+                   border-top:1px solid var(--border);
+                   padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+                   animation:slideUp .25s cubic-bezier(.4,0,.2,1); }
     @keyframes slideUp { from{transform:translateY(100%)} to{transform:none} }
-    .modal-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 18px; }
-    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .modal-sub   { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
-    .snippet-box {
-      background: #09090d; border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px;
-      font-family: 'Courier New', monospace; font-size: 11px;
-      color: var(--accent2); word-break: break-all;
-      line-height: 1.5; margin-bottom: 14px;
-      max-height: 120px; overflow-y: auto; user-select: all;
-    }
-    .modal-btns { display: flex; gap: 8px; }
-    .modal-btns .btn { flex: 1; }
-    .grab-btn {
-      display: flex; align-items: center; gap: 8px;
-      background: linear-gradient(135deg,#5865f2,#7289da);
-      border: none; border-radius: 10px;
-      color: #fff; font-family: 'Inter',sans-serif;
-      font-size: 13px; font-weight: 600;
-      padding: 10px 14px; cursor: pointer;
-      margin-top: 10px; width: 100%;
-      justify-content: center;
-      min-height: 44px;
-      transition: opacity .15s;
-    }
-    .grab-btn:active { opacity: .75; }
-    .step-list { counter-reset: step; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-    .step-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
-    .step-num {
-      counter-increment: step;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--accent); color: #fff;
-      font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; margin-top: 1px;
-    }
-    .step-num::before { content: counter(step); }
+    .modal-handle { width:40px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 18px; }
+    .modal-title { font-size:16px; font-weight:700; margin-bottom:6px; }
+    .modal-sub   { font-size:12px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+    .snippet-box { background:#09090d; border:1px solid var(--border); border-radius:10px; padding:12px;
+                   font-family:'Courier New',monospace; font-size:11px; color:var(--accent2);
+                   word-break:break-all; line-height:1.5; margin-bottom:14px;
+                   max-height:120px; overflow-y:auto; user-select:all; }
+    .modal-btns { display:flex; gap:8px; }
+    .modal-btns .btn { flex:1; }
+    .grab-btn { display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,#5865f2,#7289da);
+                border:none; border-radius:10px; color:#fff; font-family:'Inter',sans-serif;
+                font-size:13px; font-weight:600; padding:10px 14px; cursor:pointer;
+                margin-top:10px; width:100%; justify-content:center; min-height:44px; transition:opacity .15s; }
+    .grab-btn:active { opacity:.75; }
+    .step-list { counter-reset:step; display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+    .step-item { display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.5; }
+    .step-num { counter-increment:step; width:22px; height:22px; border-radius:50%;
+                background:var(--accent); color:#fff; font-size:11px; font-weight:700;
+                display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+    .step-num::before { content:counter(step); }
     .tab-row { display:flex; gap:6px; margin-bottom:16px; }
-    .tab-btn {
-      flex:1; border:1px solid var(--border); border-radius:10px;
-      background:var(--surface); color:var(--muted);
-      font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
-      padding:10px 8px; cursor:pointer; transition:all .15s;
-    }
+    .tab-btn { flex:1; border:1px solid var(--border); border-radius:10px; background:var(--surface);
+               color:var(--muted); font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+               padding:10px 8px; cursor:pointer; transition:all .15s; }
     .tab-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-
-    /* ── Login modal ── */
-    .login-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
-      border: none; border-radius: 10px;
-      color: #fff; font-family: 'Inter', sans-serif;
-      font-size: 14px; font-weight: 700;
-      padding: 13px 16px; cursor: pointer;
-      margin-top: 10px; width: 100%;
-      min-height: 48px;
-      box-shadow: 0 4px 20px rgba(88,101,242,.35);
-      transition: opacity .15s, transform .1s;
-    }
-    .login-btn:active { opacity:.8; transform:scale(.98); }
-    .login-status {
-      display: none; align-items: center; gap: 8px;
-      font-size: 12px; margin-top: 8px; padding: 10px 12px;
-      border-radius: 10px; font-weight: 500;
-    }
-    .login-status.ok  { display:flex; background:rgba(35,165,90,.15); color:var(--green); border:1px solid rgba(35,165,90,.3); }
-    .login-status.err { display:flex; background:rgba(237,66,69,.15); color:var(--red);   border:1px solid rgba(237,66,69,.3); }
-    .login-status.mfa { display:flex; background:rgba(88,101,242,.12); color:var(--accent2); border:1px solid rgba(88,101,242,.25); }
+    .method-card { border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:var(--surface); }
+    .method-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .method-desc  { font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:10px; }
+    .method-badge { display:inline-flex; align-items:center; background:rgba(35,165,90,.15); color:var(--green);
+                    border:1px solid rgba(35,165,90,.3); border-radius:6px; font-size:10px; font-weight:700;
+                    padding:2px 7px; margin-left:4px; letter-spacing:.5px; }
+    .or-divider { display:flex; align-items:center; gap:10px; margin:12px 0 4px; color:var(--muted); font-size:11px; }
+    .or-divider::before, .or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
     .mfa-row { display:flex; gap:8px; margin-top:8px; }
     .mfa-row input { flex:1; letter-spacing:4px; text-align:center; font-size:18px; }
     .mfa-row .btn  { flex:none; width:80px; }
-    .or-divider {
-      display: flex; align-items: center; gap: 10px;
-      margin: 12px 0 4px; color: var(--muted); font-size: 11px;
-    }
-    .or-divider::before, .or-divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
+    .toast { position:fixed; bottom:calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 16px);
+             left:50%; transform:translateX(-50%) translateY(20px);
+             background:var(--card2); border:1px solid var(--border); border-radius:12px;
+             padding:10px 18px; font-size:13px; font-weight:600; color:var(--text);
+             white-space:nowrap; z-index:9999; opacity:0;
+             transition:opacity .25s, transform .25s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- Top Nav -->
+<div class="toast" id="toastEl"></div>
+
 <div class="top-nav">
   <div class="nav-title">
-    <div class="nav-logo">🤖</div>
-    <div>
-      <h1>DS Multi Sender</h1>
-      <p>Discord auto-message · user token</p>
-    </div>
+    <div class="nav-logo">&#x1F916;</div>
+    <div><h1>DS Multi Sender</h1><p>Discord auto-message &middot; user token</p></div>
+    <div class="save-indicator" id="saveInd">&#x1F4BE; Saved</div>
   </div>
   <div class="nav-row">
-    <div class="status-pill">
-      <div class="pill-dot" id="gDot"></div>
-      <span id="gStatusText">Idle</span>
-    </div>
-    <div class="total-badge">⚡ <span id="gTotal">0</span> sent</div>
-    <button class="log-toggle-btn" onclick="toggleLog()" style="width:auto;padding:8px 12px;">
-      📋 <span class="log-count" id="logCount">0</span>
-    </button>
+    <div class="status-pill"><div class="pill-dot" id="gDot"></div><span id="gStatusText">Idle</span></div>
+    <div class="total-badge">&#x26A1; <span id="gTotal">0</span> sent</div>
+    <button class="log-toggle-btn" onclick="toggleLog()" style="width:auto;padding:8px 12px;">&#x1F4CB; <span class="log-count" id="logCount">0</span></button>
   </div>
 </div>
 
-<!-- Token / Auth -->
 <div class="token-section">
   <div class="section-label">Auth</div>
-
-  <!-- Info banner -->
   <div style="background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;margin-bottom:2px;">
-    <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px;">📌 How to get your token</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-      Discord blocks email/password login from HTML files.<br/>
-      Use the <strong style="color:var(--text)">⚡ Bookmarklet</strong> button below — runs on discord.com directly.
-    </div>
+    <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px;">&#x1F4CC; How to get your token</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;">Discord blocks email/password login from HTML files.<br/>Use the <strong style="color:var(--text)">&#x26A1; Get Token</strong> button below.</div>
   </div>
-
-  <!-- Bookmarklet as primary -->
-  <button class="grab-btn" onclick="showGrabModal()" style="margin-top:10px;font-size:14px;padding:13px 16px;min-height:48px;">
-    ⚡ Get Token via Bookmarklet
-  </button>
-
+  <button class="grab-btn" onclick="showGrabModal()" style="margin-top:10px;font-size:14px;padding:13px 16px;min-height:48px;">&#x26A1; Get Token (iOS / Desktop)</button>
   <div class="or-divider">or paste token manually</div>
-
-  <!-- Manual token -->
   <div class="token-wrap">
-    <input type="password" id="tokenInput" placeholder="paste token here…" autocomplete="off" autocorrect="off" spellcheck="false"/>
-    <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">👁</button>
+    <input type="password" id="tokenInput" placeholder="paste token here..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="onTokenChange()"/>
+    <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">&#x1F441;</button>
   </div>
+  <div class="token-hint" id="tokenHint"></div>
 </div>
 
-<!-- Login Modal -->
 <div class="modal-overlay" id="loginModal" style="display:none" onclick="closeLoginModal(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">🔑 Sign in with Discord</div>
-    <div class="modal-sub" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
-      Your credentials go directly to <strong style="color:var(--text)">discord.com/api</strong> — not stored anywhere.
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:10px;" id="loginForm">
-      <div>
-        <div class="field-label">EMAIL / PHONE</div>
-        <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com"
-          autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false"
-          inputmode="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/>
-      </div>
-      <div>
-        <div class="field-label">PASSWORD</div>
-        <div class="token-wrap">
-          <input class="field-input" type="password" id="loginPass" placeholder="password"
-            style="padding-right:48px" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')doLogin()"/>
-          <button class="eye-btn" onclick="toggleLoginEye()" id="loginEyeBtn">👁</button>
-        </div>
-      </div>
-
-      <!-- MFA row (hidden until needed) -->
-      <div id="mfaRow" style="display:none">
-        <div class="field-label">2FA CODE</div>
-        <div class="mfa-row">
-          <input class="field-input" type="text" id="mfaCode" placeholder="000000"
-            inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-            onkeydown="if(event.key==='Enter')doMfa()"/>
-          <button class="btn btn-start" onclick="doMfa()">Verify</button>
-        </div>
-      </div>
-
+    <div class="modal-title">&#x1F511; Sign in with Discord</div>
+    <div class="modal-sub">Your credentials go directly to <strong style="color:var(--text)">discord.com/api</strong> &mdash; not stored.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div><div class="field-label">EMAIL / PHONE</div>
+      <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/></div>
+      <div><div class="field-label">PASSWORD</div>
+      <div class="token-wrap">
+        <input class="field-input" type="password" id="loginPass" placeholder="password" style="padding-right:48px" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="eye-btn" onclick="toggleLoginEye()" id="loginEyeBtn">&#x1F441;</button>
+      </div></div>
+      <div id="mfaRow" style="display:none"><div class="field-label">2FA CODE</div>
+      <div class="mfa-row">
+        <input class="field-input" type="text" id="mfaCode" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')doMfa()"/>
+        <button class="btn btn-start" onclick="doMfa()">Verify</button>
+      </div></div>
       <div id="loginErr" style="display:none;font-size:12px;color:var(--red);padding:8px 12px;background:rgba(237,66,69,.1);border-radius:8px;"></div>
-
-      <button class="btn btn-start" id="loginSubmitBtn" onclick="doLogin()" style="min-height:50px;font-size:15px;"
-        onkeydown="if(event.key==='Enter')doLogin()">
-        Sign In
-      </button>
+      <button class="btn btn-start" id="loginSubmitBtn" onclick="doLogin()" style="min-height:50px;font-size:15px;">Sign In</button>
     </div>
-
-    <div style="margin-top:10px;text-align:center">
-      <button onclick="closeLoginModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button>
-    </div>
+    <div style="margin-top:10px;text-align:center"><button onclick="closeLoginModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
   </div>
 </div>
 
-<!-- Auto-Grab Modal -->
 <div class="modal-overlay" id="grabModal" style="display:none" onclick="closeGrabModal(event)">
-  <div class="modal-sheet">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto;">
     <div class="modal-handle"></div>
-    <div class="modal-title">⚡ Get Token</div>
-
-    <!-- Tab switcher -->
+    <div class="modal-title">&#x26A1; Get Token</div>
     <div class="tab-row">
-      <button class="tab-btn active" id="tabIos" onclick="switchTab('ios')">&#127381; iOS / Safari</button>
-      <button class="tab-btn" id="tabDsk" onclick="switchTab('desktop')">&#128187; Desktop</button>
+      <button class="tab-btn active" id="tabIos" onclick="switchTab('ios')">&#x1F4F1; iOS / Safari</button>
+      <button class="tab-btn" id="tabDsk" onclick="switchTab('desktop')">&#x1F4BB; Desktop</button>
     </div>
-
-    <!-- iOS Tab -->
     <div id="paneIos">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
-        Safari blocks DevTools on iOS. Use a <strong style="color:var(--text)">Bookmark trick</strong> instead — takes 30 sec.
-      </p>
-      <div class="step-list">
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Tap <strong>Copy Bookmarklet</strong> below to copy the code</span>
+      <div class="method-card">
+        <div class="method-title">&#x1F516; Bookmarklet <span class="method-badge">RECOMMENDED</span></div>
+        <div class="method-desc">4-strategy token extractor runs directly on discord.com. Works on modern Discord builds.</div>
+        <div class="step-list">
+          <div class="step-item"><div class="step-num"></div><span>Tap <strong>Copy Bookmarklet</strong> below</span></div>
+          <div class="step-item"><div class="step-num"></div><span>Safari &rarr; bookmark <strong>any page</strong> (Share &rarr; Add Bookmark)</span></div>
+          <div class="step-item"><div class="step-num"></div><span>Bookmarks &rarr; long-press new bookmark &rarr; <strong>Edit</strong> &rarr; clear URL &rarr; paste &rarr; Save</span></div>
+          <div class="step-item"><div class="step-num"></div><span>Open <strong>discord.com</strong> in Safari &mdash; make sure you're logged in</span></div>
+          <div class="step-item"><div class="step-num"></div><span>Tap the bookmark &rarr; dialog shows token &rarr; <strong>Select All &rarr; Copy</strong></span></div>
+          <div class="step-item"><div class="step-num"></div><span>Come back here &rarr; tap <strong>Paste Token</strong></span></div>
         </div>
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Open Safari → bookmark <strong>any</strong> page (share → Add Bookmark)</span>
-        </div>
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Go to <strong>Bookmarks</strong> → long-press that bookmark → <strong>Edit</strong> → delete the URL field → paste the copied code → Save</span>
-        </div>
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Open <strong>discord.com</strong> in Safari and log in</span>
-        </div>
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Tap the bookmark you just edited — a box will pop up showing your token. <strong>Copy it.</strong></span>
-        </div>
-        <div class="step-item">
-          <div class="step-num"></div>
-          <span>Come back here → tap <strong>Paste Token</strong></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-start" id="copyBmBtn" onclick="copyBookmarklet()" style="flex:1;">&#x1F4CB; Copy Bookmarklet</button>
+          <button class="btn" style="background:var(--accent);color:#fff;flex:1;" onclick="pasteToken()">&#x1F4E5; Paste Token</button>
         </div>
       </div>
-      <div class="modal-btns">
-        <button class="btn btn-start" id="copyBmBtn" onclick="copyBookmarklet()">📋 Copy Bookmarklet</button>
-        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#128229; Paste Token</button>
+      <div class="method-card">
+        <div class="method-title">&#x270D; Manual Paste</div>
+        <div class="method-desc">Already have your token? Paste it directly.</div>
+        <button class="btn" style="background:var(--card2);color:var(--accent2);border:1px solid var(--border);width:100%;"
+          onclick="closeGrabModal();setTimeout(function(){document.getElementById('tokenInput').focus();},100);">&#x1F4DD; Paste Token Manually</button>
       </div>
+      <div><div class="field-label" style="margin-bottom:6px;">BOOKMARKLET CODE (tap to select then copy)</div>
+      <div class="snippet-box" id="bmSnippetBox" onclick="selectBmSnippet()" style="font-size:10px;max-height:80px;"></div></div>
     </div>
-
-    <!-- Desktop Tab -->
     <div id="paneDsk" style="display:none">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-        Open Discord in Chrome/Firefox → F12 Console → paste this → Enter. Token gets copied to clipboard.
-      </p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Open Discord in Chrome/Firefox &rarr; F12 &rarr; Console &rarr; paste &rarr; Enter. Token is auto-copied.</p>
       <div class="snippet-box" id="snippetBox" onclick="selectSnippet()"></div>
       <div class="modal-btns">
-        <button class="btn btn-start" id="copySnipBtn" onclick="copySnippet()">📋 Copy Snippet</button>
-        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#128229; Paste Token</button>
+        <button class="btn btn-start" id="copySnipBtn" onclick="copySnippet()">&#x1F4CB; Copy Snippet</button>
+        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#x1F4E5; Paste Token</button>
       </div>
     </div>
-
-    <div style="margin-top:12px;text-align:center">
-      <button onclick="closeGrabModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button>
-    </div>
+    <div style="margin-top:12px;text-align:center"><button onclick="closeGrabModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
   </div>
 </div>
 
-<!-- Main -->
 <div class="main">
-  <!-- Log (collapsible) -->
-  <div>
-    <div class="log-box" id="logBox">
-      <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info"> Ready. Add a channel below.</span></div>
-    </div>
-  </div>
-
-  <!-- Task list -->
+  <div><div class="log-box" id="logBox">
+    <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info"> Ready. Add a channel below.</span></div>
+  </div></div>
   <div id="taskList">
     <div class="empty-state" id="emptyState">
-      <div class="emoji">📡</div>
-      <p>No channels yet<br/>Tap <strong style="color:var(--accent);">＋</strong> to add one</p>
+      <div class="emoji">&#x1F4E1;</div>
+      <p>No channels yet<br/>Tap <strong style="color:var(--accent);">&#xFF0B;</strong> to add one</p>
     </div>
   </div>
 </div>
 
-<!-- Bottom Bar -->
 <div class="bottom-bar">
-  <button class="bb-btn bb-start" onclick="startAll()">▶ Start All</button>
-  <button class="bb-btn bb-stop"  onclick="stopAll()">⏹ Stop</button>
-  <button class="bb-btn bb-add"   onclick="addTask()">＋</button>
+  <button class="bb-btn bb-start" onclick="startAll()">&#x25B6; Start All</button>
+  <button class="bb-btn bb-stop" onclick="stopAll()">&#x23F9; Stop</button>
+  <button class="bb-btn bb-save" onclick="saveData()" title="Save all">&#x1F4BE;</button>
+  <button class="bb-btn bb-add" onclick="addTask()">&#xFF0B;</button>
 </div>
 
 <script>
-// ── Hardcoded token (optional) ────────────────────────────
-// Paste your token here once — app auto-fills on every open
-// Get token via: ⚡ Bookmarklet button in the app
-var DEFAULT_TOKEN = '';   // <-- paste token here between the quotes
-
-var tasks = {};
-var taskIdCounter = 0;
-var logEntryCount = 0;
-var logOpen = false;
-
-// Auto-fill token on load
-window.addEventListener('DOMContentLoaded', function() {
-  if (DEFAULT_TOKEN) {
-    var inp = document.getElementById('tokenInput');
-    inp.value = DEFAULT_TOKEN;
-    inp.type = 'text';
-    inp.style.letterSpacing = 'normal';
-    document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
-  }
-});
-
+var STORE_KEY = 'ds_sender_v2';
+var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
+var saveTimer = null, toastTimer = null, _mfaTicket = null;
 var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
 
-function newTask() {
-  var id = ++taskIdCounter;
-  return {
-    id: id,
-    name: 'Channel ' + id,
-    color: COLORS[(id - 1) % COLORS.length],
-    channelId: '',
-    messages: [],
-    msgIndex: 0,
-    mode: 'sequential',
-    intervalVal: 5,
-    intervalUnit: 1000,
-    jitter: false,
-    running: false,
-    timer: null,
-    sentCount: 0
-  };
+// 4-strategy iOS bookmarklet: webpack -> localStorage -> React fiber -> cookie
+// Uses prompt() to show token (copy() blocked in iOS Safari)
+var IOS_BOOKMARKLET = "javascript:(function(){var t=null;try{if(window.webpackChunkdiscord_app){webpackChunkdiscord_app.push([[Math.random()],{},function(e){var ms=Object.values(e.c);for(var i=0;i<ms.length;i++){try{var m=ms[i]&&ms[i].exports;if(!m)continue;if(m.default&&typeof m.default.getToken==='function'){t=m.default.getToken();if(t)break;}if(typeof m.getToken==='function'){t=m.getToken();if(t)break;}if(m.Z&&typeof m.Z.getToken==='function'){t=m.Z.getToken();if(t)break;}if(m.ZP&&typeof m.ZP.getToken==='function'){t=m.ZP.getToken();if(t)break;}}catch(x){}}}]);webpackChunkdiscord_app.pop();}}catch(e1){}if(!t){try{var ls=localStorage.getItem('token');if(ls&&ls.length>20)t=ls.replace(/\"/g,'');}catch(e2){}}if(!t){try{var root=document.getElementById('app-mount');if(root){var fk=Object.keys(root).find(function(k){return k.startsWith('__reactFiber')||k.startsWith('__reactInternalInstance');});if(fk){var fb=root[fk],d=0;while(fb&&d<200){try{var ps=fb.pendingProps||fb.memoizedProps;if(ps&&ps.token&&typeof ps.token==='string'&&ps.token.length>20){t=ps.token;break;}}catch(fe){}fb=fb.child||fb.sibling||fb.return;d++;}}}}catch(e3){}}if(t&&t.length>20){prompt('SELECT ALL then COPY your token:',t);}else{alert('Token not found.\\nMake sure you are on discord.com and logged in.');}})();";
+
+var TOKEN_SNIPPET = "(function(){var t=null;try{webpackChunkdiscord_app.push([[Math.random()],{},function(e){var ms=Object.values(e.c);for(var i=0;i<ms.length;i++){try{var m=ms[i]&&ms[i].exports;if(!m)continue;if(m.default&&typeof m.default.getToken==='function'){t=m.default.getToken();if(t)break;}if(typeof m.getToken==='function'){t=m.getToken();if(t)break;}if(m.Z&&typeof m.Z.getToken==='function'){t=m.Z.getToken();if(t)break;}if(m.ZP&&typeof m.ZP.getToken==='function'){t=m.ZP.getToken();if(t)break;}}catch(x){}}}]);webpackChunkdiscord_app.pop();}catch(e){}if(!t){try{var ls=localStorage.getItem('token');if(ls&&ls.length>20)t=ls.replace(/\"/g,'');}catch(e2){}}if(t&&t.length>20){copy(t);alert('Token copied!');}else{alert('Failed. Make sure you are logged in to discord.com.');}})();";
+
+function toast(msg,dur){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},dur||2200);}
+
+function saveData(){
+  try{
+    var token=document.getElementById('tokenInput').value.trim();
+    var arr=Object.values(tasks).map(function(t){return{id:t.id,name:t.name,color:t.color,channelId:t.channelId,messages:t.messages.slice(),mode:t.mode,intervalVal:t.intervalVal,intervalUnit:t.intervalUnit,jitter:t.jitter};});
+    localStorage.setItem(STORE_KEY,JSON.stringify({version:2,token:token,tasks:arr,taskIdCounter:taskIdCounter}));
+    var ind=document.getElementById('saveInd');ind.classList.add('show');setTimeout(function(){ind.classList.remove('show');},2000);
+    toast('\uD83D\uDCBE Saved!');
+  }catch(e){toast('Save failed: '+e.message);}
+}
+function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveData,1200);}
+
+function loadData(){
+  try{
+    var raw=localStorage.getItem(STORE_KEY);if(!raw)return false;
+    var data=JSON.parse(raw);if(!data||data.version!==2)return false;
+    if(data.token){var inp=document.getElementById('tokenInput');inp.value=data.token;inp.type='text';inp.style.letterSpacing='normal';document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(data.token);}
+    if(data.taskIdCounter)taskIdCounter=data.taskIdCounter;
+    if(data.tasks&&data.tasks.length){
+      var es=document.getElementById('emptyState');if(es)es.remove();
+      data.tasks.forEach(function(td){
+        var t={id:td.id,name:td.name||('Channel '+td.id),color:td.color||COLORS[(td.id-1)%COLORS.length],channelId:td.channelId||'',messages:td.messages||[],msgIndex:0,mode:td.mode||'sequential',intervalVal:td.intervalVal||5,intervalUnit:td.intervalUnit||1000,jitter:!!td.jitter,running:false,timer:null,sentCount:0};
+        tasks[t.id]=t;renderTask(t);
+      });
+    }
+    log('Loaded '+(data.tasks?data.tasks.length:0)+' tasks','ok');return true;
+  }catch(e){log('Load error: '+e.message,'err');return false;}
 }
 
-function addTask() {
-  var t = newTask();
-  tasks[t.id] = t;
-  var es = document.getElementById('emptyState');
-  if (es) es.remove();
-  renderTask(t);
-  log('Task "' + t.name + '" added', 'info', t);
-  // auto-expand new task
-  document.getElementById('task-' + t.id).classList.remove('collapsed');
-  // scroll to it
-  setTimeout(function() {
-    var el = document.getElementById('task-' + t.id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+function onTokenChange(){var val=document.getElementById('tokenInput').value.trim();updateTokenHint(val);autoSave();}
+function updateTokenHint(val){
+  var h=document.getElementById('tokenHint');if(!h)return;
+  if(!val){h.textContent='';return;}
+  if(val.length<50){h.style.color='var(--red)';h.textContent='\u26A0 Token too short ('+val.length+' chars)';}
+  else{h.style.color='var(--green)';h.textContent='\u2713 Token looks valid ('+val.length+' chars)';}
 }
 
-function renderTask(t) {
-  var list = document.getElementById('taskList');
-  var existing = document.getElementById('task-' + t.id);
+window.addEventListener('DOMContentLoaded',function(){
+  var loaded=loadData();
+  if(!loaded)log('Ready. Add a channel below.','info');
+  document.getElementById('snippetBox').textContent=TOKEN_SNIPPET;
+  var bm=document.getElementById('bmSnippetBox');if(bm)bm.textContent=IOS_BOOKMARKLET;
+});
 
-  var el = document.createElement('div');
-  el.className = 'task-card collapsed';
-  el.id = 'task-' + t.id;
-
-  el.innerHTML =
-    '<div class="task-head" onclick="toggleCollapse(' + t.id + ')">' +
-      '<div class="task-dot" id="dot-' + t.id + '"></div>' +
-      '<div class="task-info">' +
-        '<div class="task-name" style="color:' + t.color + '" id="tname-' + t.id + '">' + escHtml(t.name) + '</div>' +
-        '<div class="task-sub" id="tsub-' + t.id + '">tap to configure</div>' +
-      '</div>' +
-      '<div class="task-badge" id="tbadge-' + t.id + '">' + t.sentCount + ' sent</div>' +
-      '<div class="task-chevron">▾</div>' +
-    '</div>' +
-
-    '<div class="task-body">' +
-
-      // Name + channel
-      '<div>' +
-        '<div class="field-label">TASK NAME</div>' +
-        '<input class="field-input" type="text" id="tnameinp-' + t.id + '" value="' + escHtml(t.name) + '" oninput="syncName(' + t.id + ',this.value)" autocorrect="off" spellcheck="false"/>' +
-      '</div>' +
-
-      '<div>' +
-        '<div class="field-label">CHANNEL ID</div>' +
-        '<input class="field-input" type="text" id="chid-' + t.id + '" placeholder="e.g. 123456789012345678" value="' + escHtml(t.channelId) + '" oninput="syncF(' + t.id + ',\'channelId\',this.value)" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="numeric"/>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Right-click channel → Copy Channel ID (need Dev Mode)</div>' +
-      '</div>' +
-
-      // Message pool
-      '<div>' +
-        '<div class="field-label">MESSAGE POOL &nbsp;<span id="modespan-' + t.id + '" style="color:var(--accent2);font-weight:400;text-transform:none;letter-spacing:0;">' + (t.mode==='random'?'Random':'Sequential') + '</span></div>' +
-        '<div class="msg-list" id="pool-' + t.id + '"></div>' +
-        '<div class="add-bar">' +
-          '<textarea class="field-input" id="newmsg-' + t.id + '" placeholder="Type message…" rows="2"></textarea>' +
-          '<button class="add-btn" onclick="addMsg(' + t.id + ')">＋</button>' +
-        '</div>' +
-        '<div class="toggle-row" style="margin-top:10px;">' +
-          '<div><div class="toggle-label">Random mode</div><div class="toggle-sub">Pick random from pool</div></div>' +
-          '<label class="ios-toggle"><input type="checkbox" id="modtog-' + t.id + '" ' + (t.mode==='random'?'checked':'') + ' onchange="toggleMode(' + t.id + ')"/><div class="ios-track"></div><div class="ios-thumb"></div></label>' +
-        '</div>' +
-      '</div>' +
-
-      // Interval
-      '<div>' +
-        '<div class="field-label">INTERVAL</div>' +
-        '<div class="interval-row">' +
-          '<input class="field-input" type="number" id="ival-' + t.id + '" value="' + t.intervalVal + '" min="1" oninput="syncF(' + t.id + ',\'intervalVal\',+this.value)" inputmode="decimal"/>' +
-          '<select class="field-input" id="iunit-' + t.id + '" onchange="syncF(' + t.id + ',\'intervalUnit\',+this.value)">' +
-            '<option value="1000">Seconds</option>' +
-            '<option value="60000">Minutes</option>' +
-            '<option value="3600000">Hours</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="toggle-row" style="margin-top:10px;">' +
-          '<div><div class="toggle-label">Jitter</div><div class="toggle-sub">±30% random variance</div></div>' +
-          '<label class="ios-toggle"><input type="checkbox" id="jittog-' + t.id + '" ' + (t.jitter?'checked':'') + ' onchange="syncF(' + t.id + ',\'jitter\',this.checked)"/><div class="ios-track"></div><div class="ios-thumb"></div></label>' +
-        '</div>' +
-      '</div>' +
-
-      // Controls
-      '<div class="task-actions">' +
-        '<button class="btn btn-start" id="startbtn-' + t.id + '" onclick="startTask(' + t.id + ')">▶ Start</button>' +
-        '<button class="btn btn-stop"  id="stopbtn-'  + t.id + '" onclick="stopTask('  + t.id + ')" disabled>⏹</button>' +
-        '<button class="btn btn-remove" onclick="removeTask(' + t.id + ')">✕</button>' +
-      '</div>' +
-
-    '</div>';
-
-  if (existing) {
-    list.replaceChild(el, existing);
-  } else {
-    list.appendChild(el);
-  }
+function newTask(){var id=++taskIdCounter;return{id:id,name:'Channel '+id,color:COLORS[(id-1)%COLORS.length],channelId:'',messages:[],msgIndex:0,mode:'sequential',intervalVal:5,intervalUnit:1000,jitter:false,running:false,timer:null,sentCount:0};}
+function addTask(){
+  var t=newTask();tasks[t.id]=t;
+  var es=document.getElementById('emptyState');if(es)es.remove();
+  renderTask(t);log('Task "'+t.name+'" added','info',t);
+  document.getElementById('task-'+t.id).classList.remove('collapsed');
+  setTimeout(function(){var el=document.getElementById('task-'+t.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},100);
+  autoSave();
+}
+function renderTask(t){
+  var list=document.getElementById('taskList');var existing=document.getElementById('task-'+t.id);
+  var el=document.createElement('div');el.className='task-card collapsed';el.id='task-'+t.id;
+  var unitOpts=[{v:1000,l:'Seconds'},{v:60000,l:'Minutes'},{v:3600000,l:'Hours'}].map(function(o){return '<option value="'+o.v+'"'+(t.intervalUnit===o.v?' selected':'')+'>'+o.l+'</option>';}).join('');
+  el.innerHTML=
+    '<div class="task-head" onclick="toggleCollapse('+t.id+')">'+
+      '<div class="task-dot" id="dot-'+t.id+'"></div>'+
+      '<div class="task-info">'+
+        '<div class="task-name" style="color:'+t.color+'" id="tname-'+t.id+'">'+escHtml(t.name)+'</div>'+
+        '<div class="task-sub" id="tsub-'+t.id+'">tap to configure</div>'+
+      '</div>'+
+      '<div class="task-badge" id="tbadge-'+t.id+'">'+t.sentCount+' sent</div>'+
+      '<div class="task-chevron">\u25BE</div>'+
+    '</div>'+
+    '<div class="task-body">'+
+      '<div><div class="field-label">TASK NAME</div><input class="field-input" type="text" id="tnameinp-'+t.id+'" value="'+escHtml(t.name)+'" oninput="syncName('+t.id+',this.value)" autocorrect="off" spellcheck="false"/></div>'+
+      '<div><div class="field-label">CHANNEL ID</div><input class="field-input" type="text" id="chid-'+t.id+'" placeholder="e.g. 123456789012345678" value="'+escHtml(t.channelId)+'" oninput="syncF('+t.id+',\'channelId\',this.value)" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="numeric"/>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Right-click channel &rarr; Copy Channel ID (Dev Mode)</div></div>'+
+      '<div><div class="field-label">MESSAGE POOL &nbsp;<span id="modespan-'+t.id+'" style="color:var(--accent2);font-weight:400;text-transform:none;letter-spacing:0;">'+(t.mode==='random'?'Random':'Sequential')+'</span></div>'+
+      '<div class="msg-list" id="pool-'+t.id+'"></div>'+
+      '<div class="add-bar"><textarea class="field-input" id="newmsg-'+t.id+'" placeholder="Type message..." rows="2"></textarea><button class="add-btn" onclick="addMsg('+t.id+')">\uFF0B</button></div>'+
+      '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Random mode</div><div class="toggle-sub">Pick random from pool</div></div>'+
+      '<label class="ios-toggle"><input type="checkbox" id="modtog-'+t.id+'" '+(t.mode==='random'?'checked':'')+' onchange="toggleMode('+t.id+')"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>'+
+      '<div><div class="field-label">INTERVAL</div><div class="interval-row">'+
+      '<input class="field-input" type="number" id="ival-'+t.id+'" value="'+t.intervalVal+'" min="1" oninput="syncF('+t.id+',\'intervalVal\',+this.value)" inputmode="decimal"/>'+
+      '<select class="field-input" id="iunit-'+t.id+'" onchange="syncF('+t.id+',\'intervalUnit\',+this.value)">'+unitOpts+'</select></div>'+
+      '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Jitter</div><div class="toggle-sub">\xB130% random variance</div></div>'+
+      '<label class="ios-toggle"><input type="checkbox" id="jittog-'+t.id+'" '+(t.jitter?'checked':'')+' onchange="syncF('+t.id+',\'jitter\',this.checked)"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>'+
+      '<div class="task-actions">'+
+      '<button class="btn btn-start" id="startbtn-'+t.id+'" onclick="startTask('+t.id+')">\u25B6 Start</button>'+
+      '<button class="btn btn-stop" id="stopbtn-'+t.id+'" onclick="stopTask('+t.id+')" disabled>\u23F9</button>'+
+      '<button class="btn btn-remove" onclick="removeTask('+t.id+')">\u2715</button>'+
+      '</div></div>';
+  if(existing){list.replaceChild(el,existing);}else{list.appendChild(el);}
   renderPool(t);
 }
-
-function renderPool(t) {
-  var pool = document.getElementById('pool-' + t.id);
-  if (!pool) return;
-  pool.innerHTML = '';
-  if (!t.messages.length) {
-    pool.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px 0 8px;">No messages yet</div>';
-    return;
-  }
-  t.messages.forEach(function(m, i) {
-    var d = document.createElement('div');
-    d.className = 'msg-item';
-    d.innerHTML = '<span class="msg-item-text">' + escHtml(m) + '</span>' +
-      '<button class="msg-del" onclick="delMsg(' + t.id + ',' + i + ')">✕</button>';
-    pool.appendChild(d);
-  });
+function renderPool(t){
+  var pool=document.getElementById('pool-'+t.id);if(!pool)return;pool.innerHTML='';
+  if(!t.messages.length){pool.innerHTML='<div style="color:var(--muted);font-size:13px;padding:4px 0 8px;">No messages yet</div>';return;}
+  t.messages.forEach(function(m,i){var d=document.createElement('div');d.className='msg-item';d.innerHTML='<span class="msg-item-text">'+escHtml(m)+'</span><button class="msg-del" onclick="delMsg('+t.id+','+i+')">\u2715</button>';pool.appendChild(d);});
+}
+function toggleCollapse(id){document.getElementById('task-'+id).classList.toggle('collapsed');}
+function syncF(id,field,val){tasks[id][field]=val;autoSave();}
+function syncName(id,val){tasks[id].name=val||('Channel '+id);var n=document.getElementById('tname-'+id);if(n)n.textContent=tasks[id].name;autoSave();}
+function toggleMode(id){tasks[id].mode=document.getElementById('modtog-'+id).checked?'random':'sequential';var s=document.getElementById('modespan-'+id);if(s)s.textContent=tasks[id].mode==='random'?'Random':'Sequential';autoSave();}
+function addMsg(id){var inp=document.getElementById('newmsg-'+id);var txt=inp.value.trim();if(!txt)return;tasks[id].messages.push(txt);inp.value='';renderPool(tasks[id]);autoSave();}
+function delMsg(id,i){tasks[id].messages.splice(i,1);if(tasks[id].msgIndex>=tasks[id].messages.length)tasks[id].msgIndex=0;renderPool(tasks[id]);autoSave();}
+function removeTask(id){
+  stopTask(id);var el=document.getElementById('task-'+id);if(el)el.remove();delete tasks[id];
+  if(!Object.keys(tasks).length){var list=document.getElementById('taskList');var es=document.createElement('div');es.className='empty-state';es.id='emptyState';es.innerHTML='<div class="emoji">\uD83D\uDCE1</div><p>No channels yet<br/>Tap <strong style="color:var(--accent);">\uFF0B</strong> to add one</p>';list.appendChild(es);}
+  updateGlobal();autoSave();
 }
 
-function toggleCollapse(id) {
-  var c = document.getElementById('task-' + id);
-  c.classList.toggle('collapsed');
+function getToken(){return document.getElementById('tokenInput').value.trim().replace(/^(Bot |Bearer )/i,'');}
+async function doSend(t){
+  var content=pickMsg(t);if(!content){log('No messages in pool','err',t);return;}
+  try{
+    var res=await fetch('https://discord.com/api/v9/channels/'+t.channelId+'/messages',{method:'POST',headers:{'Authorization':getToken(),'Content-Type':'application/json','User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'},body:JSON.stringify({content:content})});
+    if(res.status===401)throw new Error('401 Unauthorized \u2014 token invalid or expired');
+    if(res.status===403)throw new Error('403 Forbidden \u2014 no permission in this channel');
+    if(res.status===429){var d=await res.json().catch(function(){return{};});throw new Error('Rate limited \u2014 retry after '+(d.retry_after||1).toFixed(1)+'s');}
+    if(!res.ok){var d2=await res.json().catch(function(){return{};});throw new Error('HTTP '+res.status+': '+(d2.message||res.statusText));}
+    t.sentCount++;var badge=document.getElementById('tbadge-'+t.id);if(badge)badge.textContent=t.sentCount+' sent';
+    log('Sent: "'+(content.length>45?content.slice(0,42)+'\u2026':content)+'"','ok',t);updateGlobal();
+  }catch(e){log(e.message,'err',t);setDot(t,'error');var sub=document.getElementById('tsub-'+t.id);if(sub)sub.textContent='\u26A0 '+e.message.slice(0,40);}
+}
+function pickMsg(t){if(!t.messages.length)return null;if(t.mode==='random')return t.messages[Math.floor(Math.random()*t.messages.length)];var m=t.messages[t.msgIndex%t.messages.length];t.msgIndex++;return m;}
+function getMs(t){var ms=t.intervalVal*t.intervalUnit;if(t.jitter)ms+=(Math.random()*2-1)*ms*0.3;return Math.max(ms,500);}
+function scheduleNext(t){if(!t.running)return;t.timer=setTimeout(async function(){if(!t.running)return;await doSend(t);scheduleNext(t);},getMs(t));}
+function startTask(id){
+  var t=tasks[id];if(!t||t.running)return;
+  var tok=getToken();
+  if(!tok){log('Token is empty!','err',t);return;}
+  if(tok.length<50){log('Token too short \u2014 re-copy from Discord','err',t);return;}
+  if(!t.channelId){log('Channel ID empty','err',t);return;}
+  if(!t.messages.length){log('No messages in pool','err',t);return;}
+  t.running=true;t.sentCount=0;t.msgIndex=0;
+  var badge=document.getElementById('tbadge-'+id);if(badge)badge.textContent='0 sent';
+  document.getElementById('startbtn-'+id).disabled=true;document.getElementById('stopbtn-'+id).disabled=false;
+  setDot(t,'running');
+  var unitL={1000:'s',60000:'m',3600000:'h'}[t.intervalUnit]||'s';
+  var sub=document.getElementById('tsub-'+id);if(sub)sub.textContent='\u25CF Sending every '+t.intervalVal+unitL+(t.jitter?' \xB1jitter':'');
+  log('Started \u2014 ~'+t.intervalVal+unitL,'info',t);
+  t.timer=setTimeout(async function(){await doSend(t);scheduleNext(t);},150);updateGlobal();
+}
+function stopTask(id){
+  var t=tasks[id];if(!t)return;clearTimeout(t.timer);t.timer=null;t.running=false;
+  var sb=document.getElementById('startbtn-'+id);var stb=document.getElementById('stopbtn-'+id);
+  if(sb)sb.disabled=false;if(stb)stb.disabled=true;setDot(t,'idle');
+  var sub=document.getElementById('tsub-'+id);if(sub)sub.textContent='Stopped \xB7 '+t.sentCount+' sent';
+  log('Stopped \xB7 '+t.sentCount+' sent','info',t);updateGlobal();
+}
+function startAll(){Object.values(tasks).forEach(function(t){if(!t.running)startTask(t.id);});}
+function stopAll(){Object.values(tasks).forEach(function(t){if(t.running)stopTask(t.id);});}
+function setDot(t,state){var d=document.getElementById('dot-'+t.id);if(d)d.className='task-dot'+(state==='running'?' running':state==='error'?' error':'');}
+function updateGlobal(){
+  var running=Object.values(tasks).filter(function(t){return t.running;}).length;
+  var total=Object.values(tasks).reduce(function(a,t){return a+t.sentCount;},0);
+  var dot=document.getElementById('gDot');dot.className='pill-dot'+(running>0?' active':'');
+  document.getElementById('gStatusText').textContent=running>0?running+' running':'Idle';
+  document.getElementById('gTotal').textContent=total;
 }
 
-function syncF(id, field, val) { tasks[id][field] = val; }
+function log(msg,type,task){
+  logEntryCount++;var box=document.getElementById('logBox');
+  var now=new Date().toLocaleTimeString('en-GB');var div=document.createElement('div');div.className='log-entry';
+  var tag=task?'<span class="log-tag" style="color:'+task.color+'">['+escHtml(task.name)+'] </span>':'';
+  div.innerHTML='<span class="log-time">'+now+' </span>'+tag+'<span class="log-'+(type||'info')+'">'+escHtml(String(msg))+'</span>';
+  box.appendChild(div);if(logOpen)box.scrollTop=box.scrollHeight;document.getElementById('logCount').textContent=logEntryCount;
+}
+function toggleLog(){logOpen=!logOpen;var box=document.getElementById('logBox');box.classList.toggle('open',logOpen);if(logOpen)box.scrollTop=box.scrollHeight;}
+function toggleEye(){var inp=document.getElementById('tokenInput');var btn=document.getElementById('eyeBtn');if(inp.type==='password'){inp.type='text';inp.style.letterSpacing='normal';btn.textContent='\uD83D\uDE48';}else{inp.type='password';inp.style.letterSpacing='3px';btn.textContent='\uD83D\uDC41';}}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function syncName(id, val) {
-  tasks[id].name = val || ('Channel ' + id);
-  var n = document.getElementById('tname-' + id);
-  if (n) n.textContent = tasks[id].name;
+function switchTab(tab){var isIos=tab==='ios';document.getElementById('paneIos').style.display=isIos?'':'none';document.getElementById('paneDsk').style.display=isIos?'none':'';document.getElementById('tabIos').className='tab-btn'+(isIos?' active':'');document.getElementById('tabDsk').className='tab-btn'+(!isIos?' active':'');}
+function showGrabModal(){document.getElementById('snippetBox').textContent=TOKEN_SNIPPET;var bm=document.getElementById('bmSnippetBox');if(bm)bm.textContent=IOS_BOOKMARKLET;document.getElementById('grabModal').style.display='flex';document.getElementById('copySnipBtn').textContent='\uD83D\uDCCB Copy Snippet';document.getElementById('copyBmBtn').textContent='\uD83D\uDCCB Copy Bookmarklet';switchTab(/iphone|ipad|ipod/i.test(navigator.userAgent)?'ios':'desktop');}
+function closeGrabModal(e){if(!e||e.target===document.getElementById('grabModal'))document.getElementById('grabModal').style.display='none';}
+function selectSnippet(){var r=document.createRange();r.selectNodeContents(document.getElementById('snippetBox'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);}
+function selectBmSnippet(){var r=document.createRange();r.selectNodeContents(document.getElementById('bmSnippetBox'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);}
+
+function iosSafeCopy(text,onOk,onFail){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onOk).catch(function(){if(!execCommandCopy(text))onFail();else onOk();});return;}
+  if(!execCommandCopy(text))onFail();else onOk();
+}
+function execCommandCopy(text){try{var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;width:1px;height:1px;';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,text.length);var ok=document.execCommand('copy');document.body.removeChild(ta);return ok;}catch(e){return false;}}
+function copyBookmarklet(){var btn=document.getElementById('copyBmBtn');iosSafeCopy(IOS_BOOKMARKLET,function(){btn.textContent='\u2705 Copied!';toast('\uD83D\uDCCB Bookmarklet copied!');setTimeout(function(){btn.textContent='\uD83D\uDCCB Copy Bookmarklet';},2500);},function(){prompt('Select all and copy this bookmarklet:',IOS_BOOKMARKLET);});}
+function copySnippet(){var btn=document.getElementById('copySnipBtn');iosSafeCopy(TOKEN_SNIPPET,function(){btn.textContent='\u2705 Copied!';setTimeout(function(){btn.textContent='\uD83D\uDCCB Copy Snippet';},2000);},function(){selectSnippet();btn.textContent='\u270B Select & copy manually';});}
+async function pasteToken(){
+  function applyRaw(txt){if(!txt||!txt.trim())return false;var clean=txt.trim().replace(/^(Bot |Bearer )/i,'');if(clean.length<20)return false;var inp=document.getElementById('tokenInput');inp.value=clean;inp.type='text';inp.style.letterSpacing='normal';document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(clean);autoSave();closeGrabModal();log('Token pasted ('+clean.length+' chars)','ok');toast('\u2705 Token saved!');return true;}
+  try{if(navigator.clipboard&&navigator.clipboard.readText){var txt=await navigator.clipboard.readText();if(applyRaw(txt))return;}}catch(e){}
+  var manual=prompt('Paste your Discord token here:');if(manual)applyRaw(manual);
 }
 
-function toggleMode(id) {
-  tasks[id].mode = document.getElementById('modtog-' + id).checked ? 'random' : 'sequential';
-  var s = document.getElementById('modespan-' + id);
-  if (s) s.textContent = tasks[id].mode === 'random' ? 'Random' : 'Sequential';
+function showLoginModal(){document.getElementById('loginModal').style.display='flex';document.getElementById('loginErr').style.display='none';document.getElementById('mfaRow').style.display='none';document.getElementById('loginSubmitBtn').style.display='';document.getElementById('loginSubmitBtn').disabled=false;document.getElementById('loginSubmitBtn').textContent='Sign In';_mfaTicket=null;setTimeout(function(){document.getElementById('loginEmail').focus();},200);}
+function closeLoginModal(e){if(!e||e.target===document.getElementById('loginModal'))document.getElementById('loginModal').style.display='none';}
+function toggleLoginEye(){var inp=document.getElementById('loginPass');var btn=document.getElementById('loginEyeBtn');if(inp.type==='password'){inp.type='text';btn.textContent='\uD83D\uDE48';}else{inp.type='password';btn.textContent='\uD83D\uDC41';}}
+function setLoginErr(msg){var el=document.getElementById('loginErr');el.textContent=msg;el.style.display=msg?'block':'none';}
+function setLoginBtn(txt,disabled){var btn=document.getElementById('loginSubmitBtn');btn.textContent=txt;btn.disabled=!!disabled;}
+async function doLogin(){
+  var email=document.getElementById('loginEmail').value.trim();var pass=document.getElementById('loginPass').value;
+  if(!email||!pass){setLoginErr('Fill in email and password.');return;}
+  setLoginErr('');setLoginBtn('Signing in\u2026',true);
+  try{
+    var res=await fetch('https://discord.com/api/v9/auth/login',{method:'POST',headers:{'Content-Type':'application/json','User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'},body:JSON.stringify({login:email,password:pass,undelete:false,captcha_key:null,login_source:null,gift_code_sku_id:null})});
+    var data=await res.json();
+    log('Discord API ['+res.status+']: '+JSON.stringify(data).slice(0,120),'info');
+    if(data.token){applyToken(data.token,email);return;}
+    if(data.mfa&&data.ticket){_mfaTicket=data.ticket;document.getElementById('mfaRow').style.display='';setLoginBtn('Waiting for 2FA\u2026',true);setLoginErr('');document.getElementById('mfaCode').value='';setTimeout(function(){document.getElementById('mfaCode').focus();},100);log('2FA required \u2014 enter your code','info');return;}
+    if(data.captcha_key){setLoginBtn('Sign In',false);setLoginErr('\u26A0 CAPTCHA required \u2014 login in real Safari first then retry.');return;}
+    var errMsg=data.message||'';
+    if(data.errors){var fields=Object.keys(data.errors);for(var i=0;i<fields.length;i++){var f=data.errors[fields[i]];if(f&&f._errors&&f._errors[0]){errMsg=fields[i]+': '+(f._errors[0].message||f._errors[0].code||errMsg);break;}}}
+    setLoginBtn('Sign In',false);setLoginErr(errMsg||('HTTP '+res.status+' \u2014 check email/password'));
+  }catch(e){setLoginBtn('Sign In',false);setLoginErr(e.message&&e.message.toLowerCase().includes('fetch')?'CORS blocked \u2014 try hosting on GitHub Pages.':'Network error: '+e.message);log('Login error: '+e.message,'err');}
 }
-
-function addMsg(id) {
-  var inp = document.getElementById('newmsg-' + id);
-  var txt = inp.value.trim();
-  if (!txt) return;
-  tasks[id].messages.push(txt);
-  inp.value = '';
-  renderPool(tasks[id]);
+async function doMfa(){
+  var code=document.getElementById('mfaCode').value.trim().replace(/\s/g,'');
+  if(!code||code.length<6){setLoginErr('Enter your 6-digit 2FA code.');return;}
+  if(!_mfaTicket){setLoginErr('Session expired \u2014 try logging in again.');return;}
+  setLoginErr('');var vBtn=document.querySelector('#mfaRow .btn');vBtn.disabled=true;vBtn.textContent='\u2026';
+  try{
+    var res=await fetch('https://discord.com/api/v9/auth/mfa/totp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,ticket:_mfaTicket,login_source:null,gift_code_sku_id:null})});
+    var data=await res.json();
+    if(data.token){applyToken(data.token,document.getElementById('loginEmail').value.trim());return;}
+    vBtn.disabled=false;vBtn.textContent='Verify';setLoginErr(data.message||'Invalid 2FA code.');
+  }catch(e){vBtn.disabled=false;vBtn.textContent='Verify';setLoginErr('Network error: '+e.message);}
 }
-
-function delMsg(id, i) {
-  tasks[id].messages.splice(i, 1);
-  if (tasks[id].msgIndex >= tasks[id].messages.length) tasks[id].msgIndex = 0;
-  renderPool(tasks[id]);
-}
-
-function removeTask(id) {
-  stopTask(id);
-  var el = document.getElementById('task-' + id);
-  if (el) el.remove();
-  delete tasks[id];
-  if (!Object.keys(tasks).length) {
-    var list = document.getElementById('taskList');
-    var es = document.createElement('div');
-    es.className = 'empty-state';
-    es.id = 'emptyState';
-    es.innerHTML = '<div class="emoji">📡</div><p>No channels yet<br/>Tap <strong style="color:var(--accent);">＋</strong> to add one</p>';
-    list.appendChild(es);
-  }
-  updateGlobal();
-}
-
-// ── Send logic ────────────────────────────────────────────
-function getToken() {
-  var raw = document.getElementById('tokenInput').value.trim();
-  // strip accidental Bot / Bearer prefix
-  raw = raw.replace(/^(Bot |Bearer )/i, '');
-  return raw;
-}
-
-async function doSend(t) {
-  var content = pickMsg(t);
-  if (!content) { log('No messages in pool', 'err', t); return; }
-  try {
-    var res = await fetch('https://discord.com/api/v9/channels/' + t.channelId + '/messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': getToken(),
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
-      },
-      body: JSON.stringify({ content: content })
-    });
-
-    if (res.status === 401) {
-      throw new Error('401 Unauthorized — token invalid or expired. Re-copy from DevTools.');
-    }
-    if (res.status === 403) {
-      throw new Error('403 Forbidden — no permission to send in this channel.');
-    }
-    if (res.status === 429) {
-      var d = await res.json().catch(function(){ return {}; });
-      throw new Error('Rate limited — retry after ' + (d.retry_after||1).toFixed(1) + 's');
-    }
-    if (!res.ok) {
-      var d2 = await res.json().catch(function(){ return {}; });
-      throw new Error('HTTP ' + res.status + ': ' + (d2.message || res.statusText));
-    }
-
-    t.sentCount++;
-    var badge = document.getElementById('tbadge-' + t.id);
-    if (badge) badge.textContent = t.sentCount + ' sent';
-    log('Sent: "' + (content.length > 45 ? content.slice(0,42)+'…' : content) + '"', 'ok', t);
-    updateGlobal();
-
-  } catch(e) {
-    log(e.message, 'err', t);
-    setDot(t, 'error');
-    var sub = document.getElementById('tsub-' + t.id);
-    if (sub) sub.textContent = '⚠ ' + e.message.slice(0, 40);
-  }
-}
-
-function pickMsg(t) {
-  if (!t.messages.length) return null;
-  if (t.mode === 'random') return t.messages[Math.floor(Math.random() * t.messages.length)];
-  var m = t.messages[t.msgIndex % t.messages.length];
-  t.msgIndex++;
-  return m;
-}
-
-function getMs(t) {
-  var ms = t.intervalVal * t.intervalUnit;
-  if (t.jitter) ms += (Math.random() * 2 - 1) * ms * 0.3;
-  return Math.max(ms, 500);
-}
-
-function scheduleNext(t) {
-  if (!t.running) return;
-  t.timer = setTimeout(async function() {
-    if (!t.running) return;
-    await doSend(t);
-    scheduleNext(t);
-  }, getMs(t));
-}
-
-function startTask(id) {
-  var t = tasks[id];
-  if (!t || t.running) return;
-  var tok = getToken();
-  if (!tok) { log('Token is empty!', 'err', t); return; }
-  // basic token length sanity check (Discord tokens are 70+ chars)
-  if (tok.length < 50) { log('Token looks too short — check if it copied correctly', 'err', t); return; }
-  if (!t.channelId){ log('Channel ID empty', 'err', t); return; }
-  if (!t.messages.length){ log('No messages in pool', 'err', t); return; }
-
-  t.running = true;
-  t.sentCount = 0;
-  t.msgIndex = 0;
-  var badge = document.getElementById('tbadge-' + id);
-  if (badge) badge.textContent = '0 sent';
-  document.getElementById('startbtn-' + id).disabled = true;
-  document.getElementById('stopbtn-' + id).disabled = false;
-  setDot(t, 'running');
-  var sub = document.getElementById('tsub-' + id);
-  if (sub) sub.textContent = '● Sending every ' + t.intervalVal + ['s','m','h'][['1000','60000','3600000'].indexOf(String(t.intervalUnit))] + (t.jitter?' ±jitter':'');
-  var unitL = {1000:'s',60000:'m',3600000:'h'}[t.intervalUnit]||'s';
-  log('Started — ~' + t.intervalVal + unitL, 'info', t);
-
-  t.timer = setTimeout(async function() {
-    await doSend(t);
-    scheduleNext(t);
-  }, 150);
-
-  updateGlobal();
-}
-
-function stopTask(id) {
-  var t = tasks[id];
-  if (!t) return;
-  clearTimeout(t.timer);
-  t.timer = null;
-  t.running = false;
-  var sb = document.getElementById('startbtn-' + id);
-  var stb = document.getElementById('stopbtn-' + id);
-  if (sb)  sb.disabled = false;
-  if (stb) stb.disabled = true;
-  setDot(t, 'idle');
-  var sub = document.getElementById('tsub-' + id);
-  if (sub) sub.textContent = 'Stopped · ' + t.sentCount + ' sent';
-  log('Stopped · ' + t.sentCount + ' sent', 'info', t);
-  updateGlobal();
-}
-
-function startAll() {
-  Object.values(tasks).forEach(function(t) { if (!t.running) startTask(t.id); });
-}
-
-function stopAll() {
-  Object.values(tasks).forEach(function(t) { if (t.running) stopTask(t.id); });
-}
-
-function setDot(t, state) {
-  var d = document.getElementById('dot-' + t.id);
-  if (d) d.className = 'task-dot' + (state==='running'?' running':state==='error'?' error':'');
-}
-
-function updateGlobal() {
-  var running = Object.values(tasks).filter(function(t){ return t.running; }).length;
-  var total   = Object.values(tasks).reduce(function(a,t){ return a + t.sentCount; }, 0);
-  var dot = document.getElementById('gDot');
-  dot.className = 'pill-dot' + (running > 0 ? ' active' : '');
-  document.getElementById('gStatusText').textContent = running > 0 ? running + ' running' : 'Idle';
-  document.getElementById('gTotal').textContent = total;
-}
-
-// ── Log ───────────────────────────────────────────────────
-function log(msg, type, task) {
-  logEntryCount++;
-  var box = document.getElementById('logBox');
-  var now = new Date().toLocaleTimeString('en-GB');
-  var div = document.createElement('div');
-  div.className = 'log-entry';
-  var tag = task ? '<span class="log-tag" style="color:' + task.color + '">[' + escHtml(task.name) + '] </span>' : '';
-  div.innerHTML = '<span class="log-time">' + now + ' </span>' + tag + '<span class="log-' + (type||'info') + '">' + escHtml(String(msg)) + '</span>';
-  box.appendChild(div);
-  if (logOpen) box.scrollTop = box.scrollHeight;
-  document.getElementById('logCount').textContent = logEntryCount;
-}
-
-function toggleLog() {
-  logOpen = !logOpen;
-  var box = document.getElementById('logBox');
-  box.classList.toggle('open', logOpen);
-  if (logOpen) box.scrollTop = box.scrollHeight;
-}
-
-// ── Util ─────────────────────────────────────────────────
-function toggleEye() {
-  var inp = document.getElementById('tokenInput');
-  var btn = document.getElementById('eyeBtn');
-  if (inp.type === 'password') { inp.type = 'text'; inp.style.letterSpacing = 'normal'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; inp.style.letterSpacing = '3px'; btn.textContent = '👁'; }
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Auto-Grab Token ───────────────────────────────────────
-// Desktop console snippet — uses copy() which works in Chrome/Firefox DevTools
-var TOKEN_SNIPPET = "(function(){try{var t;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(var k in e.c)try{var m=e.c[k].exports;if(m&&m.default&&typeof m.default.getToken=='function'){t=m.default.getToken();break;}if(m&&typeof m.getToken=='function'){t=m.getToken();break;}}catch(x){}}\n]);webpackChunkdiscord_app.pop();if(!t)throw 1;copy(t);alert('Token copied! Come back and tap Paste Token.');}catch(e){alert('Failed. Open discord.com and log in first.');}})()";
-
-// iOS bookmarklet — uses prompt() to display token (copy() not available in iOS Safari)
-var IOS_BOOKMARKLET = "javascript:(function(){try{var t;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(var k in e.c)try{var m=e.c[k].exports;if(m&&m.default&&typeof m.default.getToken=='function'){t=m.default.getToken();break;}if(m&&typeof m.getToken=='function'){t=m.getToken();break;}}catch(x){}}]);webpackChunkdiscord_app.pop();if(!t)throw 1;prompt('SELECT ALL then COPY:',t);}catch(e){alert('Failed. Open discord.com and log in first.');}})()";
-
-function switchTab(tab) {
-  var isIos = tab === 'ios';
-  document.getElementById('paneIos').style.display = isIos ? '' : 'none';
-  document.getElementById('paneDsk').style.display = isIos ? 'none' : '';
-  document.getElementById('tabIos').className = 'tab-btn' + (isIos ? ' active' : '');
-  document.getElementById('tabDsk').className = 'tab-btn' + (!isIos ? ' active' : '');
-}
-
-function showGrabModal() {
-  document.getElementById('snippetBox').textContent = TOKEN_SNIPPET;
-  document.getElementById('grabModal').style.display = 'flex';
-  document.getElementById('copySnipBtn').textContent = '\ud83d\udccb Copy Snippet';
-  document.getElementById('copyBmBtn').textContent = '\ud83d\udccb Copy Bookmarklet';
-  // auto-switch tab based on device
-  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  switchTab(isIos ? 'ios' : 'desktop');
-}
-
-function closeGrabModal(e) {
-  if (!e || e.target === document.getElementById('grabModal')) {
-    document.getElementById('grabModal').style.display = 'none';
-  }
-}
-
-function selectSnippet() {
-  var r = document.createRange();
-  r.selectNodeContents(document.getElementById('snippetBox'));
-  window.getSelection().removeAllRanges();
-  window.getSelection().addRange(r);
-}
-
-function copyBookmarklet() {
-  var btn = document.getElementById('copyBmBtn');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(IOS_BOOKMARKLET).then(function() {
-      btn.textContent = '\u2705 Copied!';
-      setTimeout(function() { btn.textContent = '\ud83d\udccb Copy Bookmarklet'; }, 2500);
-    }).catch(function() {
-      prompt('Copy this (select all then copy):', IOS_BOOKMARKLET);
-    });
-  } else {
-    prompt('Copy this (select all then copy):', IOS_BOOKMARKLET);
-  }
-}
-
-function copySnippet() {
-  var btn = document.getElementById('copySnipBtn');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(TOKEN_SNIPPET).then(function() {
-      btn.textContent = '\u2705 Copied!';
-      setTimeout(function() { btn.textContent = '\ud83d\udccb Copy Snippet'; }, 2000);
-    }).catch(function() { selectSnippet(); btn.textContent = '\u270b Select & copy manually'; });
-  } else {
-    selectSnippet();
-    btn.textContent = '\u270b Select & copy manually';
-  }
-}
-
-async function pasteToken() {
-  try {
-    var txt = await navigator.clipboard.readText();
-    if (txt && txt.length > 20) {
-      var clean = txt.trim().replace(/^(Bot |Bearer )/i, '');
-      document.getElementById('tokenInput').value = clean;
-      document.getElementById('tokenInput').type = 'text';
-      document.getElementById('tokenInput').style.letterSpacing = 'normal';
-      document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
-      closeGrabModal();
-      log('Token auto-pasted (' + clean.length + ' chars)', 'ok');
-    } else {
-      var t = prompt('Paste your token here:');
-      if (t && t.trim()) {
-        var clean2 = t.trim().replace(/^(Bot |Bearer )/i, '');
-        document.getElementById('tokenInput').value = clean2;
-        closeGrabModal();
-        log('Token set (' + clean2.length + ' chars)', 'ok');
-      }
-    }
-  } catch(e) {
-    var t = prompt('Paste your token here:');
-    if (t && t.trim()) {
-      var clean = t.trim().replace(/^(Bot |Bearer )/i, '');
-      document.getElementById('tokenInput').value = clean;
-      closeGrabModal();
-      log('Token set (' + clean.length + ' chars)', 'ok');
-    }
-  }
-}
-
-function checkClipboardToken() { /* reserved */ }
-
-// ── Discord Login ─────────────────────────────────────────
-var _mfaTicket = null;
-
-function showLoginModal() {
-  document.getElementById('loginModal').style.display = 'flex';
-  document.getElementById('loginErr').style.display = 'none';
-  document.getElementById('mfaRow').style.display = 'none';
-  document.getElementById('loginSubmitBtn').style.display = '';
-  document.getElementById('loginSubmitBtn').disabled = false;
-  document.getElementById('loginSubmitBtn').textContent = 'Sign In';
-  _mfaTicket = null;
-  setTimeout(function() { document.getElementById('loginEmail').focus(); }, 200);
-}
-
-function closeLoginModal(e) {
-  if (!e || e.target === document.getElementById('loginModal')) {
-    document.getElementById('loginModal').style.display = 'none';
-  }
-}
-
-function toggleLoginEye() {
-  var inp = document.getElementById('loginPass');
-  var btn = document.getElementById('loginEyeBtn');
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '\ud83d\ude48'; }
-  else { inp.type = 'password'; btn.textContent = '\ud83d\udc41'; }
-}
-
-function setLoginErr(msg) {
-  var el = document.getElementById('loginErr');
-  el.textContent = msg;
-  el.style.display = msg ? 'block' : 'none';
-}
-
-function setLoginBtn(txt, disabled) {
-  var btn = document.getElementById('loginSubmitBtn');
-  btn.textContent = txt;
-  btn.disabled = !!disabled;
-}
-
-async function doLogin() {
-  var email = document.getElementById('loginEmail').value.trim();
-  var pass  = document.getElementById('loginPass').value;
-  if (!email || !pass) { setLoginErr('Fill in email and password.'); return; }
-
-  setLoginErr('');
-  setLoginBtn('Signing in\u2026', true);
-
-  try {
-    var res = await fetch('https://discord.com/api/v9/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
-      },
-      body: JSON.stringify({
-        login: email,
-        password: pass,
-        undelete: false,
-        captcha_key: null,
-        login_source: null,
-        gift_code_sku_id: null
-      })
-    });
-
-    var data = await res.json();
-
-    // Log raw response for debugging
-    log('Discord API [' + res.status + ']: ' + JSON.stringify(data).slice(0, 120), 'info');
-
-    // Success
-    if (data.token) {
-      applyToken(data.token, email);
-      return;
-    }
-
-    // MFA required
-    if (data.mfa && data.ticket) {
-      _mfaTicket = data.ticket;
-      document.getElementById('mfaRow').style.display = '';
-      setLoginBtn('Waiting for 2FA\u2026', true);
-      setLoginErr('');
-      document.getElementById('mfaCode').value = '';
-      setTimeout(function() { document.getElementById('mfaCode').focus(); }, 100);
-      log('2FA required \u2014 enter your authenticator code', 'info');
-      return;
-    }
-
-    // Captcha required
-    if (data.captcha_key || (Array.isArray(data.captcha_key) && data.captcha_key.length)) {
-      setLoginBtn('Sign In', false);
-      setLoginErr('\u26a0\ufe0f CAPTCHA required \u2014 Discord thinks this is an automated login. Open discord.com in real Safari first, login once normally, then retry here.');
-      return;
-    }
-
-    // Extract nested error message if present
-    // e.g. errors.login._errors[0].message OR errors.password._errors[0].message
-    var errMsg = data.message || '';
-    if (data.errors) {
-      var fields = Object.keys(data.errors);
-      for (var i = 0; i < fields.length; i++) {
-        var f = data.errors[fields[i]];
-        if (f && f._errors && f._errors[0]) {
-          errMsg = fields[i] + ': ' + (f._errors[0].message || f._errors[0].code || errMsg);
-          break;
-        }
-      }
-    }
-
-    setLoginBtn('Sign In', false);
-    setLoginErr(errMsg || ('HTTP ' + res.status + ' \u2014 check email/password'));
-
-  } catch(e) {
-    setLoginBtn('Sign In', false);
-    // CORS / network error — most common on file://
-    if (e.message && e.message.toLowerCase().includes('fetch')) {
-      setLoginErr('CORS blocked \u2014 file:// pages cannot call Discord API on some browsers. Try opening the app via a local server or GitHub Pages.');
-    } else {
-      setLoginErr('Network error: ' + e.message);
-    }
-    log('Login error: ' + e.message, 'err');
-  }
-}
-
-async function doMfa() {
-  var code = document.getElementById('mfaCode').value.trim().replace(/\s/g, '');
-  if (!code || code.length < 6) { setLoginErr('Enter your 6-digit 2FA code.'); return; }
-  if (!_mfaTicket) { setLoginErr('Session expired. Please try logging in again.'); return; }
-
-  setLoginErr('');
-  var verifyBtn = document.querySelector('#mfaRow .btn');
-  verifyBtn.disabled = true;
-  verifyBtn.textContent = '\u2026';
-
-  try {
-    var res = await fetch('https://discord.com/api/v9/auth/mfa/totp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: code, ticket: _mfaTicket, login_source: null, gift_code_sku_id: null })
-    });
-    var data = await res.json();
-
-    if (data.token) {
-      applyToken(data.token, document.getElementById('loginEmail').value.trim());
-      return;
-    }
-    verifyBtn.disabled = false;
-    verifyBtn.textContent = 'Verify';
-    setLoginErr(data.message || 'Invalid 2FA code.');
-  } catch(e) {
-    verifyBtn.disabled = false;
-    verifyBtn.textContent = 'Verify';
-    setLoginErr('Network error: ' + e.message);
-  }
-}
-
-function applyToken(token, email) {
-  // fill token field
-  document.getElementById('tokenInput').value = token;
-  document.getElementById('tokenInput').type = 'text';
-  document.getElementById('tokenInput').style.letterSpacing = 'normal';
-  document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
-
-  // update login button to show logged-in state
-  var btn = document.getElementById('loginBtn');
-  btn.textContent = '\u2705 Logged in as ' + email;
-  btn.style.background = 'linear-gradient(135deg,#23a55a,#1a8c4a)';
-  btn.style.boxShadow = '0 4px 20px rgba(35,165,90,.35)';
-  btn.onclick = function() {
-    if (confirm('Log out and clear token?')) {
-      document.getElementById('tokenInput').value = '';
-      btn.textContent = '\ud83d\udd11 Sign in with Discord';
-      btn.style.background = '';
-      btn.style.boxShadow = '';
-      btn.onclick = function(){ showLoginModal(); };
-    }
-  };
-
-  closeLoginModal();
-  _mfaTicket = null;
-  log('Logged in \u2014 token acquired (' + token.length + ' chars)', 'ok');
+function applyToken(token,email){
+  var inp=document.getElementById('tokenInput');inp.value=token;inp.type='text';inp.style.letterSpacing='normal';
+  document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(token);autoSave();
+  closeLoginModal();_mfaTicket=null;log('Token acquired ('+token.length+' chars) \u2014 auto-saved','ok');toast('\u2705 Token saved!');
 }
 </script>
 </body>
