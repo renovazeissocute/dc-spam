@@ -299,6 +299,102 @@
     /* ── Animations ── */
     .task-card { animation: cardIn .2s ease; }
     @keyframes cardIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+
+    /* ── Auto-grab modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,.75);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      display: flex; align-items: flex-end;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .modal-sheet {
+      width: 100%; background: var(--card);
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      animation: slideUp .25s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:none} }
+    .modal-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border); margin: 0 auto 18px; }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .modal-sub   { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .snippet-box {
+      background: #09090d; border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px;
+      font-family: 'Courier New', monospace; font-size: 11px;
+      color: var(--accent2); word-break: break-all;
+      line-height: 1.5; margin-bottom: 14px;
+      max-height: 120px; overflow-y: auto; user-select: all;
+    }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-btns .btn { flex: 1; }
+    .grab-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg,#5865f2,#7289da);
+      border: none; border-radius: 10px;
+      color: #fff; font-family: 'Inter',sans-serif;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 14px; cursor: pointer;
+      margin-top: 10px; width: 100%;
+      justify-content: center;
+      min-height: 44px;
+      transition: opacity .15s;
+    }
+    .grab-btn:active { opacity: .75; }
+    .step-list { counter-reset: step; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+    .step-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+    .step-num {
+      counter-increment: step;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step-num::before { content: counter(step); }
+    .tab-row { display:flex; gap:6px; margin-bottom:16px; }
+    .tab-btn {
+      flex:1; border:1px solid var(--border); border-radius:10px;
+      background:var(--surface); color:var(--muted);
+      font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+      padding:10px 8px; cursor:pointer; transition:all .15s;
+    }
+    .tab-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    /* ── Login modal ── */
+    .login-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
+      border: none; border-radius: 10px;
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 700;
+      padding: 13px 16px; cursor: pointer;
+      margin-top: 10px; width: 100%;
+      min-height: 48px;
+      box-shadow: 0 4px 20px rgba(88,101,242,.35);
+      transition: opacity .15s, transform .1s;
+    }
+    .login-btn:active { opacity:.8; transform:scale(.98); }
+    .login-status {
+      display: none; align-items: center; gap: 8px;
+      font-size: 12px; margin-top: 8px; padding: 10px 12px;
+      border-radius: 10px; font-weight: 500;
+    }
+    .login-status.ok  { display:flex; background:rgba(35,165,90,.15); color:var(--green); border:1px solid rgba(35,165,90,.3); }
+    .login-status.err { display:flex; background:rgba(237,66,69,.15); color:var(--red);   border:1px solid rgba(237,66,69,.3); }
+    .login-status.mfa { display:flex; background:rgba(88,101,242,.12); color:var(--accent2); border:1px solid rgba(88,101,242,.25); }
+    .mfa-row { display:flex; gap:8px; margin-top:8px; }
+    .mfa-row input { flex:1; letter-spacing:4px; text-align:center; font-size:18px; }
+    .mfa-row .btn  { flex:none; width:80px; }
+    .or-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 12px 0 4px; color: var(--muted); font-size: 11px;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
   </style>
 </head>
 <body>
@@ -324,14 +420,149 @@
   </div>
 </div>
 
-<!-- Token -->
+<!-- Token / Auth -->
 <div class="token-section">
-  <div class="section-label">User Token</div>
+  <div class="section-label">Auth</div>
+
+  <!-- Info banner -->
+  <div style="background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;margin-bottom:2px;">
+    <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px;">📌 How to get your token</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+      Discord blocks email/password login from HTML files.<br/>
+      Use the <strong style="color:var(--text)">⚡ Bookmarklet</strong> button below — runs on discord.com directly.
+    </div>
+  </div>
+
+  <!-- Bookmarklet as primary -->
+  <button class="grab-btn" onclick="showGrabModal()" style="margin-top:10px;font-size:14px;padding:13px 16px;min-height:48px;">
+    ⚡ Get Token via Bookmarklet
+  </button>
+
+  <div class="or-divider">or paste token manually</div>
+
+  <!-- Manual token -->
   <div class="token-wrap">
     <input type="password" id="tokenInput" placeholder="paste token here…" autocomplete="off" autocorrect="off" spellcheck="false"/>
     <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">👁</button>
   </div>
-  <div class="token-hint">DevTools → Network → any request → Headers → <code style="color:var(--accent2);">authorization</code></div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal-overlay" id="loginModal" style="display:none" onclick="closeLoginModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 Sign in with Discord</div>
+    <div class="modal-sub" style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Your credentials go directly to <strong style="color:var(--text)">discord.com/api</strong> — not stored anywhere.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;" id="loginForm">
+      <div>
+        <div class="field-label">EMAIL / PHONE</div>
+        <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com"
+          autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false"
+          inputmode="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/>
+      </div>
+      <div>
+        <div class="field-label">PASSWORD</div>
+        <div class="token-wrap">
+          <input class="field-input" type="password" id="loginPass" placeholder="password"
+            style="padding-right:48px" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()"/>
+          <button class="eye-btn" onclick="toggleLoginEye()" id="loginEyeBtn">👁</button>
+        </div>
+      </div>
+
+      <!-- MFA row (hidden until needed) -->
+      <div id="mfaRow" style="display:none">
+        <div class="field-label">2FA CODE</div>
+        <div class="mfa-row">
+          <input class="field-input" type="text" id="mfaCode" placeholder="000000"
+            inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+            onkeydown="if(event.key==='Enter')doMfa()"/>
+          <button class="btn btn-start" onclick="doMfa()">Verify</button>
+        </div>
+      </div>
+
+      <div id="loginErr" style="display:none;font-size:12px;color:var(--red);padding:8px 12px;background:rgba(237,66,69,.1);border-radius:8px;"></div>
+
+      <button class="btn btn-start" id="loginSubmitBtn" onclick="doLogin()" style="min-height:50px;font-size:15px;"
+        onkeydown="if(event.key==='Enter')doLogin()">
+        Sign In
+      </button>
+    </div>
+
+    <div style="margin-top:10px;text-align:center">
+      <button onclick="closeLoginModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auto-Grab Modal -->
+<div class="modal-overlay" id="grabModal" style="display:none" onclick="closeGrabModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚡ Get Token</div>
+
+    <!-- Tab switcher -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabIos" onclick="switchTab('ios')">&#127381; iOS / Safari</button>
+      <button class="tab-btn" id="tabDsk" onclick="switchTab('desktop')">&#128187; Desktop</button>
+    </div>
+
+    <!-- iOS Tab -->
+    <div id="paneIos">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Safari blocks DevTools on iOS. Use a <strong style="color:var(--text)">Bookmark trick</strong> instead — takes 30 sec.
+      </p>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Tap <strong>Copy Bookmarklet</strong> below to copy the code</span>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Open Safari → bookmark <strong>any</strong> page (share → Add Bookmark)</span>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Go to <strong>Bookmarks</strong> → long-press that bookmark → <strong>Edit</strong> → delete the URL field → paste the copied code → Save</span>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Open <strong>discord.com</strong> in Safari and log in</span>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Tap the bookmark you just edited — a box will pop up showing your token. <strong>Copy it.</strong></span>
+        </div>
+        <div class="step-item">
+          <div class="step-num"></div>
+          <span>Come back here → tap <strong>Paste Token</strong></span>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-start" id="copyBmBtn" onclick="copyBookmarklet()">📋 Copy Bookmarklet</button>
+        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#128229; Paste Token</button>
+      </div>
+    </div>
+
+    <!-- Desktop Tab -->
+    <div id="paneDsk" style="display:none">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Open Discord in Chrome/Firefox → F12 Console → paste this → Enter. Token gets copied to clipboard.
+      </p>
+      <div class="snippet-box" id="snippetBox" onclick="selectSnippet()"></div>
+      <div class="modal-btns">
+        <button class="btn btn-start" id="copySnipBtn" onclick="copySnippet()">📋 Copy Snippet</button>
+        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#128229; Paste Token</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;text-align:center">
+      <button onclick="closeGrabModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <!-- Main -->
@@ -360,10 +591,26 @@
 </div>
 
 <script>
+// ── Hardcoded token (optional) ────────────────────────────
+// Paste your token here once — app auto-fills on every open
+// Get token via: ⚡ Bookmarklet button in the app
+var DEFAULT_TOKEN = '';   // <-- paste token here between the quotes
+
 var tasks = {};
 var taskIdCounter = 0;
 var logEntryCount = 0;
 var logOpen = false;
+
+// Auto-fill token on load
+window.addEventListener('DOMContentLoaded', function() {
+  if (DEFAULT_TOKEN) {
+    var inp = document.getElementById('tokenInput');
+    inp.value = DEFAULT_TOKEN;
+    inp.type = 'text';
+    inp.style.letterSpacing = 'normal';
+    document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
+  }
+});
 
 var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
 
@@ -551,7 +798,12 @@ function removeTask(id) {
 }
 
 // ── Send logic ────────────────────────────────────────────
-function getToken() { return document.getElementById('tokenInput').value.trim(); }
+function getToken() {
+  var raw = document.getElementById('tokenInput').value.trim();
+  // strip accidental Bot / Bearer prefix
+  raw = raw.replace(/^(Bot |Bearer )/i, '');
+  return raw;
+}
 
 async function doSend(t) {
   var content = pickMsg(t);
@@ -567,6 +819,12 @@ async function doSend(t) {
       body: JSON.stringify({ content: content })
     });
 
+    if (res.status === 401) {
+      throw new Error('401 Unauthorized — token invalid or expired. Re-copy from DevTools.');
+    }
+    if (res.status === 403) {
+      throw new Error('403 Forbidden — no permission to send in this channel.');
+    }
     if (res.status === 429) {
       var d = await res.json().catch(function(){ return {}; });
       throw new Error('Rate limited — retry after ' + (d.retry_after||1).toFixed(1) + 's');
@@ -616,7 +874,10 @@ function scheduleNext(t) {
 function startTask(id) {
   var t = tasks[id];
   if (!t || t.running) return;
-  if (!getToken()) { log('Token is empty!', 'err', t); return; }
+  var tok = getToken();
+  if (!tok) { log('Token is empty!', 'err', t); return; }
+  // basic token length sanity check (Discord tokens are 70+ chars)
+  if (tok.length < 50) { log('Token looks too short — check if it copied correctly', 'err', t); return; }
   if (!t.channelId){ log('Channel ID empty', 'err', t); return; }
   if (!t.messages.length){ log('No messages in pool', 'err', t); return; }
 
@@ -711,6 +972,286 @@ function toggleEye() {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Auto-Grab Token ───────────────────────────────────────
+// Desktop console snippet — uses copy() which works in Chrome/Firefox DevTools
+var TOKEN_SNIPPET = "(function(){try{var t;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(var k in e.c)try{var m=e.c[k].exports;if(m&&m.default&&typeof m.default.getToken=='function'){t=m.default.getToken();break;}if(m&&typeof m.getToken=='function'){t=m.getToken();break;}}catch(x){}}\n]);webpackChunkdiscord_app.pop();if(!t)throw 1;copy(t);alert('Token copied! Come back and tap Paste Token.');}catch(e){alert('Failed. Open discord.com and log in first.');}})()";
+
+// iOS bookmarklet — uses prompt() to display token (copy() not available in iOS Safari)
+var IOS_BOOKMARKLET = "javascript:(function(){try{var t;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(var k in e.c)try{var m=e.c[k].exports;if(m&&m.default&&typeof m.default.getToken=='function'){t=m.default.getToken();break;}if(m&&typeof m.getToken=='function'){t=m.getToken();break;}}catch(x){}}]);webpackChunkdiscord_app.pop();if(!t)throw 1;prompt('SELECT ALL then COPY:',t);}catch(e){alert('Failed. Open discord.com and log in first.');}})()";
+
+function switchTab(tab) {
+  var isIos = tab === 'ios';
+  document.getElementById('paneIos').style.display = isIos ? '' : 'none';
+  document.getElementById('paneDsk').style.display = isIos ? 'none' : '';
+  document.getElementById('tabIos').className = 'tab-btn' + (isIos ? ' active' : '');
+  document.getElementById('tabDsk').className = 'tab-btn' + (!isIos ? ' active' : '');
+}
+
+function showGrabModal() {
+  document.getElementById('snippetBox').textContent = TOKEN_SNIPPET;
+  document.getElementById('grabModal').style.display = 'flex';
+  document.getElementById('copySnipBtn').textContent = '\ud83d\udccb Copy Snippet';
+  document.getElementById('copyBmBtn').textContent = '\ud83d\udccb Copy Bookmarklet';
+  // auto-switch tab based on device
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  switchTab(isIos ? 'ios' : 'desktop');
+}
+
+function closeGrabModal(e) {
+  if (!e || e.target === document.getElementById('grabModal')) {
+    document.getElementById('grabModal').style.display = 'none';
+  }
+}
+
+function selectSnippet() {
+  var r = document.createRange();
+  r.selectNodeContents(document.getElementById('snippetBox'));
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(r);
+}
+
+function copyBookmarklet() {
+  var btn = document.getElementById('copyBmBtn');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(IOS_BOOKMARKLET).then(function() {
+      btn.textContent = '\u2705 Copied!';
+      setTimeout(function() { btn.textContent = '\ud83d\udccb Copy Bookmarklet'; }, 2500);
+    }).catch(function() {
+      prompt('Copy this (select all then copy):', IOS_BOOKMARKLET);
+    });
+  } else {
+    prompt('Copy this (select all then copy):', IOS_BOOKMARKLET);
+  }
+}
+
+function copySnippet() {
+  var btn = document.getElementById('copySnipBtn');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(TOKEN_SNIPPET).then(function() {
+      btn.textContent = '\u2705 Copied!';
+      setTimeout(function() { btn.textContent = '\ud83d\udccb Copy Snippet'; }, 2000);
+    }).catch(function() { selectSnippet(); btn.textContent = '\u270b Select & copy manually'; });
+  } else {
+    selectSnippet();
+    btn.textContent = '\u270b Select & copy manually';
+  }
+}
+
+async function pasteToken() {
+  try {
+    var txt = await navigator.clipboard.readText();
+    if (txt && txt.length > 20) {
+      var clean = txt.trim().replace(/^(Bot |Bearer )/i, '');
+      document.getElementById('tokenInput').value = clean;
+      document.getElementById('tokenInput').type = 'text';
+      document.getElementById('tokenInput').style.letterSpacing = 'normal';
+      document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
+      closeGrabModal();
+      log('Token auto-pasted (' + clean.length + ' chars)', 'ok');
+    } else {
+      var t = prompt('Paste your token here:');
+      if (t && t.trim()) {
+        var clean2 = t.trim().replace(/^(Bot |Bearer )/i, '');
+        document.getElementById('tokenInput').value = clean2;
+        closeGrabModal();
+        log('Token set (' + clean2.length + ' chars)', 'ok');
+      }
+    }
+  } catch(e) {
+    var t = prompt('Paste your token here:');
+    if (t && t.trim()) {
+      var clean = t.trim().replace(/^(Bot |Bearer )/i, '');
+      document.getElementById('tokenInput').value = clean;
+      closeGrabModal();
+      log('Token set (' + clean.length + ' chars)', 'ok');
+    }
+  }
+}
+
+function checkClipboardToken() { /* reserved */ }
+
+// ── Discord Login ─────────────────────────────────────────
+var _mfaTicket = null;
+
+function showLoginModal() {
+  document.getElementById('loginModal').style.display = 'flex';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('mfaRow').style.display = 'none';
+  document.getElementById('loginSubmitBtn').style.display = '';
+  document.getElementById('loginSubmitBtn').disabled = false;
+  document.getElementById('loginSubmitBtn').textContent = 'Sign In';
+  _mfaTicket = null;
+  setTimeout(function() { document.getElementById('loginEmail').focus(); }, 200);
+}
+
+function closeLoginModal(e) {
+  if (!e || e.target === document.getElementById('loginModal')) {
+    document.getElementById('loginModal').style.display = 'none';
+  }
+}
+
+function toggleLoginEye() {
+  var inp = document.getElementById('loginPass');
+  var btn = document.getElementById('loginEyeBtn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '\ud83d\ude48'; }
+  else { inp.type = 'password'; btn.textContent = '\ud83d\udc41'; }
+}
+
+function setLoginErr(msg) {
+  var el = document.getElementById('loginErr');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function setLoginBtn(txt, disabled) {
+  var btn = document.getElementById('loginSubmitBtn');
+  btn.textContent = txt;
+  btn.disabled = !!disabled;
+}
+
+async function doLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) { setLoginErr('Fill in email and password.'); return; }
+
+  setLoginErr('');
+  setLoginBtn('Signing in\u2026', true);
+
+  try {
+    var res = await fetch('https://discord.com/api/v9/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
+      },
+      body: JSON.stringify({
+        login: email,
+        password: pass,
+        undelete: false,
+        captcha_key: null,
+        login_source: null,
+        gift_code_sku_id: null
+      })
+    });
+
+    var data = await res.json();
+
+    // Log raw response for debugging
+    log('Discord API [' + res.status + ']: ' + JSON.stringify(data).slice(0, 120), 'info');
+
+    // Success
+    if (data.token) {
+      applyToken(data.token, email);
+      return;
+    }
+
+    // MFA required
+    if (data.mfa && data.ticket) {
+      _mfaTicket = data.ticket;
+      document.getElementById('mfaRow').style.display = '';
+      setLoginBtn('Waiting for 2FA\u2026', true);
+      setLoginErr('');
+      document.getElementById('mfaCode').value = '';
+      setTimeout(function() { document.getElementById('mfaCode').focus(); }, 100);
+      log('2FA required \u2014 enter your authenticator code', 'info');
+      return;
+    }
+
+    // Captcha required
+    if (data.captcha_key || (Array.isArray(data.captcha_key) && data.captcha_key.length)) {
+      setLoginBtn('Sign In', false);
+      setLoginErr('\u26a0\ufe0f CAPTCHA required \u2014 Discord thinks this is an automated login. Open discord.com in real Safari first, login once normally, then retry here.');
+      return;
+    }
+
+    // Extract nested error message if present
+    // e.g. errors.login._errors[0].message OR errors.password._errors[0].message
+    var errMsg = data.message || '';
+    if (data.errors) {
+      var fields = Object.keys(data.errors);
+      for (var i = 0; i < fields.length; i++) {
+        var f = data.errors[fields[i]];
+        if (f && f._errors && f._errors[0]) {
+          errMsg = fields[i] + ': ' + (f._errors[0].message || f._errors[0].code || errMsg);
+          break;
+        }
+      }
+    }
+
+    setLoginBtn('Sign In', false);
+    setLoginErr(errMsg || ('HTTP ' + res.status + ' \u2014 check email/password'));
+
+  } catch(e) {
+    setLoginBtn('Sign In', false);
+    // CORS / network error — most common on file://
+    if (e.message && e.message.toLowerCase().includes('fetch')) {
+      setLoginErr('CORS blocked \u2014 file:// pages cannot call Discord API on some browsers. Try opening the app via a local server or GitHub Pages.');
+    } else {
+      setLoginErr('Network error: ' + e.message);
+    }
+    log('Login error: ' + e.message, 'err');
+  }
+}
+
+async function doMfa() {
+  var code = document.getElementById('mfaCode').value.trim().replace(/\s/g, '');
+  if (!code || code.length < 6) { setLoginErr('Enter your 6-digit 2FA code.'); return; }
+  if (!_mfaTicket) { setLoginErr('Session expired. Please try logging in again.'); return; }
+
+  setLoginErr('');
+  var verifyBtn = document.querySelector('#mfaRow .btn');
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = '\u2026';
+
+  try {
+    var res = await fetch('https://discord.com/api/v9/auth/mfa/totp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, ticket: _mfaTicket, login_source: null, gift_code_sku_id: null })
+    });
+    var data = await res.json();
+
+    if (data.token) {
+      applyToken(data.token, document.getElementById('loginEmail').value.trim());
+      return;
+    }
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'Verify';
+    setLoginErr(data.message || 'Invalid 2FA code.');
+  } catch(e) {
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'Verify';
+    setLoginErr('Network error: ' + e.message);
+  }
+}
+
+function applyToken(token, email) {
+  // fill token field
+  document.getElementById('tokenInput').value = token;
+  document.getElementById('tokenInput').type = 'text';
+  document.getElementById('tokenInput').style.letterSpacing = 'normal';
+  document.getElementById('eyeBtn').textContent = '\ud83d\ude48';
+
+  // update login button to show logged-in state
+  var btn = document.getElementById('loginBtn');
+  btn.textContent = '\u2705 Logged in as ' + email;
+  btn.style.background = 'linear-gradient(135deg,#23a55a,#1a8c4a)';
+  btn.style.boxShadow = '0 4px 20px rgba(35,165,90,.35)';
+  btn.onclick = function() {
+    if (confirm('Log out and clear token?')) {
+      document.getElementById('tokenInput').value = '';
+      btn.textContent = '\ud83d\udd11 Sign in with Discord';
+      btn.style.background = '';
+      btn.style.boxShadow = '';
+      btn.onclick = function(){ showLoginModal(); };
+    }
+  };
+
+  closeLoginModal();
+  _mfaTicket = null;
+  log('Logged in \u2014 token acquired (' + token.length + ' chars)', 'ok');
 }
 </script>
 </body>
