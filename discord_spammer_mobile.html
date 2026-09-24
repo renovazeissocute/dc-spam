@@ -1240,11 +1240,9 @@
     var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
     var saveTimer = null, toastTimer = null, _mfaTicket = null;
     var COLORS = ['#a78bfa', '#60a5fa', '#34d399', '#f97316', '#f43f5e', '#facc15', '#22d3ee', '#e879f9', '#fb923c', '#4ade80'];
-    var BM_STATUS_PREFIX = 'ds_bm_status_';   // bookmarklet → app: status updates
-    var BM_CMD_PREFIX = 'ds_bm_cmd_';      // app → bookmarklet: commands (run/stop/ping)
-    var _bmPollTimer = null;                   // single interval watches all BM sessions
-    var _bmLastTs = {};                        // last seen status timestamp per taskId
-    var _bmRunning = {};                       // tracks which tasks are BM-running (app side)
+    var _dsWins = {};          // taskId → discord.com window ref (window.open result)
+    var _bmRunning = {};       // taskId → bool: is iOS sender running for this task
+    var _msgListenerSet = false; // postMessage listener installed flag
 
     // iOS bookmarklet — robust for modern Discord 2025+
     // Uses fixed chunk ID, scans all module export keys, multiple fallbacks
@@ -1383,12 +1381,7 @@
       if (!loaded) log('Ready. Add a channel below.', 'info');
       document.getElementById('snippetBox').textContent = TOKEN_SNIPPET;
       var bm = document.getElementById('bmSnippetBox'); if (bm) bm.textContent = IOS_BOOKMARKLET;
-      // Auto-start BM poll if there are any stored BM status keys (previous session running)
-      try {
-        for (var i = 0; i < localStorage.length; i++) {
-          if ((localStorage.key(i) || '').indexOf(BM_STATUS_PREFIX) === 0) { startBmPoll(); break; }
-        }
-      } catch (e) { }
+      setupMsgListener(); // install postMessage bridge once at startup
     });
 
     function newTask() { var id = ++taskIdCounter; return { id: id, name: 'Channel ' + id, color: COLORS[(id - 1) % COLORS.length], channelId: '', messages: [], msgIndex: 0, mode: 'sequential', intervalVal: 5, intervalUnit: 1000, jitter: false, running: false, timer: null, sentCount: 0 }; }
@@ -1471,10 +1464,9 @@
         var msg = e.message || '';
         var isCors = /load failed|failed to fetch|network request failed|networkerror/i.test(msg);
         if (isCors) {
-          // Auto-switch to iOS BM command mode
           stopTask(t.id);
-          log('\uD83D\uDCF1 CORS detected \u2014 switching to iOS BM command mode', 'info', t);
-          bmStartTask(t.id);
+          log('\uD83D\uDCF1 CORS detected \u2014 opening Discord tab for iOS mode', 'info', t);
+          bmOpenAndStart(t.id);
           return;
         }
         log(msg, 'err', t);
@@ -1503,8 +1495,7 @@
     }
     function stopTask(id) {
       var t = tasks[id]; if (!t) return;
-      // If this was a BM-controlled task, send stop command
-      if (_bmRunning[id]) { bmStopTask(id); return; }
+      if (_bmRunning[id]) { bmStop(id); return; }  // iOS mode: send stop via postMessage
       clearTimeout(t.timer); t.timer = null; t.running = false;
       var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
       if (sb) sb.disabled = false; if (stb) stb.disabled = true; setDot(t, 'idle');
@@ -1512,140 +1503,171 @@
       log('Stopped \xB7 ' + t.sentCount + ' sent', 'info', t); updateGlobal();
     }
 
-    // ── iOS BM command-mode start/stop ──
-    // These write to localStorage; the bookmarklet listener picks up the command.
-    function bmStartTask(id) {
+    // ─────────────────────────────────────────────────────────────────
+    // iOS SENDER — postMessage bridge (the CORRECT cross-origin method)
+    // localStorage is origin-scoped and CANNOT be shared between
+    // file:// and https://discord.com — postMessage is the right API.
+    //
+    // Flow:
+    //  1. bmOpenAndStart(id)  → opens discord.com in a new window
+    //  2. User taps the Sender bookmark on that discord.com tab
+    //  3. Bookmark calls window.opener.postMessage({type:'ds_status',st:'ready'})
+    //  4. App receives 'ready' → sends {source:'ds_app',cmd:'run',cfg:{...}}
+    //  5. Bookmark starts sending, streams status back via postMessage
+    //  6. bmStop(id) → sends {source:'ds_app',cmd:'stop'}
+    // ─────────────────────────────────────────────────────────────────
+    function bmOpenAndStart(id) {
       var t = tasks[id]; if (!t) return;
-      var tok = getToken();
-      if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
-      if (!t.channelId) { toast('\u26A0 Set a Channel ID first!'); return; }
-      if (!t.messages.length) { toast('\u26A0 Add at least one message!'); return; }
-      // Write updated config + run command
-      var cfg = {
-        tok: tok, ch: t.channelId, msgs: t.messages, mode: t.mode,
-        iv: Math.max(t.intervalVal * t.intervalUnit, 1000), ji: t.jitter, tid: id
-      };
-      try {
-        localStorage.setItem(BM_CMD_PREFIX + id, JSON.stringify({ cmd: 'run', cfg: cfg, ts: Date.now() }));
-      } catch (e) { toast('localStorage error: ' + e.message); return; }
+      if (!getToken() || getToken().length < 20) { toast('\u26A0 Set your token first!'); return; }
+      if (!t.channelId) { toast('\u26A0 Set Channel ID first!'); return; }
+      if (!t.messages.length) { toast('\u26A0 Add a message first!'); return; }
+      setupMsgListener();
+      var win = _dsWins[id];
+      if (!win || win.closed) {
+        win = window.open('https://discord.com/channels/@me', 'dsSender_' + id);
+        _dsWins[id] = win;
+      } else { try { win.focus(); } catch (e) { } }
       _bmRunning[id] = true;
-      // Update UI to reflect BM running state
-      var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
-      if (sb) sb.disabled = true; if (stb) stb.disabled = false;
+      var sb = document.getElementById('startbtn-' + id); if (sb) sb.disabled = true;
+      var stb = document.getElementById('stopbtn-' + id); if (stb) stb.disabled = false;
       setDot(t, 'running');
       var sub = document.getElementById('tsub-' + id);
-      if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM \u2014 waiting for listener...';
-      log('\uD83D\uDCF1 iOS BM start command sent. If stuck, open discord.com \u2192 tap the Sender bookmark first.', 'info', t);
-      startBmPoll();
+      if (sub) sub.textContent = '\uD83D\uDCF1 Discord opened \u2014 tap Sender bookmark in that tab';
+      log('\uD83D\uDCF1 Discord tab opened. Switch to it and tap your Sender bookmark once.', 'info', t);
+      toast('\uD83D\uDCF2 Switch to Discord tab \u2192 tap Sender bookmark \u2192 come back', 3500);
       updateGlobal();
     }
-    function bmStopTask(id) {
-      var t = tasks[id];
-      try { localStorage.setItem(BM_CMD_PREFIX + id, JSON.stringify({ cmd: 'stop', ts: Date.now() })); } catch (e) { }
+    function bmStop(id) {
+      var win = _dsWins[id]; var t = tasks[id];
+      if (win && !win.closed) {
+        try { win.postMessage({ source: 'ds_app', cmd: 'stop' }, 'https://discord.com'); } catch (e) { }
+      }
       _bmRunning[id] = false;
-      // Immediately reset UI; status poll will confirm
-      var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
-      if (sb) sb.disabled = false; if (stb) stb.disabled = true;
       setDot(t || { id: id }, 'idle');
+      var sb = document.getElementById('startbtn-' + id); if (sb) sb.disabled = false;
+      var stb = document.getElementById('stopbtn-' + id); if (stb) stb.disabled = true;
       var sub = document.getElementById('tsub-' + id);
-      if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM stop command sent...';
-      if (t) log('\uD83D\uDCF1 iOS BM stop command sent', 'info', t);
+      if (sub) sub.textContent = '\u23F9 iOS Sender stop sent';
+      if (t) log('\uD83D\uDCF1 iOS Sender stop command sent', 'info', t);
       updateGlobal();
     }
-
-    function startAll() { Object.values(tasks).forEach(function (t) { if (!t.running && !_bmRunning[t.id]) startTask(t.id); }); }
-    function stopAll() {
-      Object.values(tasks).forEach(function (t) {
-        if (_bmRunning[t.id]) bmStopTask(t.id);
-        else if (t.running) stopTask(t.id);
+    function buildBmCfg(id) {
+      var t = tasks[id];
+      return {
+        tok: getToken(), ch: t.channelId, msgs: t.messages, mode: t.mode,
+        iv: Math.max(t.intervalVal * t.intervalUnit, 1000), ji: t.jitter
+      };
+    }
+    // Install the postMessage listener once — event-driven, no polling needed
+    function setupMsgListener() {
+      if (_msgListenerSet) return;
+      _msgListenerSet = true;
+      window.addEventListener('message', function (e) {
+        if (!e.data || e.data.type !== 'ds_status') return;
+        var d = e.data;
+        // Identify which task window sent this
+        var tid = null;
+        Object.keys(_dsWins).forEach(function (id) {
+          try { if (_dsWins[id] && !_dsWins[id].closed && e.source === _dsWins[id]) tid = +id; } catch (ex) { }
+        });
+        var t = tid !== null ? tasks[tid] : null;
+        // 'ready' = bookmark was just tapped, send the run command
+        if (d.st === 'ready') {
+          if (tid !== null && t && _dsWins[tid] && !_dsWins[tid].closed) {
+            _dsWins[tid].postMessage({ source: 'ds_app', cmd: 'run', cfg: buildBmCfg(tid) }, 'https://discord.com');
+            log('\uD83D\uDCF1 iOS Sender armed \u2014 sending run command', 'info', t);
+          }
+          return;
+        }
+        // Status updates
+        var typeMap = { ok: 'ok', err: 'err', rl: 'info', start: 'info', stop: 'info' };
+        var type = typeMap[d.st] || 'info';
+        var display = '';
+        if (d.st === 'ok') display = '\u2705 Sent (' + d.cnt + '): "' + (d.msg && d.msg.length > 40 ? d.msg.slice(0, 37) + '\u2026' : (d.msg || '')) + '"';
+        else if (d.st === 'rl') display = '\u23F3 ' + (d.msg || 'Rate limited');
+        else if (d.st === 'err') display = '\u274C ' + (d.msg || 'Error');
+        else if (d.st === 'start') display = '\uD83D\uDCF1 iOS Sender running!';
+        else if (d.st === 'stop') display = '\u23F9 iOS Sender stopped \xB7 ' + (d.cnt || 0) + ' sent';
+        else display = d.msg || '';
+        log('[iOS] ' + display, type, t || null);
+        if (t && tid !== null) {
+          if (d.st === 'ok') {
+            t.sentCount = d.cnt || t.sentCount;
+            var badge = document.getElementById('tbadge-' + tid); if (badge) badge.textContent = d.cnt + ' sent';
+            var sub = document.getElementById('tsub-' + tid); if (sub) sub.textContent = '\uD83D\uDCF1 iOS \u25CF ' + d.cnt + ' sent';
+          }
+          if (d.st === 'start') {
+            _bmRunning[tid] = true;
+            setDot(t, 'running');
+            var sub2 = document.getElementById('tsub-' + tid); if (sub2) sub2.textContent = '\uD83D\uDCF1 iOS Sender \u25CF running';
+          }
+          if (d.st === 'stop') {
+            _bmRunning[tid] = false; setDot(t, 'idle');
+            var sb = document.getElementById('startbtn-' + tid); if (sb) sb.disabled = false;
+            var stb = document.getElementById('stopbtn-' + tid); if (stb) stb.disabled = true;
+            var sub3 = document.getElementById('tsub-' + tid); if (sub3) sub3.textContent = '\uD83D\uDCF1 iOS stopped \xB7 ' + (d.cnt || 0) + ' sent';
+          }
+          if (d.st === 'rl') { var sub4 = document.getElementById('tsub-' + tid); if (sub4) sub4.textContent = '\u23F3 iOS rate-limited...'; }
+          if (d.st === 'err') { var sub5 = document.getElementById('tsub-' + tid); if (sub5) sub5.textContent = '\u26A0 iOS error: ' + (d.msg || '').slice(0, 40); }
+          updateGlobal();
+        }
       });
     }
+    function startAll() { Object.values(tasks).forEach(function (t) { if (!t.running && !_bmRunning[t.id]) startTask(t.id); }); }
+    function stopAll() { Object.values(tasks).forEach(function (t) { if (_bmRunning[t.id]) bmStop(t.id); else if (t.running) stopTask(t.id); }); }
     function setDot(t, state) { var d = document.getElementById('dot-' + t.id); if (d) d.className = 'task-dot' + (state === 'running' ? ' running' : state === 'error' ? ' error' : ''); }
     function updateGlobal() {
       var directRunning = Object.values(tasks).filter(function (t) { return t.running; }).length;
-      var bmRunningCount = Object.keys(_bmRunning).filter(function (id) { return _bmRunning[id]; }).length;
-      var running = directRunning + bmRunningCount;
+      var bmCount = Object.keys(_bmRunning).filter(function (id) { return _bmRunning[id]; }).length;
+      var running = directRunning + bmCount;
       var total = Object.values(tasks).reduce(function (a, t) { return a + t.sentCount; }, 0);
       var dot = document.getElementById('gDot'); dot.className = 'pill-dot' + (running > 0 ? ' active' : '');
-      var statusParts = [];
-      if (directRunning > 0) statusParts.push(directRunning + ' direct');
-      if (bmRunningCount > 0) statusParts.push(bmRunningCount + ' iOS BM');
-      document.getElementById('gStatusText').textContent = statusParts.length ? statusParts.join(', ') : 'Idle';
+      var parts = [];
+      if (directRunning > 0) parts.push(directRunning + ' running');
+      if (bmCount > 0) parts.push(bmCount + ' iOS');
+      document.getElementById('gStatusText').textContent = parts.length ? parts.join(' + ') : 'Idle';
       document.getElementById('gTotal').textContent = total;
     }
 
     // ───────────────────────────────────────────────────────────────
-    // SENDER BOOKMARKLET — Persistent command-listener mode
-    // 1. User taps "iOS Setup" → copies bookmarklet → one-time Safari setup
-    // 2. User opens discord.com, taps the bookmark → enters listener mode
-    // 3. App writes ds_bm_cmd_<tid>={cmd:"run",cfg:{...}} → BM starts sending
-    // 4. App writes ds_bm_cmd_<tid>={cmd:"stop"} → BM stops
-    // No need to touch the discord.com tab again!
+    // SENDER BOOKMARKLET — postMessage version
+    // Works because window.open() sets window.opener on discord.com,
+    // allowing bidirectional postMessage between file:// and discord.com
     // ───────────────────────────────────────────────────────────────
     function generateSenderBookmarklet(id) {
-      var t = tasks[id];
       var tok = getToken();
       if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
-
-      // The bookmarklet embeds a minimal stub — actual config comes from localStorage commands
-      // so it stays up-to-date without re-copying the bookmarklet each time.
+      var t = tasks[id];
+      // Simple, clean bookmarklet — uses postMessage, no localStorage
       var bm = 'javascript:(function(){';
-      // If already listening, just acknowledge
-      bm += 'if(window._dsListener){';
-      bm += 'alert("\uD83D\uDCF1 Listener already active! Just use Start/Stop in DS Sender app.");';
-      bm += 'return;';
-      bm += '}';
-      // Write heartbeat
-      bm += 'function whb(tid){try{localStorage.setItem("ds_bm_hb_"+tid,Date.now());}catch(e){}}';
-      // Write status
-      bm += 'function wst(tid,st,msg,cnt){try{localStorage.setItem("ds_bm_status_"+tid,JSON.stringify({st:st,msg:msg,cnt:cnt,ts:Date.now()}));}catch(e){}}';
-      // Core send loop
-      bm += 'var _cfg=null,_idx=0,_sent=0,_running=false,_tid=null,_sendTimer=null;';
-      bm += 'function pick(c){if(c.mode==="random")return c.msgs[Math.floor(Math.random()*c.msgs.length)];return c.msgs[_idx++%c.msgs.length];}';
-      bm += 'function getMs(c){var ms=c.iv;if(c.ji)ms+=((Math.random()*2-1)*ms*0.3);return Math.max(ms,800);}';
-      bm += 'function doSend(){';
+      bm += 'if(window._dsSender){alert("\uD83D\uDCF1 DS Sender already armed! Use Stop in the app.");return;}';
+      bm += 'var _cfg=null,_idx=0,_sent=0,_running=false,_t=null;';
+      bm += 'function pm(st,msg,cnt){try{window.opener&&window.opener.postMessage({type:"ds_status",st:st,msg:msg,cnt:cnt},"*");}catch(e){}}';
+      bm += 'function ttl(s){document.title=s;}';
+      bm += 'function pick(){return _cfg.mode==="random"?_cfg.msgs[Math.floor(Math.random()*_cfg.msgs.length)]:_cfg.msgs[_idx++%_cfg.msgs.length];}';
+      bm += 'function ms(){var m=_cfg.iv;if(_cfg.ji)m+=(Math.random()*2-1)*m*0.3;return Math.max(m,800);}';
+      bm += 'function send(){';
       bm += 'if(!_running||!_cfg)return;';
-      bm += 'var msg=pick(_cfg);';
+      bm += 'var msg=pick();';
       bm += 'fetch("/api/v9/channels/"+_cfg.ch+"/messages",{method:"POST",headers:{"Authorization":_cfg.tok,"Content-Type":"application/json"},body:JSON.stringify({content:msg})})';
       bm += '.then(function(r){';
-      bm += 'if(r.status===429){';
-      bm += 'r.json().then(function(d){var ra=d.retry_after||5;document.title="\u23F3 RL "+ra+"s";wst(_tid,"rl","Rate limited "+ra+"s",_sent);_sendTimer=setTimeout(doSend,ra*1000);});';
-      bm += '} else if(r.ok){';
-      bm += '_sent++;document.title="\u2705 "+_sent+" sent";wst(_tid,"ok",msg,_sent);_sendTimer=setTimeout(doSend,getMs(_cfg));';
-      bm += '} else {';
-      bm += 'r.json().then(function(d){document.title="\u274C "+(d.message||r.status);wst(_tid,"err","HTTP "+(d.message||r.status),_sent);_sendTimer=setTimeout(doSend,getMs(_cfg));});';
+      bm += 'if(r.status===429){r.json().then(function(d){var ra=d.retry_after||5;ttl("\u23F3 RL "+ra+"s");pm("rl","RL "+ra+"s",_sent);_t=setTimeout(send,ra*1000);});}';
+      bm += 'else if(r.ok){_sent++;ttl("\u2705 "+_sent+" sent");pm("ok",msg,_sent);_t=setTimeout(send,ms());}';
+      bm += 'else{r.json().then(function(d){ttl("\u274C "+(d.message||r.status));pm("err",d.message||r.status,_sent);_t=setTimeout(send,ms());});}';
+      bm += '}).catch(function(e){ttl("\u274C "+e.message);pm("err",e.message,_sent);_t=setTimeout(send,3000);});';
       bm += '}';
-      bm += '}).catch(function(e){document.title="\u274C "+e.message;wst(_tid,"err",e.message,_sent);_sendTimer=setTimeout(doSend,2000);});';
-      bm += '}';
-      // Command poller
-      bm += 'function pollCmd(){';
-      bm += 'if(!window._dsListener)return;';
-      bm += 'whb(_tid);';
-      bm += 'try{';
-      bm += 'var keys=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("ds_bm_cmd_")===0)keys.push(k);}';
-      bm += 'keys.forEach(function(k){';
-      bm += 'var raw=localStorage.getItem(k);if(!raw)return;';
-      bm += 'var d=JSON.parse(raw);';
-      bm += 'var tid=parseInt(k.replace("ds_bm_cmd_",""),10);';
-      bm += 'if(d.ts&&d.ts<=(_lastCmdTs[tid]||0))return;';
-      bm += 'if(!_lastCmdTs)_lastCmdTs={};_lastCmdTs[tid]=d.ts;';
-      bm += 'if(d.cmd==="run"){_tid=tid;_cfg=d.cfg;_idx=0;_sent=0;_running=true;clearTimeout(_sendTimer);document.title="\u25CF DS Listener \u2014 running";wst(tid,"start","Sender started",0);doSend();}';
-      bm += 'else if(d.cmd==="stop"&&tid===_tid){_running=false;clearTimeout(_sendTimer);document.title="\uD83D\uDCF1 DS Listener \u2014 idle";wst(tid,"stop","Stopped. "+_sent+" sent.",_sent);}';
+      bm += 'window.addEventListener("message",function(e){';
+      bm += 'if(!e.data||e.data.source!=="ds_app")return;';
+      bm += 'if(e.data.cmd==="run"){_cfg=e.data.cfg;_idx=0;_sent=0;_running=true;clearTimeout(_t);ttl("\u25CF DS Sender \u2014 running");pm("start","started",0);send();}';
+      bm += 'else if(e.data.cmd==="stop"){_running=false;clearTimeout(_t);ttl("\u23F9 DS Sender \u2014 idle");pm("stop","stopped",_sent);}';
       bm += '});';
-      bm += '}catch(e){}';
-      bm += 'setTimeout(pollCmd,1500);';
-      bm += '}';
-      // Startup
-      bm += 'var _lastCmdTs={};';
-      bm += 'window._dsListener=true;';
-      bm += 'document.title="\uD83D\uDCF1 DS Listener \u2014 idle";';
-      bm += 'alert("\uD83D\uDCF1 DS Sender listener armed!\\nTab title = status.\\nNow press Start in the DS Sender app \u2014 no need to touch this tab again.\\n\\nDO NOT close this discord.com tab.");';
-      bm += '_tid=' + id + ';';
-      bm += 'pollCmd();';
+      bm += 'window._dsSender=true;';
+      bm += 'ttl("\uD83D\uDCF1 DS Sender \u2014 armed");';
+      bm += 'pm("ready","armed",0);';
+      bm += 'alert("\uD83D\uDCF1 DS Sender armed!\\nGo back to the DS Sender app and press Start.\\nDO NOT close this tab.");';
       bm += '})()';
 
-      showSenderModal(bm, t.name);
-      startBmPoll();
+      showSenderModal(bm, t ? t.name : 'Task');
     }
     function showSenderModal(bm, name) {
       document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
@@ -1683,66 +1705,7 @@
     }
     function toggleLog() { logOpen = !logOpen; var box = document.getElementById('logBox'); box.classList.toggle('open', logOpen); if (logOpen) box.scrollTop = box.scrollHeight; }
 
-    // ─────────────────────────────────────────────────────────────────
-    // iOS BM STATUS BRIDGE  (localStorage polling every 1.5 s)
-    // Bookmarklet writes ds_bm_status_<tid> = {st,msg,cnt,ts}
-    // We read it here and push into the log + update task badge
-    // ─────────────────────────────────────────────────────────────────
-    function startBmPoll() {
-      if (_bmPollTimer) return;   // already running
-      _bmPollTimer = setInterval(pollBmStatus, 1500);
-    }
-    function pollBmStatus() {
-      // Scan all ds_bm_status_* keys
-      var keys = [];
-      try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(BM_STATUS_PREFIX) === 0) keys.push(k); } }
-      catch (e) { return; }
-      keys.forEach(function (k) {
-        try {
-          var raw = localStorage.getItem(k); if (!raw) return;
-          var d = JSON.parse(raw);
-          var tid = parseInt(k.replace(BM_STATUS_PREFIX, ''), 10);
-          var t = tasks[tid];
-          // Deduplicate by timestamp
-          if (_bmLastTs[tid] && _bmLastTs[tid] >= d.ts) return;
-          _bmLastTs[tid] = d.ts;
-          var typeMap = { ok: 'ok', err: 'err', rl: 'info', start: 'info', stop: 'info' };
-          var type = typeMap[d.st] || 'info';
-          var display = '';
-          if (d.st === 'ok') display = '\u2705 Sent (' + d.cnt + ' total): "' + (d.msg && d.msg.length > 45 ? d.msg.slice(0, 42) + '\u2026' : d.msg) + '"';
-          else if (d.st === 'rl') display = '\u23F3 ' + d.msg;
-          else if (d.st === 'err') display = '\u274C ' + d.msg;
-          else if (d.st === 'start') display = '\uD83D\uDCF1 iOS BM listener confirmed running';
-          else if (d.st === 'stop') display = '\u23F9 iOS BM stopped \xB7 ' + d.cnt + ' sent';
-          else display = d.msg;
-          log('[iOS BM] ' + display, type, t || null);
-          // Update task badge, sub-text, dot
-          if (t) {
-            var badge = document.getElementById('tbadge-' + tid);
-            if (badge) badge.textContent = (d.cnt || 0) + ' sent (iOS)';
-            var sub = document.getElementById('tsub-' + tid);
-            if (d.st === 'start') {
-              _bmRunning[tid] = true;
-              setDot(t, 'running');
-              var sb2 = document.getElementById('startbtn-' + tid); if (sb2) sb2.disabled = true;
-              var stb2 = document.getElementById('stopbtn-' + tid); if (stb2) stb2.disabled = false;
-            }
-            if (d.st === 'ok' && sub) sub.textContent = '\uD83D\uDCF1 iOS BM \u25CF running \xB7 ' + (d.cnt || 0) + ' sent';
-            if (d.st === 'stop') {
-              _bmRunning[tid] = false;
-              setDot(t, 'idle');
-              var sb3 = document.getElementById('startbtn-' + tid); if (sb3) sb3.disabled = false;
-              var stb3 = document.getElementById('stopbtn-' + tid); if (stb3) stb3.disabled = true;
-              if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM stopped \xB7 ' + (d.cnt || 0) + ' sent';
-            }
-            if (d.st === 'err' && sub) sub.textContent = '\u26A0 iOS BM error: ' + (d.msg || '').slice(0, 40);
-            if (d.st === 'rl' && sub) sub.textContent = '\u23F3 iOS BM rate-limited';
-            if (d.st === 'ok') { t.sentCount = d.cnt || t.sentCount; }
-            updateGlobal();
-          }
-        } catch (e) { }
-      });
-    }
+    // postMessage listener is set up in setupMsgListener() above — no polling needed
     function toggleEye() { var inp = document.getElementById('tokenInput'); var btn = document.getElementById('eyeBtn'); if (inp.type === 'password') { inp.type = 'text'; inp.style.letterSpacing = 'normal'; btn.textContent = '\uD83D\uDE48'; } else { inp.type = 'password'; inp.style.letterSpacing = '3px'; btn.textContent = '\uD83D\uDC41'; } }
     function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
