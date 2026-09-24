@@ -1,874 +1,1809 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>DS Sender</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    :root {
-      --bg:#0d0d12; --surface:#18191f; --card:#1e2029; --card2:#24263a;
-      --border:#2e3045; --accent:#5865f2; --accent2:#7289da;
-      --green:#23a55a; --red:#ed4245; --muted:#6b7280; --text:#e8eaf0;
-      --radius:16px; --bottom-bar-height:80px;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
-    html { height:100%; background:var(--bg); }
-    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text);
-           min-height:100%; padding-bottom:calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 10px);
-           padding-top:env(safe-area-inset-top); -webkit-font-smoothing:antialiased; }
-    .top-nav { position:sticky; top:0; z-index:100; background:rgba(13,13,18,.85);
-               -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
-               border-bottom:1px solid var(--border); padding:14px 16px 12px;
-               padding-top:calc(14px + env(safe-area-inset-top)); }
-    .nav-title { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-    .nav-logo { width:34px; height:34px; border-radius:50%; background:var(--accent);
-                display:flex; align-items:center; justify-content:center; font-size:18px;
-                box-shadow:0 0 16px rgba(88,101,242,.5); flex-shrink:0; }
-    .nav-title h1 { font-size:17px; font-weight:700; letter-spacing:-.3px; }
-    .nav-title p  { font-size:11px; color:var(--muted); margin-top:1px; }
-    .save-indicator { font-size:11px; color:var(--green); font-weight:600;
-                      opacity:0; transition:opacity .4s; display:flex; align-items:center;
-                      gap:4px; margin-left:auto; pointer-events:none; }
-    .save-indicator.show { opacity:1; }
-    .status-pill { display:inline-flex; align-items:center; gap:6px; background:var(--surface);
-                   border:1px solid var(--border); border-radius:20px; padding:6px 12px;
-                   font-size:12px; font-weight:500; }
-    .pill-dot { width:7px; height:7px; border-radius:50%; background:var(--muted);
-                flex-shrink:0; transition:background .3s; }
-    .pill-dot.active { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-    .nav-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .total-badge { font-size:12px; font-weight:700; color:var(--accent2);
-                   background:rgba(88,101,242,.15); border-radius:10px; padding:4px 10px; }
-    .token-section { padding:12px 16px 4px; }
-    .section-label { font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase;
-                     color:var(--muted); margin-bottom:8px; }
-    .token-wrap { position:relative; }
-    .token-wrap input { width:100%; background:var(--card); border:1px solid var(--border);
-                        border-radius:12px; color:var(--text); font-family:'Inter',sans-serif;
-                        font-size:16px; padding:14px 48px 14px 14px; outline:none;
-                        letter-spacing:2px; transition:border-color .2s; }
-    .token-wrap input:focus { border-color:var(--accent); }
-    .eye-btn { position:absolute; right:14px; top:50%; transform:translateY(-50%);
-               background:none; border:none; color:var(--muted); font-size:18px;
-               cursor:pointer; padding:6px; -webkit-tap-highlight-color:transparent; }
-    .token-hint { font-size:11px; margin-top:6px; }
-    .main { padding:12px 16px; display:flex; flex-direction:column; gap:12px; }
-    .task-card { background:var(--card); border:1px solid var(--border);
-                 border-radius:var(--radius); overflow:hidden; animation:cardIn .2s ease; }
-    @keyframes cardIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
-    .task-card.collapsed .task-body { display:none; }
-    .task-head { display:flex; align-items:center; gap:10px; padding:14px 16px; min-height:60px;
-                 cursor:pointer; -webkit-tap-highlight-color:transparent; background:var(--card2); }
-    .task-dot { width:10px; height:10px; border-radius:50%; background:var(--muted);
-                flex-shrink:0; transition:background .3s; }
-    .task-dot.running { background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.5s infinite; }
-    .task-dot.error   { background:var(--red); }
-    .task-info { flex:1; min-width:0; }
-    .task-name { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .task-sub  { font-size:11px; color:var(--muted); margin-top:2px; }
-    .task-badge { font-size:13px; font-weight:700; color:var(--accent2);
-                  background:rgba(88,101,242,.15); border-radius:10px; padding:4px 10px; white-space:nowrap; }
-    .task-chevron { color:var(--muted); font-size:13px; transition:transform .25s; flex-shrink:0; }
-    .task-card.collapsed .task-chevron { transform:rotate(-90deg); }
-    .task-body { padding:16px; display:flex; flex-direction:column; gap:14px; }
-    .field-label { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px; }
-    .field-input { width:100%; background:var(--surface); border:1px solid var(--border);
-                   border-radius:10px; color:var(--text); font-family:'Inter',sans-serif;
-                   font-size:16px; padding:12px 14px; outline:none; transition:border-color .2s; }
-    .field-input:focus { border-color:var(--accent); }
-    textarea.field-input { resize:none; min-height:72px; line-height:1.5; }
-    .msg-list { display:flex; flex-direction:column; gap:7px; }
-    .msg-item { display:flex; align-items:flex-start; gap:8px; background:var(--surface);
-                border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
-    .msg-item-text { flex:1; font-size:14px; word-break:break-word; line-height:1.4; }
-    .msg-del { background:rgba(237,66,69,.15); border:none; border-radius:7px; color:var(--red);
-               font-size:14px; font-weight:700; padding:6px 10px; cursor:pointer;
-               min-width:36px; min-height:36px; display:flex; align-items:center;
-               justify-content:center; flex-shrink:0; }
-    .add-bar { display:flex; gap:8px; align-items:flex-end; margin-top:4px; }
-    .add-bar textarea { flex:1; min-height:48px; }
-    .add-bar .add-btn { background:var(--accent); border:none; border-radius:10px; color:#fff;
-                        font-size:20px; font-weight:700; width:48px; height:48px;
-                        display:flex; align-items:center; justify-content:center;
-                        cursor:pointer; flex-shrink:0; }
-    .interval-row { display:flex; gap:8px; }
-    .interval-row .field-input { flex:1; }
-    .interval-row select.field-input { width:110px; flex:none; }
-    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:2px 0; }
-    .toggle-label { font-size:14px; color:var(--text); }
-    .toggle-sub   { font-size:11px; color:var(--muted); margin-top:1px; }
-    .ios-toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
-    .ios-toggle input { display:none; }
-    .ios-track { position:absolute; inset:0; background:var(--border); border-radius:20px; transition:background .25s; }
-    .ios-toggle input:checked ~ .ios-track { background:var(--green); }
-    .ios-thumb { position:absolute; left:2px; top:2px; width:27px; height:27px; border-radius:50%;
-                 background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.4);
-                 transition:left .25s cubic-bezier(.4,0,.2,1); }
-    .ios-toggle input:checked ~ .ios-thumb { left:22px; }
-    .task-actions { display:flex; gap:8px; }
-    .task-actions .btn { flex:1; }
-    .btn { border:none; border-radius:10px; cursor:pointer; font-family:'Inter',sans-serif;
-           font-weight:600; font-size:14px; padding:12px 16px; transition:all .15s;
-           white-space:nowrap; min-height:44px; -webkit-tap-highlight-color:transparent; }
-    .btn:disabled { opacity:.4; }
-    .btn-start  { background:var(--green); color:#fff; }
-    .btn-stop   { background:var(--red);   color:#fff; }
-    .btn-remove { background:rgba(237,66,69,.12); color:var(--red); font-size:13px;
-                  flex:none !important; width:44px; padding:12px 0; }
-    .bottom-bar { position:fixed; bottom:0; left:0; right:0; z-index:100;
-                  background:rgba(13,13,18,.9); -webkit-backdrop-filter:saturate(180%) blur(24px);
-                  backdrop-filter:saturate(180%) blur(24px); border-top:1px solid var(--border);
-                  padding:10px 16px; padding-bottom:calc(10px + env(safe-area-inset-bottom));
-                  display:flex; gap:10px; }
-    .bottom-bar .bb-btn { flex:1; border:none; border-radius:12px; cursor:pointer;
-                          font-family:'Inter',sans-serif; font-weight:700; font-size:15px;
-                          padding:14px; min-height:50px; -webkit-tap-highlight-color:transparent;
-                          transition:transform .1s, opacity .15s; }
-    .bottom-bar .bb-btn:active { transform:scale(.96); }
-    .bb-start { background:var(--green); color:#fff; }
-    .bb-stop  { background:var(--red);   color:#fff; }
-    .bb-add   { background:var(--accent); color:#fff; flex:none; width:50px; font-size:22px; border-radius:12px; }
-    .bb-save  { background:var(--card2); color:var(--accent2); border:1px solid var(--border);
-                flex:none; width:50px; font-size:20px; border-radius:12px; }
+
+    :root {
+      --bg: #0d0d12;
+      --surface: #18191f;
+      --card: #1e2029;
+      --card2: #24263a;
+      --border: #2e3045;
+      --accent: #5865f2;
+      --accent2: #7289da;
+      --green: #23a55a;
+      --red: #ed4245;
+      --muted: #6b7280;
+      --text: #e8eaf0;
+      --radius: 16px;
+      --bottom-bar-height: 80px;
+    }
+
+    html {
+      height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      padding-bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 10px);
+      padding-top: env(safe-area-inset-top);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13, 13, 18, .85);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      padding-top: calc(14px + env(safe-area-inset-top));
+    }
+
+    .nav-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .nav-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 16px rgba(88, 101, 242, .5);
+      flex-shrink: 0;
+    }
+
+    .nav-title h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .nav-title p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .save-indicator {
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity .4s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      pointer-events: none;
+    }
+
+    .save-indicator.show {
+      opacity: 1;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+
+    .pill-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .35
+      }
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .total-badge {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent2);
+      background: rgba(88, 101, 242, .15);
+      border-radius: 10px;
+      padding: 4px 10px;
+    }
+
+    .token-section {
+      padding: 12px 16px 4px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .token-wrap {
+      position: relative;
+    }
+
+    .token-wrap input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      padding: 14px 48px 14px 14px;
+      outline: none;
+      letter-spacing: 2px;
+      transition: border-color .2s;
+    }
+
+    .token-wrap input:focus {
+      border-color: var(--accent);
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .token-hint {
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .main {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: cardIn .2s ease;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .task-card.collapsed .task-body {
+      display: none;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      min-height: 60px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      background: var(--card2);
+    }
+
+    .task-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+
+    .task-dot.running {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    .task-dot.error {
+      background: var(--red);
+    }
+
+    .task-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .task-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+      background: rgba(88, 101, 242, .15);
+      border-radius: 10px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .task-chevron {
+      color: var(--muted);
+      font-size: 13px;
+      transition: transform .25s;
+      flex-shrink: 0;
+    }
+
+    .task-card.collapsed .task-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .task-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field-input:focus {
+      border-color: var(--accent);
+    }
+
+    textarea.field-input {
+      resize: none;
+      min-height: 72px;
+      line-height: 1.5;
+    }
+
+    .msg-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .msg-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .msg-item-text {
+      flex: 1;
+      font-size: 14px;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .msg-del {
+      background: rgba(237, 66, 69, .15);
+      border: none;
+      border-radius: 7px;
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .add-bar {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      margin-top: 4px;
+    }
+
+    .add-bar textarea {
+      flex: 1;
+      min-height: 48px;
+    }
+
+    .add-bar .add-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .interval-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .interval-row .field-input {
+      flex: 1;
+    }
+
+    .interval-row select.field-input {
+      width: 110px;
+      flex: none;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .toggle-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .ios-toggle {
+      position: relative;
+      width: 51px;
+      height: 31px;
+      flex-shrink: 0;
+    }
+
+    .ios-toggle input {
+      display: none;
+    }
+
+    .ios-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 20px;
+      transition: background .25s;
+    }
+
+    .ios-toggle input:checked~.ios-track {
+      background: var(--green);
+    }
+
+    .ios-thumb {
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 27px;
+      height: 27px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+      transition: left .25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .ios-toggle input:checked~.ios-thumb {
+      left: 22px;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .task-actions .btn {
+      flex: 1;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 12px 16px;
+      transition: all .15s;
+      white-space: nowrap;
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:disabled {
+      opacity: .4;
+    }
+
+    .btn-start {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-stop {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-remove {
+      background: rgba(237, 66, 69, .12);
+      color: var(--red);
+      font-size: 13px;
+      flex: none !important;
+      width: 44px;
+      padding: 12px 0;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(13, 13, 18, .9);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      backdrop-filter: saturate(180%) blur(24px);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+    }
+
+    .bottom-bar .bb-btn {
+      flex: 1;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px;
+      min-height: 50px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .1s, opacity .15s;
+    }
+
+    .bottom-bar .bb-btn:active {
+      transform: scale(.96);
+    }
+
+    .bb-start {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .bb-stop {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .bb-add {
+      background: var(--accent);
+      color: #fff;
+      flex: none;
+      width: 50px;
+      font-size: 22px;
+      border-radius: 12px;
+    }
+
+    .bb-save {
+      background: var(--card2);
+      color: var(--accent2);
+      border: 1px solid var(--border);
+      flex: none;
+      width: 50px;
+      font-size: 20px;
+      border-radius: 12px;
+    }
+
     /* Sender bookmarklet modal */
-    .sender-info-box { background:rgba(35,165,90,.1); border:1px solid rgba(35,165,90,.3);
-                       border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:12px; color:var(--green); line-height:1.6; }
-    .sender-step { display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.5; margin-bottom:8px; }
-    .sender-step-num { background:var(--green); color:#fff; width:20px; height:20px; border-radius:50%;
-                       font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
-    .cors-notice { background:rgba(237,66,69,.1); border:1px solid rgba(237,66,69,.3);
-                   border-radius:10px; padding:10px 12px; font-size:12px; color:var(--red); line-height:1.6; margin-bottom:10px; }
-    .log-toggle-btn { width:100%; background:var(--surface); border:1px solid var(--border);
-                      border-radius:12px; color:var(--muted); font-family:'Inter',sans-serif;
-                      font-size:13px; font-weight:500; padding:12px; cursor:pointer;
-                      text-align:left; display:flex; align-items:center; gap:8px; }
-    .log-count { background:var(--accent); color:#fff; border-radius:8px; padding:1px 7px; font-size:11px; font-weight:700; }
-    .log-box { background:#09090d; border:1px solid var(--border); border-radius:12px; padding:12px;
-               max-height:220px; overflow-y:auto; font-family:'Courier New',monospace;
-               font-size:12px; line-height:1.7; display:none; }
-    .log-box.open { display:block; }
-    .log-entry { display:flex; flex-wrap:wrap; gap:4px; }
-    .log-time  { color:var(--muted); flex-shrink:0; }
-    .log-tag   { flex-shrink:0; }
-    .log-ok    { color:var(--green); }
-    .log-err   { color:var(--red); }
-    .log-info  { color:var(--accent2); }
-    .empty-state { text-align:center; padding:48px 20px; color:var(--muted); }
-    .empty-state .emoji { font-size:48px; margin-bottom:12px; }
-    .empty-state p { font-size:14px; }
-    .modal-overlay { position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.75);
-                     -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
-                     display:flex; align-items:flex-end; animation:fadeIn .2s ease; }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-    .modal-sheet { width:100%; background:var(--card); border-radius:24px 24px 0 0;
-                   border-top:1px solid var(--border);
-                   padding:20px 20px calc(20px + env(safe-area-inset-bottom));
-                   animation:slideUp .25s cubic-bezier(.4,0,.2,1); }
-    @keyframes slideUp { from{transform:translateY(100%)} to{transform:none} }
-    .modal-handle { width:40px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 18px; }
-    .modal-title { font-size:16px; font-weight:700; margin-bottom:6px; }
-    .modal-sub   { font-size:12px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
-    .snippet-box { background:#09090d; border:1px solid var(--border); border-radius:10px; padding:12px;
-                   font-family:'Courier New',monospace; font-size:11px; color:var(--accent2);
-                   word-break:break-all; line-height:1.5; margin-bottom:14px;
-                   max-height:120px; overflow-y:auto; user-select:all; }
-    .modal-btns { display:flex; gap:8px; }
-    .modal-btns .btn { flex:1; }
-    .grab-btn { display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,#5865f2,#7289da);
-                border:none; border-radius:10px; color:#fff; font-family:'Inter',sans-serif;
-                font-size:13px; font-weight:600; padding:10px 14px; cursor:pointer;
-                margin-top:10px; width:100%; justify-content:center; min-height:44px; transition:opacity .15s; }
-    .grab-btn:active { opacity:.75; }
-    .step-list { counter-reset:step; display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
-    .step-item { display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.5; }
-    .step-num { counter-increment:step; width:22px; height:22px; border-radius:50%;
-                background:var(--accent); color:#fff; font-size:11px; font-weight:700;
-                display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
-    .step-num::before { content:counter(step); }
-    .tab-row { display:flex; gap:6px; margin-bottom:16px; }
-    .tab-btn { flex:1; border:1px solid var(--border); border-radius:10px; background:var(--surface);
-               color:var(--muted); font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
-               padding:10px 8px; cursor:pointer; transition:all .15s; }
-    .tab-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-    .method-card { border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:var(--surface); }
-    .method-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-    .method-desc  { font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:10px; }
-    .method-badge { display:inline-flex; align-items:center; background:rgba(35,165,90,.15); color:var(--green);
-                    border:1px solid rgba(35,165,90,.3); border-radius:6px; font-size:10px; font-weight:700;
-                    padding:2px 7px; margin-left:4px; letter-spacing:.5px; }
-    .or-divider { display:flex; align-items:center; gap:10px; margin:12px 0 4px; color:var(--muted); font-size:11px; }
-    .or-divider::before, .or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
-    .mfa-row { display:flex; gap:8px; margin-top:8px; }
-    .mfa-row input { flex:1; letter-spacing:4px; text-align:center; font-size:18px; }
-    .mfa-row .btn  { flex:none; width:80px; }
-    .toast { position:fixed; bottom:calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 16px);
-             left:50%; transform:translateX(-50%) translateY(20px);
-             background:var(--card2); border:1px solid var(--border); border-radius:12px;
-             padding:10px 18px; font-size:13px; font-weight:600; color:var(--text);
-             white-space:nowrap; z-index:9999; opacity:0;
-             transition:opacity .25s, transform .25s; pointer-events:none; }
-    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .sender-info-box {
+      background: rgba(35, 165, 90, .1);
+      border: 1px solid rgba(35, 165, 90, .3);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--green);
+      line-height: 1.6;
+    }
+
+    .sender-step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .sender-step-num {
+      background: var(--green);
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .cors-notice {
+      background: rgba(237, 66, 69, .1);
+      border: 1px solid rgba(237, 66, 69, .3);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--red);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .log-toggle-btn {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 12px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-count {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      padding: 1px 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .log-box {
+      background: #09090d;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      display: none;
+    }
+
+    .log-box.open {
+      display: block;
+    }
+
+    .log-entry {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .log-time {
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .log-tag {
+      flex-shrink: 0;
+    }
+
+    .log-ok {
+      color: var(--green);
+    }
+
+    .log-err {
+      color: var(--red);
+    }
+
+    .log-info {
+      color: var(--accent2);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .emoji {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, .75);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: flex-end;
+      animation: fadeIn .2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      background: var(--card);
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      animation: slideUp .25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%)
+      }
+
+      to {
+        transform: none
+      }
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 0 auto 18px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .snippet-box {
+      background: #09090d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      word-break: break-all;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      max-height: 120px;
+      overflow-y: auto;
+      user-select: all;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-btns .btn {
+      flex: 1;
+    }
+
+    .grab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #5865f2, #7289da);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      justify-content: center;
+      min-height: 44px;
+      transition: opacity .15s;
+    }
+
+    .grab-btn:active {
+      opacity: .75;
+    }
+
+    .step-list {
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .step-num {
+      counter-increment: step;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-num::before {
+      content: counter(step);
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .method-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: var(--surface);
+    }
+
+    .method-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .method-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(35, 165, 90, .15);
+      color: var(--green);
+      border: 1px solid rgba(35, 165, 90, .3);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      margin-left: 4px;
+      letter-spacing: .5px;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .mfa-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mfa-row input {
+      flex: 1;
+      letter-spacing: 4px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .mfa-row .btn {
+      flex: none;
+      width: 80px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(var(--bottom-bar-height) + env(safe-area-inset-bottom) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
+
 <body>
 
-<div class="toast" id="toastEl"></div>
+  <div class="toast" id="toastEl"></div>
 
-<div class="top-nav">
-  <div class="nav-title">
-    <div class="nav-logo">&#x1F916;</div>
-    <div><h1>DS Multi Sender</h1><p>Discord auto-message &middot; user token</p></div>
-    <div class="save-indicator" id="saveInd">&#x1F4BE; Saved</div>
-  </div>
-  <div class="nav-row">
-    <div class="status-pill"><div class="pill-dot" id="gDot"></div><span id="gStatusText">Idle</span></div>
-    <div class="total-badge">&#x26A1; <span id="gTotal">0</span> sent</div>
-    <button class="log-toggle-btn" onclick="toggleLog()" style="width:auto;padding:8px 12px;">&#x1F4CB; <span class="log-count" id="logCount">0</span></button>
-  </div>
-</div>
-
-<div class="token-section">
-  <div class="section-label">Auth</div>
-  <div style="background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;margin-bottom:2px;">
-    <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px;">&#x1F4CC; How to get your token</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.6;">Discord blocks email/password login from HTML files.<br/>Use the <strong style="color:var(--text)">&#x26A1; Get Token</strong> button below.</div>
-  </div>
-  <button class="grab-btn" onclick="showGrabModal()" style="margin-top:10px;font-size:14px;padding:13px 16px;min-height:48px;">&#x26A1; Get Token (iOS / Desktop)</button>
-  <div class="or-divider">or paste token manually</div>
-  <div class="token-wrap">
-    <input type="password" id="tokenInput" placeholder="paste token here..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="onTokenChange()"/>
-    <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">&#x1F441;</button>
-  </div>
-  <div class="token-hint" id="tokenHint"></div>
-</div>
-
-<div class="modal-overlay" id="loginModal" style="display:none" onclick="closeLoginModal(event)">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">&#x1F511; Sign in with Discord</div>
-    <div class="modal-sub">Your credentials go directly to <strong style="color:var(--text)">discord.com/api</strong> &mdash; not stored.</div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div><div class="field-label">EMAIL / PHONE</div>
-      <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()"/></div>
-      <div><div class="field-label">PASSWORD</div>
-      <div class="token-wrap">
-        <input class="field-input" type="password" id="loginPass" placeholder="password" style="padding-right:48px" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button class="eye-btn" onclick="toggleLoginEye()" id="loginEyeBtn">&#x1F441;</button>
-      </div></div>
-      <div id="mfaRow" style="display:none"><div class="field-label">2FA CODE</div>
-      <div class="mfa-row">
-        <input class="field-input" type="text" id="mfaCode" placeholder="000000" inputmode="numeric" maxlength="6" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')doMfa()"/>
-        <button class="btn btn-start" onclick="doMfa()">Verify</button>
-      </div></div>
-      <div id="loginErr" style="display:none;font-size:12px;color:var(--red);padding:8px 12px;background:rgba(237,66,69,.1);border-radius:8px;"></div>
-      <button class="btn btn-start" id="loginSubmitBtn" onclick="doLogin()" style="min-height:50px;font-size:15px;">Sign In</button>
+  <div class="top-nav">
+    <div class="nav-title">
+      <div class="nav-logo">&#x1F916;</div>
+      <div>
+        <h1>DS Multi Sender</h1>
+        <p>Discord auto-message &middot; user token</p>
+      </div>
+      <div class="save-indicator" id="saveInd">&#x1F4BE; Saved</div>
     </div>
-    <div style="margin-top:10px;text-align:center"><button onclick="closeLoginModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="grabModal" style="display:none" onclick="closeGrabModal(event)">
-  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto;">
-    <div class="modal-handle"></div>
-    <div class="modal-title">&#x26A1; Get Token</div>
-    <div class="tab-row">
-      <button class="tab-btn active" id="tabIos" onclick="switchTab('ios')">&#x1F4F1; iOS / Safari</button>
-      <button class="tab-btn" id="tabDsk" onclick="switchTab('desktop')">&#x1F4BB; Desktop</button>
+    <div class="nav-row">
+      <div class="status-pill">
+        <div class="pill-dot" id="gDot"></div><span id="gStatusText">Idle</span>
+      </div>
+      <div class="total-badge">&#x26A1; <span id="gTotal">0</span> sent</div>
+      <button class="log-toggle-btn" onclick="toggleLog()" style="width:auto;padding:8px 12px;">&#x1F4CB; <span
+          class="log-count" id="logCount">0</span></button>
     </div>
-    <div id="paneIos">
-      <div class="method-card">
-        <div class="method-title">&#x1F516; Bookmarklet <span class="method-badge">RECOMMENDED</span></div>
-        <div class="method-desc">4-strategy token extractor runs directly on discord.com. Works on modern Discord builds.</div>
-        <div class="step-list">
-          <div class="step-item"><div class="step-num"></div><span>Tap <strong>Copy Bookmarklet</strong> below</span></div>
-          <div class="step-item"><div class="step-num"></div><span>Safari &rarr; bookmark <strong>any page</strong> (Share &rarr; Add Bookmark)</span></div>
-          <div class="step-item"><div class="step-num"></div><span>Bookmarks &rarr; long-press new bookmark &rarr; <strong>Edit</strong> &rarr; clear URL &rarr; paste &rarr; Save</span></div>
-          <div class="step-item"><div class="step-num"></div><span>Open <strong>discord.com</strong> in Safari &mdash; make sure you're logged in</span></div>
-          <div class="step-item"><div class="step-num"></div><span>Tap the bookmark &rarr; dialog shows token &rarr; <strong>Select All &rarr; Copy</strong></span></div>
-          <div class="step-item"><div class="step-num"></div><span>Come back here &rarr; tap <strong>Paste Token</strong></span></div>
+  </div>
+
+  <div class="token-section">
+    <div class="section-label">Auth</div>
+    <div
+      style="background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;margin-bottom:2px;">
+      <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px;">&#x1F4CC; How to get your
+        token</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Discord blocks email/password login from HTML
+        files.<br />Use the <strong style="color:var(--text)">&#x26A1; Get Token</strong> button below.</div>
+    </div>
+    <button class="grab-btn" onclick="showGrabModal()"
+      style="margin-top:10px;font-size:14px;padding:13px 16px;min-height:48px;">&#x26A1; Get Token (iOS /
+      Desktop)</button>
+    <div class="or-divider">or paste token manually</div>
+    <div class="token-wrap">
+      <input type="password" id="tokenInput" placeholder="paste token here..." autocomplete="off" autocorrect="off"
+        spellcheck="false" oninput="onTokenChange()" />
+      <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">&#x1F441;</button>
+    </div>
+    <div class="token-hint" id="tokenHint"></div>
+  </div>
+
+  <div class="modal-overlay" id="loginModal" style="display:none" onclick="closeLoginModal(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">&#x1F511; Sign in with Discord</div>
+      <div class="modal-sub">Your credentials go directly to <strong style="color:var(--text)">discord.com/api</strong>
+        &mdash; not stored.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div class="field-label">EMAIL / PHONE</div>
+          <input class="field-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"
+            autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email"
+            onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()" />
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-start" id="copyBmBtn" onclick="copyBookmarklet()" style="flex:1;">&#x1F4CB; Copy Bookmarklet</button>
-          <button class="btn" style="background:var(--accent);color:#fff;flex:1;" onclick="pasteToken()">&#x1F4E5; Paste Token</button>
+        <div>
+          <div class="field-label">PASSWORD</div>
+          <div class="token-wrap">
+            <input class="field-input" type="password" id="loginPass" placeholder="password" style="padding-right:48px"
+              autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+            <button class="eye-btn" onclick="toggleLoginEye()" id="loginEyeBtn">&#x1F441;</button>
+          </div>
+        </div>
+        <div id="mfaRow" style="display:none">
+          <div class="field-label">2FA CODE</div>
+          <div class="mfa-row">
+            <input class="field-input" type="text" id="mfaCode" placeholder="000000" inputmode="numeric" maxlength="6"
+              autocomplete="one-time-code" onkeydown="if(event.key==='Enter')doMfa()" />
+            <button class="btn btn-start" onclick="doMfa()">Verify</button>
+          </div>
+        </div>
+        <div id="loginErr"
+          style="display:none;font-size:12px;color:var(--red);padding:8px 12px;background:rgba(237,66,69,.1);border-radius:8px;">
+        </div>
+        <button class="btn btn-start" id="loginSubmitBtn" onclick="doLogin()"
+          style="min-height:50px;font-size:15px;">Sign In</button>
+      </div>
+      <div style="margin-top:10px;text-align:center"><button onclick="closeLoginModal()"
+          style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="grabModal" style="display:none" onclick="closeGrabModal(event)">
+    <div class="modal-sheet" style="max-height:90vh;overflow-y:auto;">
+      <div class="modal-handle"></div>
+      <div class="modal-title">&#x26A1; Get Token</div>
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabIos" onclick="switchTab('ios')">&#x1F4F1; iOS / Safari</button>
+        <button class="tab-btn" id="tabDsk" onclick="switchTab('desktop')">&#x1F4BB; Desktop</button>
+      </div>
+      <div id="paneIos">
+        <div class="method-card">
+          <div class="method-title">&#x1F516; Bookmarklet <span class="method-badge">RECOMMENDED</span></div>
+          <div class="method-desc">4-strategy token extractor runs directly on discord.com. Works on modern Discord
+            builds.</div>
+          <div class="step-list">
+            <div class="step-item">
+              <div class="step-num"></div><span>Tap <strong>Copy Bookmarklet</strong> below</span>
+            </div>
+            <div class="step-item">
+              <div class="step-num"></div><span>Safari &rarr; bookmark <strong>any page</strong> (Share &rarr; Add
+                Bookmark)</span>
+            </div>
+            <div class="step-item">
+              <div class="step-num"></div><span>Bookmarks &rarr; long-press new bookmark &rarr; <strong>Edit</strong>
+                &rarr; clear URL &rarr; paste &rarr; Save</span>
+            </div>
+            <div class="step-item">
+              <div class="step-num"></div><span>Open <strong>discord.com</strong> in Safari &mdash; make sure you're
+                logged in</span>
+            </div>
+            <div class="step-item">
+              <div class="step-num"></div><span>Tap the bookmark &rarr; dialog shows token &rarr; <strong>Select All
+                  &rarr; Copy</strong></span>
+            </div>
+            <div class="step-item">
+              <div class="step-num"></div><span>Come back here &rarr; tap <strong>Paste Token</strong></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-start" id="copyBmBtn" onclick="copyBookmarklet()" style="flex:1;">&#x1F4CB; Copy
+              Bookmarklet</button>
+            <button class="btn" style="background:var(--accent);color:#fff;flex:1;" onclick="pasteToken()">&#x1F4E5;
+              Paste Token</button>
+          </div>
+        </div>
+        <div class="method-card">
+          <div class="method-title">&#x270D; Manual Paste</div>
+          <div class="method-desc">Already have your token? Paste it directly.</div>
+          <button class="btn"
+            style="background:var(--card2);color:var(--accent2);border:1px solid var(--border);width:100%;"
+            onclick="closeGrabModal();setTimeout(function(){document.getElementById('tokenInput').focus();},100);">&#x1F4DD;
+            Paste Token Manually</button>
+        </div>
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">BOOKMARKLET CODE (tap to select then copy)</div>
+          <div class="snippet-box" id="bmSnippetBox" onclick="selectBmSnippet()"
+            style="font-size:10px;max-height:80px;"></div>
         </div>
       </div>
-      <div class="method-card">
-        <div class="method-title">&#x270D; Manual Paste</div>
-        <div class="method-desc">Already have your token? Paste it directly.</div>
-        <button class="btn" style="background:var(--card2);color:var(--accent2);border:1px solid var(--border);width:100%;"
-          onclick="closeGrabModal();setTimeout(function(){document.getElementById('tokenInput').focus();},100);">&#x1F4DD; Paste Token Manually</button>
+      <div id="paneDsk" style="display:none">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Open Discord in Chrome/Firefox
+          &rarr; F12 &rarr; Console &rarr; paste &rarr; Enter. Token is auto-copied.</p>
+        <div class="snippet-box" id="snippetBox" onclick="selectSnippet()"></div>
+        <div class="modal-btns">
+          <button class="btn btn-start" id="copySnipBtn" onclick="copySnippet()">&#x1F4CB; Copy Snippet</button>
+          <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#x1F4E5; Paste
+            Token</button>
+        </div>
       </div>
-      <div><div class="field-label" style="margin-bottom:6px;">BOOKMARKLET CODE (tap to select then copy)</div>
-      <div class="snippet-box" id="bmSnippetBox" onclick="selectBmSnippet()" style="font-size:10px;max-height:80px;"></div></div>
+      <div style="margin-top:12px;text-align:center"><button onclick="closeGrabModal()"
+          style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
     </div>
-    <div id="paneDsk" style="display:none">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Open Discord in Chrome/Firefox &rarr; F12 &rarr; Console &rarr; paste &rarr; Enter. Token is auto-copied.</p>
-      <div class="snippet-box" id="snippetBox" onclick="selectSnippet()"></div>
-      <div class="modal-btns">
-        <button class="btn btn-start" id="copySnipBtn" onclick="copySnippet()">&#x1F4CB; Copy Snippet</button>
-        <button class="btn" style="background:var(--accent);color:#fff" onclick="pasteToken()">&#x1F4E5; Paste Token</button>
+  </div>
+
+  <!-- Sender Bookmarklet Modal -->
+  <div class="modal-overlay" id="senderModal" style="display:none" onclick="closeSenderModal(event)">
+    <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;">
+      <div class="modal-handle"></div>
+      <div class="modal-title">&#x1F4E4; iOS Sender Bookmarklet</div>
+      <div class="sender-info-box">
+        &#x2139;&#xFE0F; <strong>Why this exists:</strong> Safari blocks API calls from local HTML files (CORS). This
+        bookmarklet runs directly <strong>on discord.com</strong> &mdash; same-origin, zero CORS. Keep the discord.com
+        tab open and it keeps sending.
+      </div>
+      <div id="senderTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;"></div>
+      <div class="sender-step">
+        <div class="sender-step-num">1</div><span>Tap <strong>Copy Sender BM</strong> below</span>
+      </div>
+      <div class="sender-step">
+        <div class="sender-step-num">2</div><span>Bookmark any page in Safari (Share &#x2192; Add Bookmark)</span>
+      </div>
+      <div class="sender-step">
+        <div class="sender-step-num">3</div><span>Edit that bookmark &#x2192; clear URL &#x2192; paste &#x2192;
+          Save</span>
+      </div>
+      <div class="sender-step">
+        <div class="sender-step-num">4</div><span>Open <strong>discord.com</strong> in Safari (stay on that tab)</span>
+      </div>
+      <div class="sender-step">
+        <div class="sender-step-num">5</div><span>Tap the bookmark &#x2192; it starts sending! Watch the tab title for
+          status</span>
+      </div>
+      <div class="sender-step">
+        <div class="sender-step-num">6</div><span>Close / navigate away from discord.com tab to stop</span>
+      </div>
+      <div style="margin:12px 0 6px;">
+        <div class="field-label">SENDER CODE (tap to select)</div>
+      </div>
+      <div class="snippet-box" id="senderBmBox" onclick="selectSenderBm()" style="font-size:10px;max-height:90px;">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-start" id="copySenderBtn" onclick="copySenderBm()" style="flex:1;">&#x1F4CB; Copy Sender
+          BM</button>
+        <button class="btn"
+          style="background:var(--card2);color:var(--muted);border:1px solid var(--border);flex:none;width:70px;"
+          onclick="closeSenderModal()">Close</button>
       </div>
     </div>
-    <div style="margin-top:12px;text-align:center"><button onclick="closeGrabModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
   </div>
-</div>
 
-<!-- Sender Bookmarklet Modal -->
-<div class="modal-overlay" id="senderModal" style="display:none" onclick="closeSenderModal(event)">
-  <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;">
-    <div class="modal-handle"></div>
-    <div class="modal-title">&#x1F4E4; iOS Sender Bookmarklet</div>
-    <div class="sender-info-box">
-      &#x2139;&#xFE0F; <strong>Why this exists:</strong> Safari blocks API calls from local HTML files (CORS). This bookmarklet runs directly <strong>on discord.com</strong> &mdash; same-origin, zero CORS. Keep the discord.com tab open and it keeps sending.
+  <div class="main">
+    <div>
+      <div class="log-box" id="logBox">
+        <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info"> Ready. Add a channel
+            below.</span></div>
+      </div>
     </div>
-    <div id="senderTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;"></div>
-    <div class="sender-step"><div class="sender-step-num">1</div><span>Tap <strong>Copy Sender BM</strong> below</span></div>
-    <div class="sender-step"><div class="sender-step-num">2</div><span>Bookmark any page in Safari (Share &#x2192; Add Bookmark)</span></div>
-    <div class="sender-step"><div class="sender-step-num">3</div><span>Edit that bookmark &#x2192; clear URL &#x2192; paste &#x2192; Save</span></div>
-    <div class="sender-step"><div class="sender-step-num">4</div><span>Open <strong>discord.com</strong> in Safari (stay on that tab)</span></div>
-    <div class="sender-step"><div class="sender-step-num">5</div><span>Tap the bookmark &#x2192; it starts sending! Watch the tab title for status</span></div>
-    <div class="sender-step"><div class="sender-step-num">6</div><span>Close / navigate away from discord.com tab to stop</span></div>
-    <div style="margin:12px 0 6px;"><div class="field-label">SENDER CODE (tap to select)</div></div>
-    <div class="snippet-box" id="senderBmBox" onclick="selectSenderBm()" style="font-size:10px;max-height:90px;"></div>
-    <div style="display:flex;gap:8px;margin-top:4px;">
-      <button class="btn btn-start" id="copySenderBtn" onclick="copySenderBm()" style="flex:1;">&#x1F4CB; Copy Sender BM</button>
-      <button class="btn" style="background:var(--card2);color:var(--muted);border:1px solid var(--border);flex:none;width:70px;" onclick="closeSenderModal()">Close</button>
+    <div id="taskList">
+      <div class="empty-state" id="emptyState">
+        <div class="emoji">&#x1F4E1;</div>
+        <p>No channels yet<br />Tap <strong style="color:var(--accent);">&#xFF0B;</strong> to add one</p>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="main">
-  <div><div class="log-box" id="logBox">
-    <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info"> Ready. Add a channel below.</span></div>
-  </div></div>
-  <div id="taskList">
-    <div class="empty-state" id="emptyState">
-      <div class="emoji">&#x1F4E1;</div>
-      <p>No channels yet<br/>Tap <strong style="color:var(--accent);">&#xFF0B;</strong> to add one</p>
-    </div>
+  <div class="bottom-bar">
+    <button class="bb-btn bb-start" onclick="startAll()">&#x25B6; Start All</button>
+    <button class="bb-btn bb-stop" onclick="stopAll()">&#x23F9; Stop</button>
+    <button class="bb-btn bb-save" onclick="saveData()" title="Save all">&#x1F4BE;</button>
+    <button class="bb-btn bb-add" onclick="addTask()">&#xFF0B;</button>
   </div>
-</div>
 
-<div class="bottom-bar">
-  <button class="bb-btn bb-start" onclick="startAll()">&#x25B6; Start All</button>
-  <button class="bb-btn bb-stop" onclick="stopAll()">&#x23F9; Stop</button>
-  <button class="bb-btn bb-save" onclick="saveData()" title="Save all">&#x1F4BE;</button>
-  <button class="bb-btn bb-add" onclick="addTask()">&#xFF0B;</button>
-</div>
+  <script>
+    var STORE_KEY = 'ds_sender_v2';
+    var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
+    var saveTimer = null, toastTimer = null, _mfaTicket = null;
+    var COLORS = ['#a78bfa', '#60a5fa', '#34d399', '#f97316', '#f43f5e', '#facc15', '#22d3ee', '#e879f9', '#fb923c', '#4ade80'];
+    var BM_STATUS_PREFIX = 'ds_bm_status_';   // bookmarklet → app: status updates
+    var BM_CMD_PREFIX = 'ds_bm_cmd_';      // app → bookmarklet: commands (run/stop/ping)
+    var _bmPollTimer = null;                   // single interval watches all BM sessions
+    var _bmLastTs = {};                        // last seen status timestamp per taskId
+    var _bmRunning = {};                       // tracks which tasks are BM-running (app side)
 
-<script>
-var STORE_KEY = 'ds_sender_v2';
-var tasks = {}, taskIdCounter = 0, logEntryCount = 0, logOpen = false;
-var saveTimer = null, toastTimer = null, _mfaTicket = null;
-var COLORS = ['#a78bfa','#60a5fa','#34d399','#f97316','#f43f5e','#facc15','#22d3ee','#e879f9','#fb923c','#4ade80'];
-var BM_STATUS_PREFIX = 'ds_bm_status_';   // localStorage key prefix for bookmarklet → app bridge
-var _bmPollTimer = null;                   // single interval that watches all BM sessions
-var _bmLastTs = {};                        // last seen timestamp per taskId to deduplicate
+    // iOS bookmarklet — robust for modern Discord 2025+
+    // Uses fixed chunk ID, scans all module export keys, multiple fallbacks
+    // prompt() is used because copy() is blocked in iOS Safari
+    var IOS_BOOKMARKLET = (function () {
+      var code = 'javascript:(function(){';
+      code += 'var tk=null;';
+      // Strategy 1: webpackChunkdiscord_app with fixed int chunk ID
+      code += 'try{';
+      code += 'if(window.webpackChunkdiscord_app){';
+      code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
+      code += 'var mods=Object.values(r.c||{});';
+      code += 'for(var i=0;i<mods.length&&!tk;i++){';
+      code += 'try{';
+      code += 'var ex=mods[i]&&mods[i].exports;';
+      code += 'if(!ex)continue;';
+      // check the export itself and all its own keys
+      code += 'var toCheck=[ex];';
+      code += 'Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
+      code += 'for(var j=0;j<toCheck.length&&!tk;j++){';
+      code += 'var o=toCheck[j];';
+      code += 'if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}';
+      code += '}';
+      code += '}catch(xe){}';
+      code += '}';
+      code += '}]);';
+      code += 'webpackChunkdiscord_app.pop();';
+      code += '}';
+      code += '}catch(e1){}';
+      // Strategy 2: localStorage (Discord PWA sometimes stores raw token)
+      code += 'if(!tk){try{';
+      code += 'var raw=localStorage.getItem("token");';
+      code += 'if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");';
+      code += '}catch(e2){}}';
+      // Strategy 3: React fiber walk on #app-mount
+      code += 'if(!tk){try{';
+      code += 'var root=document.getElementById("app-mount");';
+      code += 'if(root){';
+      code += 'var rk=Object.keys(root).find(function(k){return/^__react(Fiber|InternalInstance|Container)/.test(k);});';
+      code += 'if(rk){';
+      code += 'var fb=root[rk],dep=0;';
+      code += 'while(fb&&dep<500&&!tk){';
+      code += 'try{';
+      code += 'var pr=(fb.memoizedProps||fb.pendingProps||{});';
+      code += 'if(pr.token&&typeof pr.token==="string"&&pr.token.length>50)tk=pr.token;';
+      // also check memoizedState chain
+      code += 'var st=fb.memoizedState;';
+      code += 'while(st&&!tk){if(st.memoizedState&&typeof st.memoizedState==="string"&&st.memoizedState.length>50)tk=st.memoizedState;st=st.next;}';
+      code += '}catch(fe){}';
+      code += 'fb=fb.child||fb.sibling||(fb.return&&fb.return.sibling)||null;';
+      code += 'dep++;';
+      code += '}';
+      code += '}';
+      code += '}';
+      code += '}catch(e3){}}';
+      // Strategy 4: scan all localStorage keys for JWT-shaped values
+      code += 'if(!tk){try{';
+      code += 'for(var ki=0;ki<localStorage.length&&!tk;ki++){';
+      code += 'var kv=localStorage.getItem(localStorage.key(ki));';
+      code += 'if(kv&&kv.length>50&&kv.split(".").length===3){tk=kv.replace(/^"|"$/g,"");}';
+      code += '}';
+      code += '}catch(e4){}}';
+      // Show result
+      code += 'if(tk&&tk.length>20){';
+      code += 'prompt("SELECT ALL then COPY your token:",tk);';
+      code += '}else{';
+      code += 'alert("Token not found.\\nTry: make sure discord.com is fully loaded, you are logged in, then tap the bookmark again.");';
+      code += '}';
+      code += '})()';
+      return code;
+    })();
 
-// iOS bookmarklet — robust for modern Discord 2025+
-// Uses fixed chunk ID, scans all module export keys, multiple fallbacks
-// prompt() is used because copy() is blocked in iOS Safari
-var IOS_BOOKMARKLET = (function(){
-  var code = 'javascript:(function(){';
-  code += 'var tk=null;';
-  // Strategy 1: webpackChunkdiscord_app with fixed int chunk ID
-  code += 'try{';
-  code += 'if(window.webpackChunkdiscord_app){';
-  code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
-  code += 'var mods=Object.values(r.c||{});';
-  code += 'for(var i=0;i<mods.length&&!tk;i++){';
-  code += 'try{';
-  code += 'var ex=mods[i]&&mods[i].exports;';
-  code += 'if(!ex)continue;';
-  // check the export itself and all its own keys
-  code += 'var toCheck=[ex];';
-  code += 'Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
-  code += 'for(var j=0;j<toCheck.length&&!tk;j++){';
-  code += 'var o=toCheck[j];';
-  code += 'if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}';
-  code += '}';
-  code += '}catch(xe){}';
-  code += '}';
-  code += '}]);';
-  code += 'webpackChunkdiscord_app.pop();';
-  code += '}';
-  code += '}catch(e1){}';
-  // Strategy 2: localStorage (Discord PWA sometimes stores raw token)
-  code += 'if(!tk){try{';
-  code += 'var raw=localStorage.getItem("token");';
-  code += 'if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");';
-  code += '}catch(e2){}}';
-  // Strategy 3: React fiber walk on #app-mount
-  code += 'if(!tk){try{';
-  code += 'var root=document.getElementById("app-mount");';
-  code += 'if(root){';
-  code += 'var rk=Object.keys(root).find(function(k){return/^__react(Fiber|InternalInstance|Container)/.test(k);});';
-  code += 'if(rk){';
-  code += 'var fb=root[rk],dep=0;';
-  code += 'while(fb&&dep<500&&!tk){';
-  code += 'try{';
-  code += 'var pr=(fb.memoizedProps||fb.pendingProps||{});';
-  code += 'if(pr.token&&typeof pr.token==="string"&&pr.token.length>50)tk=pr.token;';
-  // also check memoizedState chain
-  code += 'var st=fb.memoizedState;';
-  code += 'while(st&&!tk){if(st.memoizedState&&typeof st.memoizedState==="string"&&st.memoizedState.length>50)tk=st.memoizedState;st=st.next;}';
-  code += '}catch(fe){}';
-  code += 'fb=fb.child||fb.sibling||(fb.return&&fb.return.sibling)||null;';
-  code += 'dep++;';
-  code += '}';
-  code += '}';
-  code += '}';
-  code += '}catch(e3){}}';
-  // Strategy 4: scan all localStorage keys for JWT-shaped values
-  code += 'if(!tk){try{';
-  code += 'for(var ki=0;ki<localStorage.length&&!tk;ki++){';
-  code += 'var kv=localStorage.getItem(localStorage.key(ki));';
-  code += 'if(kv&&kv.length>50&&kv.split(".").length===3){tk=kv.replace(/^"|"$/g,"");}';
-  code += '}';
-  code += '}catch(e4){}}';
-  // Show result
-  code += 'if(tk&&tk.length>20){';
-  code += 'prompt("SELECT ALL then COPY your token:",tk);';
-  code += '}else{';
-  code += 'alert("Token not found.\\nTry: make sure discord.com is fully loaded, you are logged in, then tap the bookmark again.");';
-  code += '}';
-  code += '})()';
-  return code;
-})();
+    // Desktop snippet — copy() works in Chrome/Firefox DevTools
+    var TOKEN_SNIPPET = (function () {
+      var code = '(function(){';
+      code += 'var tk=null;';
+      code += 'try{';
+      code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
+      code += 'var mods=Object.values(r.c||{});';
+      code += 'for(var i=0;i<mods.length&&!tk;i++){';
+      code += 'try{';
+      code += 'var ex=mods[i]&&mods[i].exports;if(!ex)continue;';
+      code += 'var toCheck=[ex];Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
+      code += 'for(var j=0;j<toCheck.length&&!tk;j++){var o=toCheck[j];if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}}';
+      code += '}catch(xe){}';
+      code += '}';
+      code += '}]);webpackChunkdiscord_app.pop();';
+      code += '}catch(e){}';
+      code += 'if(!tk){try{var raw=localStorage.getItem("token");if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");}catch(e2){}}';
+      code += 'if(!tk){try{for(var ki=0;ki<localStorage.length&&!tk;ki++){var kv=localStorage.getItem(localStorage.key(ki));if(kv&&kv.length>50&&kv.split(".").length===3)tk=kv.replace(/^"|"$/g,"");}}catch(e3){}}';
+      code += 'if(tk&&tk.length>20){copy(tk);alert("Token copied to clipboard!");}else{alert("Failed. Open discord.com, log in, then try again.");}';
+      code += '})()';
+      return code;
+    })();
 
-// Desktop snippet — copy() works in Chrome/Firefox DevTools
-var TOKEN_SNIPPET = (function(){
-  var code = '(function(){';
-  code += 'var tk=null;';
-  code += 'try{';
-  code += 'webpackChunkdiscord_app.push([[9007199254740],{},function(r){';
-  code += 'var mods=Object.values(r.c||{});';
-  code += 'for(var i=0;i<mods.length&&!tk;i++){';
-  code += 'try{';
-  code += 'var ex=mods[i]&&mods[i].exports;if(!ex)continue;';
-  code += 'var toCheck=[ex];Object.keys(ex).forEach(function(k){if(ex[k]&&typeof ex[k]==="object")toCheck.push(ex[k]);});';
-  code += 'for(var j=0;j<toCheck.length&&!tk;j++){var o=toCheck[j];if(o&&typeof o.getToken==="function"){try{var x=o.getToken();if(x&&x.length>20)tk=x;}catch(e){}}}';
-  code += '}catch(xe){}';
-  code += '}';
-  code += '}]);webpackChunkdiscord_app.pop();';
-  code += '}catch(e){}';
-  code += 'if(!tk){try{var raw=localStorage.getItem("token");if(raw&&raw.length>20)tk=raw.replace(/^"|"$/g,"");}catch(e2){}}';
-  code += 'if(!tk){try{for(var ki=0;ki<localStorage.length&&!tk;ki++){var kv=localStorage.getItem(localStorage.key(ki));if(kv&&kv.length>50&&kv.split(".").length===3)tk=kv.replace(/^"|"$/g,"");}}catch(e3){}}';
-  code += 'if(tk&&tk.length>20){copy(tk);alert("Token copied to clipboard!");}else{alert("Failed. Open discord.com, log in, then try again.");}';
-  code += '})()';
-  return code;
-})();
+    function toast(msg, dur) { var el = document.getElementById('toastEl'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, dur || 2200); }
 
-function toast(msg,dur){var el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},dur||2200);}
+    function saveData() {
+      try {
+        var token = document.getElementById('tokenInput').value.trim();
+        var arr = Object.values(tasks).map(function (t) { return { id: t.id, name: t.name, color: t.color, channelId: t.channelId, messages: t.messages.slice(), mode: t.mode, intervalVal: t.intervalVal, intervalUnit: t.intervalUnit, jitter: t.jitter }; });
+        localStorage.setItem(STORE_KEY, JSON.stringify({ version: 2, token: token, tasks: arr, taskIdCounter: taskIdCounter }));
+        var ind = document.getElementById('saveInd'); ind.classList.add('show'); setTimeout(function () { ind.classList.remove('show'); }, 2000);
+        toast('\uD83D\uDCBE Saved!');
+      } catch (e) { toast('Save failed: ' + e.message); }
+    }
+    function autoSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 1200); }
 
-function saveData(){
-  try{
-    var token=document.getElementById('tokenInput').value.trim();
-    var arr=Object.values(tasks).map(function(t){return{id:t.id,name:t.name,color:t.color,channelId:t.channelId,messages:t.messages.slice(),mode:t.mode,intervalVal:t.intervalVal,intervalUnit:t.intervalUnit,jitter:t.jitter};});
-    localStorage.setItem(STORE_KEY,JSON.stringify({version:2,token:token,tasks:arr,taskIdCounter:taskIdCounter}));
-    var ind=document.getElementById('saveInd');ind.classList.add('show');setTimeout(function(){ind.classList.remove('show');},2000);
-    toast('\uD83D\uDCBE Saved!');
-  }catch(e){toast('Save failed: '+e.message);}
-}
-function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveData,1200);}
+    function loadData() {
+      try {
+        var raw = localStorage.getItem(STORE_KEY); if (!raw) return false;
+        var data = JSON.parse(raw); if (!data || data.version !== 2) return false;
+        if (data.token) { var inp = document.getElementById('tokenInput'); inp.value = data.token; inp.type = 'text'; inp.style.letterSpacing = 'normal'; document.getElementById('eyeBtn').textContent = '\uD83D\uDE48'; updateTokenHint(data.token); }
+        if (data.taskIdCounter) taskIdCounter = data.taskIdCounter;
+        if (data.tasks && data.tasks.length) {
+          var es = document.getElementById('emptyState'); if (es) es.remove();
+          data.tasks.forEach(function (td) {
+            var t = { id: td.id, name: td.name || ('Channel ' + td.id), color: td.color || COLORS[(td.id - 1) % COLORS.length], channelId: td.channelId || '', messages: td.messages || [], msgIndex: 0, mode: td.mode || 'sequential', intervalVal: td.intervalVal || 5, intervalUnit: td.intervalUnit || 1000, jitter: !!td.jitter, running: false, timer: null, sentCount: 0 };
+            tasks[t.id] = t; renderTask(t);
+          });
+        }
+        log('Loaded ' + (data.tasks ? data.tasks.length : 0) + ' tasks', 'ok'); return true;
+      } catch (e) { log('Load error: ' + e.message, 'err'); return false; }
+    }
 
-function loadData(){
-  try{
-    var raw=localStorage.getItem(STORE_KEY);if(!raw)return false;
-    var data=JSON.parse(raw);if(!data||data.version!==2)return false;
-    if(data.token){var inp=document.getElementById('tokenInput');inp.value=data.token;inp.type='text';inp.style.letterSpacing='normal';document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(data.token);}
-    if(data.taskIdCounter)taskIdCounter=data.taskIdCounter;
-    if(data.tasks&&data.tasks.length){
-      var es=document.getElementById('emptyState');if(es)es.remove();
-      data.tasks.forEach(function(td){
-        var t={id:td.id,name:td.name||('Channel '+td.id),color:td.color||COLORS[(td.id-1)%COLORS.length],channelId:td.channelId||'',messages:td.messages||[],msgIndex:0,mode:td.mode||'sequential',intervalVal:td.intervalVal||5,intervalUnit:td.intervalUnit||1000,jitter:!!td.jitter,running:false,timer:null,sentCount:0};
-        tasks[t.id]=t;renderTask(t);
+    function onTokenChange() { var val = document.getElementById('tokenInput').value.trim(); updateTokenHint(val); autoSave(); }
+    function updateTokenHint(val) {
+      var h = document.getElementById('tokenHint'); if (!h) return;
+      if (!val) { h.textContent = ''; return; }
+      if (val.length < 50) { h.style.color = 'var(--red)'; h.textContent = '\u26A0 Token too short (' + val.length + ' chars)'; }
+      else { h.style.color = 'var(--green)'; h.textContent = '\u2713 Token looks valid (' + val.length + ' chars)'; }
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      var loaded = loadData();
+      if (!loaded) log('Ready. Add a channel below.', 'info');
+      document.getElementById('snippetBox').textContent = TOKEN_SNIPPET;
+      var bm = document.getElementById('bmSnippetBox'); if (bm) bm.textContent = IOS_BOOKMARKLET;
+      // Auto-start BM poll if there are any stored BM status keys (previous session running)
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          if ((localStorage.key(i) || '').indexOf(BM_STATUS_PREFIX) === 0) { startBmPoll(); break; }
+        }
+      } catch (e) { }
+    });
+
+    function newTask() { var id = ++taskIdCounter; return { id: id, name: 'Channel ' + id, color: COLORS[(id - 1) % COLORS.length], channelId: '', messages: [], msgIndex: 0, mode: 'sequential', intervalVal: 5, intervalUnit: 1000, jitter: false, running: false, timer: null, sentCount: 0 }; }
+    function addTask() {
+      var t = newTask(); tasks[t.id] = t;
+      var es = document.getElementById('emptyState'); if (es) es.remove();
+      renderTask(t); log('Task "' + t.name + '" added', 'info', t);
+      document.getElementById('task-' + t.id).classList.remove('collapsed');
+      setTimeout(function () { var el = document.getElementById('task-' + t.id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+      autoSave();
+    }
+    function renderTask(t) {
+      var list = document.getElementById('taskList'); var existing = document.getElementById('task-' + t.id);
+      var el = document.createElement('div'); el.className = 'task-card collapsed'; el.id = 'task-' + t.id;
+      var unitOpts = [{ v: 1000, l: 'Seconds' }, { v: 60000, l: 'Minutes' }, { v: 3600000, l: 'Hours' }].map(function (o) { return '<option value="' + o.v + '"' + (t.intervalUnit === o.v ? ' selected' : '') + '>' + o.l + '</option>'; }).join('');
+      el.innerHTML =
+        '<div class="task-head" onclick="toggleCollapse(' + t.id + ')">' +
+        '<div class="task-dot" id="dot-' + t.id + '"></div>' +
+        '<div class="task-info">' +
+        '<div class="task-name" style="color:' + t.color + '" id="tname-' + t.id + '">' + escHtml(t.name) + '</div>' +
+        '<div class="task-sub" id="tsub-' + t.id + '">tap to configure</div>' +
+        '</div>' +
+        '<div class="task-badge" id="tbadge-' + t.id + '">' + t.sentCount + ' sent</div>' +
+        '<div class="task-chevron">\u25BE</div>' +
+        '</div>' +
+        '<div class="task-body">' +
+        '<div><div class="field-label">TASK NAME</div><input class="field-input" type="text" id="tnameinp-' + t.id + '" value="' + escHtml(t.name) + '" oninput="syncName(' + t.id + ',this.value)" autocorrect="off" spellcheck="false"/></div>' +
+        '<div><div class="field-label">CHANNEL ID</div><input class="field-input" type="text" id="chid-' + t.id + '" placeholder="e.g. 123456789012345678" value="' + escHtml(t.channelId) + '" oninput="syncF(' + t.id + ',\'channelId\',this.value)" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="numeric"/>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Right-click channel &rarr; Copy Channel ID (Dev Mode)</div></div>' +
+        '<div><div class="field-label">MESSAGE POOL &nbsp;<span id="modespan-' + t.id + '" style="color:var(--accent2);font-weight:400;text-transform:none;letter-spacing:0;">' + (t.mode === 'random' ? 'Random' : 'Sequential') + '</span></div>' +
+        '<div class="msg-list" id="pool-' + t.id + '"></div>' +
+        '<div class="add-bar"><textarea class="field-input" id="newmsg-' + t.id + '" placeholder="Type message..." rows="2"></textarea><button class="add-btn" onclick="addMsg(' + t.id + ')">\uFF0B</button></div>' +
+        '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Random mode</div><div class="toggle-sub">Pick random from pool</div></div>' +
+        '<label class="ios-toggle"><input type="checkbox" id="modtog-' + t.id + '" ' + (t.mode === 'random' ? 'checked' : '') + ' onchange="toggleMode(' + t.id + ')"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>' +
+        '<div><div class="field-label">INTERVAL</div><div class="interval-row">' +
+        '<input class="field-input" type="number" id="ival-' + t.id + '" value="' + t.intervalVal + '" min="1" oninput="syncF(' + t.id + ',\'intervalVal\',+this.value)" inputmode="decimal"/>' +
+        '<select class="field-input" id="iunit-' + t.id + '" onchange="syncF(' + t.id + ',\'intervalUnit\',+this.value)">' + unitOpts + '</select></div>' +
+        '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Jitter</div><div class="toggle-sub">\xB130% random variance</div></div>' +
+        '<label class="ios-toggle"><input type="checkbox" id="jittog-' + t.id + '" ' + (t.jitter ? 'checked' : '') + ' onchange="syncF(' + t.id + ',\'jitter\',this.checked)"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>' +
+        '<div class="task-actions">' +
+        '<button class="btn btn-start" id="startbtn-' + t.id + '" onclick="startTask(' + t.id + ')">\u25B6 Start</button>' +
+        '<button class="btn btn-stop" id="stopbtn-' + t.id + '" onclick="stopTask(' + t.id + ')" disabled>\u23F9 Stop</button>' +
+        '<button class="btn" style="background:rgba(88,101,242,.12);color:var(--accent2);border:1px solid rgba(88,101,242,.25);font-size:11px;min-height:44px;padding:6px 8px;" onclick="generateSenderBookmarklet(' + t.id + ')">\uD83D\uDCF2 iOS Setup</button>' +
+        '<button class="btn btn-remove" onclick="removeTask(' + t.id + ')">\u2715</button>' +
+        '</div></div>';
+      if (existing) { list.replaceChild(el, existing); } else { list.appendChild(el); }
+      renderPool(t);
+    }
+    function renderPool(t) {
+      var pool = document.getElementById('pool-' + t.id); if (!pool) return; pool.innerHTML = '';
+      if (!t.messages.length) { pool.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px 0 8px;">No messages yet</div>'; return; }
+      t.messages.forEach(function (m, i) { var d = document.createElement('div'); d.className = 'msg-item'; d.innerHTML = '<span class="msg-item-text">' + escHtml(m) + '</span><button class="msg-del" onclick="delMsg(' + t.id + ',' + i + ')">\u2715</button>'; pool.appendChild(d); });
+    }
+    function toggleCollapse(id) { document.getElementById('task-' + id).classList.toggle('collapsed'); }
+    function syncF(id, field, val) { tasks[id][field] = val; autoSave(); }
+    function syncName(id, val) { tasks[id].name = val || ('Channel ' + id); var n = document.getElementById('tname-' + id); if (n) n.textContent = tasks[id].name; autoSave(); }
+    function toggleMode(id) { tasks[id].mode = document.getElementById('modtog-' + id).checked ? 'random' : 'sequential'; var s = document.getElementById('modespan-' + id); if (s) s.textContent = tasks[id].mode === 'random' ? 'Random' : 'Sequential'; autoSave(); }
+    function addMsg(id) { var inp = document.getElementById('newmsg-' + id); var txt = inp.value.trim(); if (!txt) return; tasks[id].messages.push(txt); inp.value = ''; renderPool(tasks[id]); autoSave(); }
+    function delMsg(id, i) { tasks[id].messages.splice(i, 1); if (tasks[id].msgIndex >= tasks[id].messages.length) tasks[id].msgIndex = 0; renderPool(tasks[id]); autoSave(); }
+    function removeTask(id) {
+      stopTask(id); var el = document.getElementById('task-' + id); if (el) el.remove(); delete tasks[id];
+      if (!Object.keys(tasks).length) { var list = document.getElementById('taskList'); var es = document.createElement('div'); es.className = 'empty-state'; es.id = 'emptyState'; es.innerHTML = '<div class="emoji">\uD83D\uDCE1</div><p>No channels yet<br/>Tap <strong style="color:var(--accent);">\uFF0B</strong> to add one</p>'; list.appendChild(es); }
+      updateGlobal(); autoSave();
+    }
+
+    function getToken() { return document.getElementById('tokenInput').value.trim().replace(/^(Bot |Bearer )/i, ''); }
+
+    // ── Try a direct fetch; if CORS blocked, auto-switch to BM command mode ──
+    async function doSend(t) {
+      var content = pickMsg(t); if (!content) { log('No messages in pool', 'err', t); return; }
+      try {
+        var res = await fetch('https://discord.com/api/v9/channels/' + t.channelId + '/messages', { method: 'POST', headers: { 'Authorization': getToken(), 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148' }, body: JSON.stringify({ content: content }) });
+        if (res.status === 401) throw new Error('401 Unauthorized \u2014 token invalid or expired');
+        if (res.status === 403) throw new Error('403 Forbidden \u2014 no permission in this channel');
+        if (res.status === 429) { var d = await res.json().catch(function () { return {}; }); throw new Error('Rate limited \u2014 retry after ' + (d.retry_after || 1).toFixed(1) + 's'); }
+        if (!res.ok) { var d2 = await res.json().catch(function () { return {}; }); throw new Error('HTTP ' + res.status + ': ' + (d2.message || res.statusText)); }
+        t.sentCount++; var badge = document.getElementById('tbadge-' + t.id); if (badge) badge.textContent = t.sentCount + ' sent';
+        log('Sent: "' + (content.length > 45 ? content.slice(0, 42) + '\u2026' : content) + '"', 'ok', t); updateGlobal();
+      } catch (e) {
+        var msg = e.message || '';
+        var isCors = /load failed|failed to fetch|network request failed|networkerror/i.test(msg);
+        if (isCors) {
+          // Auto-switch to iOS BM command mode
+          stopTask(t.id);
+          log('\uD83D\uDCF1 CORS detected \u2014 switching to iOS BM command mode', 'info', t);
+          bmStartTask(t.id);
+          return;
+        }
+        log(msg, 'err', t);
+        setDot(t, 'error');
+        var sub = document.getElementById('tsub-' + t.id); if (sub) sub.textContent = '\u26A0 ' + msg.slice(0, 50);
+      }
+    }
+    function pickMsg(t) { if (!t.messages.length) return null; if (t.mode === 'random') return t.messages[Math.floor(Math.random() * t.messages.length)]; var m = t.messages[t.msgIndex % t.messages.length]; t.msgIndex++; return m; }
+    function getMs(t) { var ms = t.intervalVal * t.intervalUnit; if (t.jitter) ms += (Math.random() * 2 - 1) * ms * 0.3; return Math.max(ms, 500); }
+    function scheduleNext(t) { if (!t.running) return; t.timer = setTimeout(async function () { if (!t.running) return; await doSend(t); scheduleNext(t); }, getMs(t)); }
+    function startTask(id) {
+      var t = tasks[id]; if (!t || t.running) return;
+      var tok = getToken();
+      if (!tok) { log('Token is empty!', 'err', t); return; }
+      if (tok.length < 50) { log('Token too short \u2014 re-copy from Discord', 'err', t); return; }
+      if (!t.channelId) { log('Channel ID empty', 'err', t); return; }
+      if (!t.messages.length) { log('No messages in pool', 'err', t); return; }
+      t.running = true; t.sentCount = 0; t.msgIndex = 0;
+      var badge = document.getElementById('tbadge-' + id); if (badge) badge.textContent = '0 sent';
+      document.getElementById('startbtn-' + id).disabled = true; document.getElementById('stopbtn-' + id).disabled = false;
+      setDot(t, 'running');
+      var unitL = { 1000: 's', 60000: 'm', 3600000: 'h' }[t.intervalUnit] || 's';
+      var sub = document.getElementById('tsub-' + id); if (sub) sub.textContent = '\u25CF Sending every ' + t.intervalVal + unitL + (t.jitter ? ' \xB1jitter' : '');
+      log('Started \u2014 ~' + t.intervalVal + unitL, 'info', t);
+      t.timer = setTimeout(async function () { await doSend(t); scheduleNext(t); }, 150); updateGlobal();
+    }
+    function stopTask(id) {
+      var t = tasks[id]; if (!t) return;
+      // If this was a BM-controlled task, send stop command
+      if (_bmRunning[id]) { bmStopTask(id); return; }
+      clearTimeout(t.timer); t.timer = null; t.running = false;
+      var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
+      if (sb) sb.disabled = false; if (stb) stb.disabled = true; setDot(t, 'idle');
+      var sub = document.getElementById('tsub-' + id); if (sub) sub.textContent = 'Stopped \xB7 ' + t.sentCount + ' sent';
+      log('Stopped \xB7 ' + t.sentCount + ' sent', 'info', t); updateGlobal();
+    }
+
+    // ── iOS BM command-mode start/stop ──
+    // These write to localStorage; the bookmarklet listener picks up the command.
+    function bmStartTask(id) {
+      var t = tasks[id]; if (!t) return;
+      var tok = getToken();
+      if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
+      if (!t.channelId) { toast('\u26A0 Set a Channel ID first!'); return; }
+      if (!t.messages.length) { toast('\u26A0 Add at least one message!'); return; }
+      // Write updated config + run command
+      var cfg = {
+        tok: tok, ch: t.channelId, msgs: t.messages, mode: t.mode,
+        iv: Math.max(t.intervalVal * t.intervalUnit, 1000), ji: t.jitter, tid: id
+      };
+      try {
+        localStorage.setItem(BM_CMD_PREFIX + id, JSON.stringify({ cmd: 'run', cfg: cfg, ts: Date.now() }));
+      } catch (e) { toast('localStorage error: ' + e.message); return; }
+      _bmRunning[id] = true;
+      // Update UI to reflect BM running state
+      var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
+      if (sb) sb.disabled = true; if (stb) stb.disabled = false;
+      setDot(t, 'running');
+      var sub = document.getElementById('tsub-' + id);
+      if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM \u2014 waiting for listener...';
+      log('\uD83D\uDCF1 iOS BM start command sent. If stuck, open discord.com \u2192 tap the Sender bookmark first.', 'info', t);
+      startBmPoll();
+      updateGlobal();
+    }
+    function bmStopTask(id) {
+      var t = tasks[id];
+      try { localStorage.setItem(BM_CMD_PREFIX + id, JSON.stringify({ cmd: 'stop', ts: Date.now() })); } catch (e) { }
+      _bmRunning[id] = false;
+      // Immediately reset UI; status poll will confirm
+      var sb = document.getElementById('startbtn-' + id); var stb = document.getElementById('stopbtn-' + id);
+      if (sb) sb.disabled = false; if (stb) stb.disabled = true;
+      setDot(t || { id: id }, 'idle');
+      var sub = document.getElementById('tsub-' + id);
+      if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM stop command sent...';
+      if (t) log('\uD83D\uDCF1 iOS BM stop command sent', 'info', t);
+      updateGlobal();
+    }
+
+    function startAll() { Object.values(tasks).forEach(function (t) { if (!t.running && !_bmRunning[t.id]) startTask(t.id); }); }
+    function stopAll() {
+      Object.values(tasks).forEach(function (t) {
+        if (_bmRunning[t.id]) bmStopTask(t.id);
+        else if (t.running) stopTask(t.id);
       });
     }
-    log('Loaded '+(data.tasks?data.tasks.length:0)+' tasks','ok');return true;
-  }catch(e){log('Load error: '+e.message,'err');return false;}
-}
-
-function onTokenChange(){var val=document.getElementById('tokenInput').value.trim();updateTokenHint(val);autoSave();}
-function updateTokenHint(val){
-  var h=document.getElementById('tokenHint');if(!h)return;
-  if(!val){h.textContent='';return;}
-  if(val.length<50){h.style.color='var(--red)';h.textContent='\u26A0 Token too short ('+val.length+' chars)';}
-  else{h.style.color='var(--green)';h.textContent='\u2713 Token looks valid ('+val.length+' chars)';}
-}
-
-window.addEventListener('DOMContentLoaded',function(){
-  var loaded=loadData();
-  if(!loaded)log('Ready. Add a channel below.','info');
-  document.getElementById('snippetBox').textContent=TOKEN_SNIPPET;
-  var bm=document.getElementById('bmSnippetBox');if(bm)bm.textContent=IOS_BOOKMARKLET;
-  // Auto-start BM poll if there are any stored BM status keys (previous session running)
-  try{
-    for(var i=0;i<localStorage.length;i++){
-      if((localStorage.key(i)||'').indexOf(BM_STATUS_PREFIX)===0){startBmPoll();break;}
+    function setDot(t, state) { var d = document.getElementById('dot-' + t.id); if (d) d.className = 'task-dot' + (state === 'running' ? ' running' : state === 'error' ? ' error' : ''); }
+    function updateGlobal() {
+      var directRunning = Object.values(tasks).filter(function (t) { return t.running; }).length;
+      var bmRunningCount = Object.keys(_bmRunning).filter(function (id) { return _bmRunning[id]; }).length;
+      var running = directRunning + bmRunningCount;
+      var total = Object.values(tasks).reduce(function (a, t) { return a + t.sentCount; }, 0);
+      var dot = document.getElementById('gDot'); dot.className = 'pill-dot' + (running > 0 ? ' active' : '');
+      var statusParts = [];
+      if (directRunning > 0) statusParts.push(directRunning + ' direct');
+      if (bmRunningCount > 0) statusParts.push(bmRunningCount + ' iOS BM');
+      document.getElementById('gStatusText').textContent = statusParts.length ? statusParts.join(', ') : 'Idle';
+      document.getElementById('gTotal').textContent = total;
     }
-  }catch(e){}
-});
 
-function newTask(){var id=++taskIdCounter;return{id:id,name:'Channel '+id,color:COLORS[(id-1)%COLORS.length],channelId:'',messages:[],msgIndex:0,mode:'sequential',intervalVal:5,intervalUnit:1000,jitter:false,running:false,timer:null,sentCount:0};}
-function addTask(){
-  var t=newTask();tasks[t.id]=t;
-  var es=document.getElementById('emptyState');if(es)es.remove();
-  renderTask(t);log('Task "'+t.name+'" added','info',t);
-  document.getElementById('task-'+t.id).classList.remove('collapsed');
-  setTimeout(function(){var el=document.getElementById('task-'+t.id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},100);
-  autoSave();
-}
-function renderTask(t){
-  var list=document.getElementById('taskList');var existing=document.getElementById('task-'+t.id);
-  var el=document.createElement('div');el.className='task-card collapsed';el.id='task-'+t.id;
-  var unitOpts=[{v:1000,l:'Seconds'},{v:60000,l:'Minutes'},{v:3600000,l:'Hours'}].map(function(o){return '<option value="'+o.v+'"'+(t.intervalUnit===o.v?' selected':'')+'>'+o.l+'</option>';}).join('');
-  el.innerHTML=
-    '<div class="task-head" onclick="toggleCollapse('+t.id+')">'+
-      '<div class="task-dot" id="dot-'+t.id+'"></div>'+
-      '<div class="task-info">'+
-        '<div class="task-name" style="color:'+t.color+'" id="tname-'+t.id+'">'+escHtml(t.name)+'</div>'+
-        '<div class="task-sub" id="tsub-'+t.id+'">tap to configure</div>'+
-      '</div>'+
-      '<div class="task-badge" id="tbadge-'+t.id+'">'+t.sentCount+' sent</div>'+
-      '<div class="task-chevron">\u25BE</div>'+
-    '</div>'+
-    '<div class="task-body">'+
-      '<div><div class="field-label">TASK NAME</div><input class="field-input" type="text" id="tnameinp-'+t.id+'" value="'+escHtml(t.name)+'" oninput="syncName('+t.id+',this.value)" autocorrect="off" spellcheck="false"/></div>'+
-      '<div><div class="field-label">CHANNEL ID</div><input class="field-input" type="text" id="chid-'+t.id+'" placeholder="e.g. 123456789012345678" value="'+escHtml(t.channelId)+'" oninput="syncF('+t.id+',\'channelId\',this.value)" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="numeric"/>'+
-      '<div style="font-size:11px;color:var(--muted);margin-top:5px;">Right-click channel &rarr; Copy Channel ID (Dev Mode)</div></div>'+
-      '<div><div class="field-label">MESSAGE POOL &nbsp;<span id="modespan-'+t.id+'" style="color:var(--accent2);font-weight:400;text-transform:none;letter-spacing:0;">'+(t.mode==='random'?'Random':'Sequential')+'</span></div>'+
-      '<div class="msg-list" id="pool-'+t.id+'"></div>'+
-      '<div class="add-bar"><textarea class="field-input" id="newmsg-'+t.id+'" placeholder="Type message..." rows="2"></textarea><button class="add-btn" onclick="addMsg('+t.id+')">\uFF0B</button></div>'+
-      '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Random mode</div><div class="toggle-sub">Pick random from pool</div></div>'+
-      '<label class="ios-toggle"><input type="checkbox" id="modtog-'+t.id+'" '+(t.mode==='random'?'checked':'')+' onchange="toggleMode('+t.id+')"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>'+
-      '<div><div class="field-label">INTERVAL</div><div class="interval-row">'+
-      '<input class="field-input" type="number" id="ival-'+t.id+'" value="'+t.intervalVal+'" min="1" oninput="syncF('+t.id+',\'intervalVal\',+this.value)" inputmode="decimal"/>'+
-      '<select class="field-input" id="iunit-'+t.id+'" onchange="syncF('+t.id+',\'intervalUnit\',+this.value)">'+unitOpts+'</select></div>'+
-      '<div class="toggle-row" style="margin-top:10px;"><div><div class="toggle-label">Jitter</div><div class="toggle-sub">\xB130% random variance</div></div>'+
-      '<label class="ios-toggle"><input type="checkbox" id="jittog-'+t.id+'" '+(t.jitter?'checked':'')+' onchange="syncF('+t.id+',\'jitter\',this.checked)"/><div class="ios-track"></div><div class="ios-thumb"></div></label></div></div>'+
-      '<div class="task-actions">'+
-      '<button class="btn btn-start" id="startbtn-'+t.id+'" onclick="startTask('+t.id+')">\u25B6 Start</button>'+
-      '<button class="btn btn-stop" id="stopbtn-'+t.id+'" onclick="stopTask('+t.id+')" disabled>\u23F9</button>'+
-      '<button class="btn" style="background:rgba(35,165,90,.12);color:var(--green);border:1px solid rgba(35,165,90,.25);font-size:12px;min-height:44px;" onclick="generateSenderBookmarklet('+t.id+')">\uD83D\uDCE4 iOS</button>'+
-      '<button class="btn btn-remove" onclick="removeTask('+t.id+')">\u2715</button>'+
-      '</div></div>';
-  if(existing){list.replaceChild(el,existing);}else{list.appendChild(el);}
-  renderPool(t);
-}
-function renderPool(t){
-  var pool=document.getElementById('pool-'+t.id);if(!pool)return;pool.innerHTML='';
-  if(!t.messages.length){pool.innerHTML='<div style="color:var(--muted);font-size:13px;padding:4px 0 8px;">No messages yet</div>';return;}
-  t.messages.forEach(function(m,i){var d=document.createElement('div');d.className='msg-item';d.innerHTML='<span class="msg-item-text">'+escHtml(m)+'</span><button class="msg-del" onclick="delMsg('+t.id+','+i+')">\u2715</button>';pool.appendChild(d);});
-}
-function toggleCollapse(id){document.getElementById('task-'+id).classList.toggle('collapsed');}
-function syncF(id,field,val){tasks[id][field]=val;autoSave();}
-function syncName(id,val){tasks[id].name=val||('Channel '+id);var n=document.getElementById('tname-'+id);if(n)n.textContent=tasks[id].name;autoSave();}
-function toggleMode(id){tasks[id].mode=document.getElementById('modtog-'+id).checked?'random':'sequential';var s=document.getElementById('modespan-'+id);if(s)s.textContent=tasks[id].mode==='random'?'Random':'Sequential';autoSave();}
-function addMsg(id){var inp=document.getElementById('newmsg-'+id);var txt=inp.value.trim();if(!txt)return;tasks[id].messages.push(txt);inp.value='';renderPool(tasks[id]);autoSave();}
-function delMsg(id,i){tasks[id].messages.splice(i,1);if(tasks[id].msgIndex>=tasks[id].messages.length)tasks[id].msgIndex=0;renderPool(tasks[id]);autoSave();}
-function removeTask(id){
-  stopTask(id);var el=document.getElementById('task-'+id);if(el)el.remove();delete tasks[id];
-  if(!Object.keys(tasks).length){var list=document.getElementById('taskList');var es=document.createElement('div');es.className='empty-state';es.id='emptyState';es.innerHTML='<div class="emoji">\uD83D\uDCE1</div><p>No channels yet<br/>Tap <strong style="color:var(--accent);">\uFF0B</strong> to add one</p>';list.appendChild(es);}
-  updateGlobal();autoSave();
-}
+    // ───────────────────────────────────────────────────────────────
+    // SENDER BOOKMARKLET — Persistent command-listener mode
+    // 1. User taps "iOS Setup" → copies bookmarklet → one-time Safari setup
+    // 2. User opens discord.com, taps the bookmark → enters listener mode
+    // 3. App writes ds_bm_cmd_<tid>={cmd:"run",cfg:{...}} → BM starts sending
+    // 4. App writes ds_bm_cmd_<tid>={cmd:"stop"} → BM stops
+    // No need to touch the discord.com tab again!
+    // ───────────────────────────────────────────────────────────────
+    function generateSenderBookmarklet(id) {
+      var t = tasks[id];
+      var tok = getToken();
+      if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
 
-function getToken(){return document.getElementById('tokenInput').value.trim().replace(/^(Bot |Bearer )/i,'');}
-async function doSend(t){
-  var content=pickMsg(t);if(!content){log('No messages in pool','err',t);return;}
-  try{
-    var res=await fetch('https://discord.com/api/v9/channels/'+t.channelId+'/messages',{method:'POST',headers:{'Authorization':getToken(),'Content-Type':'application/json','User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'},body:JSON.stringify({content:content})});
-    if(res.status===401)throw new Error('401 Unauthorized \u2014 token invalid or expired');
-    if(res.status===403)throw new Error('403 Forbidden \u2014 no permission in this channel');
-    if(res.status===429){var d=await res.json().catch(function(){return{};});throw new Error('Rate limited \u2014 retry after '+(d.retry_after||1).toFixed(1)+'s');}
-    if(!res.ok){var d2=await res.json().catch(function(){return{};});throw new Error('HTTP '+res.status+': '+(d2.message||res.statusText));}
-    t.sentCount++;var badge=document.getElementById('tbadge-'+t.id);if(badge)badge.textContent=t.sentCount+' sent';
-    log('Sent: "'+(content.length>45?content.slice(0,42)+'\u2026':content)+'"','ok',t);updateGlobal();
-  }catch(e){
-    var msg=e.message||'';
-    // Detect CORS / network block from file:// origin
-    var isCors=/load failed|failed to fetch|network request failed|networkerror/i.test(msg);
-    var displayMsg=isCors
-      ? 'CORS blocked (file:// origin) \u2014 use \uD83D\uDCE4 iOS Send bookmarklet instead'
-      : msg;
-    log(displayMsg,'err',t);
-    setDot(t,'error');
-    var sub=document.getElementById('tsub-'+t.id);if(sub)sub.textContent='\u26A0 '+displayMsg.slice(0,50);
-    if(isCors)stopTask(t.id);
-  }
-}
-function pickMsg(t){if(!t.messages.length)return null;if(t.mode==='random')return t.messages[Math.floor(Math.random()*t.messages.length)];var m=t.messages[t.msgIndex%t.messages.length];t.msgIndex++;return m;}
-function getMs(t){var ms=t.intervalVal*t.intervalUnit;if(t.jitter)ms+=(Math.random()*2-1)*ms*0.3;return Math.max(ms,500);}
-function scheduleNext(t){if(!t.running)return;t.timer=setTimeout(async function(){if(!t.running)return;await doSend(t);scheduleNext(t);},getMs(t));}
-function startTask(id){
-  var t=tasks[id];if(!t||t.running)return;
-  var tok=getToken();
-  if(!tok){log('Token is empty!','err',t);return;}
-  if(tok.length<50){log('Token too short \u2014 re-copy from Discord','err',t);return;}
-  if(!t.channelId){log('Channel ID empty','err',t);return;}
-  if(!t.messages.length){log('No messages in pool','err',t);return;}
-  t.running=true;t.sentCount=0;t.msgIndex=0;
-  var badge=document.getElementById('tbadge-'+id);if(badge)badge.textContent='0 sent';
-  document.getElementById('startbtn-'+id).disabled=true;document.getElementById('stopbtn-'+id).disabled=false;
-  setDot(t,'running');
-  var unitL={1000:'s',60000:'m',3600000:'h'}[t.intervalUnit]||'s';
-  var sub=document.getElementById('tsub-'+id);if(sub)sub.textContent='\u25CF Sending every '+t.intervalVal+unitL+(t.jitter?' \xB1jitter':'');
-  log('Started \u2014 ~'+t.intervalVal+unitL,'info',t);
-  t.timer=setTimeout(async function(){await doSend(t);scheduleNext(t);},150);updateGlobal();
-}
-function stopTask(id){
-  var t=tasks[id];if(!t)return;clearTimeout(t.timer);t.timer=null;t.running=false;
-  var sb=document.getElementById('startbtn-'+id);var stb=document.getElementById('stopbtn-'+id);
-  if(sb)sb.disabled=false;if(stb)stb.disabled=true;setDot(t,'idle');
-  var sub=document.getElementById('tsub-'+id);if(sub)sub.textContent='Stopped \xB7 '+t.sentCount+' sent';
-  log('Stopped \xB7 '+t.sentCount+' sent','info',t);updateGlobal();
-}
-function startAll(){Object.values(tasks).forEach(function(t){if(!t.running)startTask(t.id);});}
-function stopAll(){Object.values(tasks).forEach(function(t){if(t.running)stopTask(t.id);});}
-function setDot(t,state){var d=document.getElementById('dot-'+t.id);if(d)d.className='task-dot'+(state==='running'?' running':state==='error'?' error':'');}
-function updateGlobal(){
-  var running=Object.values(tasks).filter(function(t){return t.running;}).length;
-  var total=Object.values(tasks).reduce(function(a,t){return a+t.sentCount;},0);
-  var dot=document.getElementById('gDot');dot.className='pill-dot'+(running>0?' active':'');
-  document.getElementById('gStatusText').textContent=running>0?running+' running':'Idle';
-  document.getElementById('gTotal').textContent=total;
-}
+      // The bookmarklet embeds a minimal stub — actual config comes from localStorage commands
+      // so it stays up-to-date without re-copying the bookmarklet each time.
+      var bm = 'javascript:(function(){';
+      // If already listening, just acknowledge
+      bm += 'if(window._dsListener){';
+      bm += 'alert("\uD83D\uDCF1 Listener already active! Just use Start/Stop in DS Sender app.");';
+      bm += 'return;';
+      bm += '}';
+      // Write heartbeat
+      bm += 'function whb(tid){try{localStorage.setItem("ds_bm_hb_"+tid,Date.now());}catch(e){}}';
+      // Write status
+      bm += 'function wst(tid,st,msg,cnt){try{localStorage.setItem("ds_bm_status_"+tid,JSON.stringify({st:st,msg:msg,cnt:cnt,ts:Date.now()}));}catch(e){}}';
+      // Core send loop
+      bm += 'var _cfg=null,_idx=0,_sent=0,_running=false,_tid=null,_sendTimer=null;';
+      bm += 'function pick(c){if(c.mode==="random")return c.msgs[Math.floor(Math.random()*c.msgs.length)];return c.msgs[_idx++%c.msgs.length];}';
+      bm += 'function getMs(c){var ms=c.iv;if(c.ji)ms+=((Math.random()*2-1)*ms*0.3);return Math.max(ms,800);}';
+      bm += 'function doSend(){';
+      bm += 'if(!_running||!_cfg)return;';
+      bm += 'var msg=pick(_cfg);';
+      bm += 'fetch("/api/v9/channels/"+_cfg.ch+"/messages",{method:"POST",headers:{"Authorization":_cfg.tok,"Content-Type":"application/json"},body:JSON.stringify({content:msg})})';
+      bm += '.then(function(r){';
+      bm += 'if(r.status===429){';
+      bm += 'r.json().then(function(d){var ra=d.retry_after||5;document.title="\u23F3 RL "+ra+"s";wst(_tid,"rl","Rate limited "+ra+"s",_sent);_sendTimer=setTimeout(doSend,ra*1000);});';
+      bm += '} else if(r.ok){';
+      bm += '_sent++;document.title="\u2705 "+_sent+" sent";wst(_tid,"ok",msg,_sent);_sendTimer=setTimeout(doSend,getMs(_cfg));';
+      bm += '} else {';
+      bm += 'r.json().then(function(d){document.title="\u274C "+(d.message||r.status);wst(_tid,"err","HTTP "+(d.message||r.status),_sent);_sendTimer=setTimeout(doSend,getMs(_cfg));});';
+      bm += '}';
+      bm += '}).catch(function(e){document.title="\u274C "+e.message;wst(_tid,"err",e.message,_sent);_sendTimer=setTimeout(doSend,2000);});';
+      bm += '}';
+      // Command poller
+      bm += 'function pollCmd(){';
+      bm += 'if(!window._dsListener)return;';
+      bm += 'whb(_tid);';
+      bm += 'try{';
+      bm += 'var keys=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("ds_bm_cmd_")===0)keys.push(k);}';
+      bm += 'keys.forEach(function(k){';
+      bm += 'var raw=localStorage.getItem(k);if(!raw)return;';
+      bm += 'var d=JSON.parse(raw);';
+      bm += 'var tid=parseInt(k.replace("ds_bm_cmd_",""),10);';
+      bm += 'if(d.ts&&d.ts<=(_lastCmdTs[tid]||0))return;';
+      bm += 'if(!_lastCmdTs)_lastCmdTs={};_lastCmdTs[tid]=d.ts;';
+      bm += 'if(d.cmd==="run"){_tid=tid;_cfg=d.cfg;_idx=0;_sent=0;_running=true;clearTimeout(_sendTimer);document.title="\u25CF DS Listener \u2014 running";wst(tid,"start","Sender started",0);doSend();}';
+      bm += 'else if(d.cmd==="stop"&&tid===_tid){_running=false;clearTimeout(_sendTimer);document.title="\uD83D\uDCF1 DS Listener \u2014 idle";wst(tid,"stop","Stopped. "+_sent+" sent.",_sent);}';
+      bm += '});';
+      bm += '}catch(e){}';
+      bm += 'setTimeout(pollCmd,1500);';
+      bm += '}';
+      // Startup
+      bm += 'var _lastCmdTs={};';
+      bm += 'window._dsListener=true;';
+      bm += 'document.title="\uD83D\uDCF1 DS Listener \u2014 idle";';
+      bm += 'alert("\uD83D\uDCF1 DS Sender listener armed!\\nTab title = status.\\nNow press Start in the DS Sender app \u2014 no need to touch this tab again.\\n\\nDO NOT close this discord.com tab.");';
+      bm += '_tid=' + id + ';';
+      bm += 'pollCmd();';
+      bm += '})()';
 
-// ───────────────────────────────────────────────────────────────
-// SENDER BOOKMARKLET (iOS CORS fix)
-// Runs on discord.com so fetch is same-origin — no CORS
-// ───────────────────────────────────────────────────────────────
-function generateSenderBookmarklet(id) {
-  var t = tasks[id];
-  var tok = getToken();
-  if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
-  if (!t.channelId) { toast('\u26A0 Set a Channel ID first!'); return; }
-  if (!t.messages.length) { toast('\u26A0 Add at least one message!'); return; }
+      showSenderModal(bm, t.name);
+      startBmPoll();
+    }
+    function showSenderModal(bm, name) {
+      document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
+      document.getElementById('senderBmBox').textContent = bm;
+      document.getElementById('copySenderBtn').textContent = '\uD83D\uDCCB Copy Sender BM';
+      document.getElementById('senderModal').style.display = 'flex';
+    }
+    function closeSenderModal(e) {
+      if (!e || e.target === document.getElementById('senderModal'))
+        document.getElementById('senderModal').style.display = 'none';
+    }
+    function selectSenderBm() {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById('senderBmBox'));
+      window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+    }
+    function copySenderBm() {
+      var bm = document.getElementById('senderBmBox').textContent;
+      var btn = document.getElementById('copySenderBtn');
+      iosSafeCopy(bm,
+        function () { btn.textContent = '\u2705 Copied!'; toast('\uD83D\uDCCB Sender bookmarklet copied!'); setTimeout(function () { btn.textContent = '\uD83D\uDCCB Copy Sender BM'; }, 2500); },
+        function () { selectSenderBm(); btn.textContent = '\u270B Select all & copy manually'; }
+      );
+    }
 
-  // Embed config — include taskId so the app can correlate status updates
-  var cfg = JSON.stringify({
-    tok: tok,
-    ch: t.channelId,
-    msgs: t.messages,
-    mode: t.mode,
-    iv: Math.max(t.intervalVal * t.intervalUnit, 1000),
-    ji: t.jitter,
-    tid: id          // ← task ID for localStorage bridge
-  });
+    function log(msg, type, task) {
+      logEntryCount++; var box = document.getElementById('logBox');
+      var now = new Date().toLocaleTimeString('en-GB'); var div = document.createElement('div'); div.className = 'log-entry';
+      var tag = task ? '<span class="log-tag" style="color:' + task.color + '">[' + escHtml(task.name) + '] </span>' : '';
+      div.innerHTML = '<span class="log-time">' + now + ' </span>' + tag + '<span class="log-' + (type || 'info') + '">' + escHtml(String(msg)) + '</span>';
+      box.appendChild(div);
+      // Auto-open log on first real event so user notices activity
+      if (!logOpen) { logOpen = true; box.classList.add('open'); }
+      box.scrollTop = box.scrollHeight;
+      document.getElementById('logCount').textContent = logEntryCount;
+    }
+    function toggleLog() { logOpen = !logOpen; var box = document.getElementById('logBox'); box.classList.toggle('open', logOpen); if (logOpen) box.scrollTop = box.scrollHeight; }
 
-  // Helper that writes a status record into localStorage so the main app can read it
-  // Key: ds_bm_status_<tid>  Value: JSON {st,msg,cnt,ts}
-  var writeSt = [
-    'function wst(st,msg,cnt){',
-    'try{localStorage.setItem("ds_bm_status_"+c.tid,JSON.stringify({st:st,msg:msg,cnt:cnt,ts:Date.now()}));}',
-    'catch(e){}',
-    '}'
-  ].join('');
+    // ─────────────────────────────────────────────────────────────────
+    // iOS BM STATUS BRIDGE  (localStorage polling every 1.5 s)
+    // Bookmarklet writes ds_bm_status_<tid> = {st,msg,cnt,ts}
+    // We read it here and push into the log + update task badge
+    // ─────────────────────────────────────────────────────────────────
+    function startBmPoll() {
+      if (_bmPollTimer) return;   // already running
+      _bmPollTimer = setInterval(pollBmStatus, 1500);
+    }
+    function pollBmStatus() {
+      // Scan all ds_bm_status_* keys
+      var keys = [];
+      try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(BM_STATUS_PREFIX) === 0) keys.push(k); } }
+      catch (e) { return; }
+      keys.forEach(function (k) {
+        try {
+          var raw = localStorage.getItem(k); if (!raw) return;
+          var d = JSON.parse(raw);
+          var tid = parseInt(k.replace(BM_STATUS_PREFIX, ''), 10);
+          var t = tasks[tid];
+          // Deduplicate by timestamp
+          if (_bmLastTs[tid] && _bmLastTs[tid] >= d.ts) return;
+          _bmLastTs[tid] = d.ts;
+          var typeMap = { ok: 'ok', err: 'err', rl: 'info', start: 'info', stop: 'info' };
+          var type = typeMap[d.st] || 'info';
+          var display = '';
+          if (d.st === 'ok') display = '\u2705 Sent (' + d.cnt + ' total): "' + (d.msg && d.msg.length > 45 ? d.msg.slice(0, 42) + '\u2026' : d.msg) + '"';
+          else if (d.st === 'rl') display = '\u23F3 ' + d.msg;
+          else if (d.st === 'err') display = '\u274C ' + d.msg;
+          else if (d.st === 'start') display = '\uD83D\uDCF1 iOS BM listener confirmed running';
+          else if (d.st === 'stop') display = '\u23F9 iOS BM stopped \xB7 ' + d.cnt + ' sent';
+          else display = d.msg;
+          log('[iOS BM] ' + display, type, t || null);
+          // Update task badge, sub-text, dot
+          if (t) {
+            var badge = document.getElementById('tbadge-' + tid);
+            if (badge) badge.textContent = (d.cnt || 0) + ' sent (iOS)';
+            var sub = document.getElementById('tsub-' + tid);
+            if (d.st === 'start') {
+              _bmRunning[tid] = true;
+              setDot(t, 'running');
+              var sb2 = document.getElementById('startbtn-' + tid); if (sb2) sb2.disabled = true;
+              var stb2 = document.getElementById('stopbtn-' + tid); if (stb2) stb2.disabled = false;
+            }
+            if (d.st === 'ok' && sub) sub.textContent = '\uD83D\uDCF1 iOS BM \u25CF running \xB7 ' + (d.cnt || 0) + ' sent';
+            if (d.st === 'stop') {
+              _bmRunning[tid] = false;
+              setDot(t, 'idle');
+              var sb3 = document.getElementById('startbtn-' + tid); if (sb3) sb3.disabled = false;
+              var stb3 = document.getElementById('stopbtn-' + tid); if (stb3) stb3.disabled = true;
+              if (sub) sub.textContent = '\uD83D\uDCF1 iOS BM stopped \xB7 ' + (d.cnt || 0) + ' sent';
+            }
+            if (d.st === 'err' && sub) sub.textContent = '\u26A0 iOS BM error: ' + (d.msg || '').slice(0, 40);
+            if (d.st === 'rl' && sub) sub.textContent = '\u23F3 iOS BM rate-limited';
+            if (d.st === 'ok') { t.sentCount = d.cnt || t.sentCount; }
+            updateGlobal();
+          }
+        } catch (e) { }
+      });
+    }
+    function toggleEye() { var inp = document.getElementById('tokenInput'); var btn = document.getElementById('eyeBtn'); if (inp.type === 'password') { inp.type = 'text'; inp.style.letterSpacing = 'normal'; btn.textContent = '\uD83D\uDE48'; } else { inp.type = 'password'; inp.style.letterSpacing = '3px'; btn.textContent = '\uD83D\uDC41'; } }
+    function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
-  var bm = 'javascript:(function(){';
-  bm += 'var c=' + cfg + ',';
-  bm += 'idx=0,sent=0;';
-  bm += writeSt;
-  bm += 'function pick(){if(c.mode==="random")return c.msgs[Math.floor(Math.random()*c.msgs.length)];return c.msgs[idx++%c.msgs.length];}';
-  bm += 'function getMs(){var ms=c.iv;if(c.ji)ms+=((Math.random()*2-1)*ms*0.3);return Math.max(ms,800);}';
-  bm += 'function send(){';
-  bm += 'if(!window._dsSender)return;';
-  bm += 'var msg=pick();';
-  bm += 'fetch("/api/v9/channels/"+c.ch+"/messages",{method:"POST",headers:{"Authorization":c.tok,"Content-Type":"application/json"},body:JSON.stringify({content:msg})})';
-  bm += '.then(function(r){';
-  bm += 'if(r.status===429){';
-  bm +=   'r.json().then(function(d){';
-  bm +=     'var ra=(d.retry_after||5);';
-  bm +=     'document.title="\u23F3 RL "+ra+"s";';
-  bm +=     'wst("rl","Rate limited \u2014 retry after "+ra+"s",sent);';
-  bm +=     'setTimeout(send,ra*1000);';
-  bm +=   '});';
-  bm += '} else if(r.ok){';
-  bm +=   'sent++;';
-  bm +=   'document.title="\u2705 Sent! "+new Date().toLocaleTimeString();';
-  bm +=   'wst("ok",msg,sent);';
-  bm +=   'setTimeout(send,getMs());';
-  bm += '} else {';
-  bm +=   'r.json().then(function(d){';
-  bm +=     'document.title="\u274C "+d.message;';
-  bm +=     'wst("err","HTTP error: "+(d.message||r.status),sent);';
-  bm +=     'setTimeout(send,getMs());';
-  bm +=   '});';
-  bm += '}';
-  bm += '}).catch(function(e){';
-  bm +=   'document.title="\u274C "+e.message;';
-  bm +=   'wst("err",e.message,sent);';
-  bm +=   'setTimeout(send,getMs());';
-  bm += '});';
-  bm += '}';
-  // Toggle on second tap
-  bm += 'if(window._dsSender){';
-  bm +=   'window._dsSender=false;';
-  bm +=   'document.title="\u23F9 Sender stopped";';
-  bm +=   'wst("stop","Sender stopped. "+sent+" sent.",sent);';
-  bm +=   'return;';
-  bm += '}';
-  bm += 'window._dsSender=true;';
-  bm += 'document.title="\u25CF Sender started...";';
-  bm += 'wst("start","Sender started",0);';
-  bm += 'send();';
-  bm += 'alert("\u25CF Sender running ("+c.msgs.length+" msg(s), every ~"+(c.iv/1000)+"s).\\nTab title = live status.\\nStatus also syncs to DS Sender app.\\nTap bookmark again to STOP.");';
-  bm += '})()';
+    function switchTab(tab) { var isIos = tab === 'ios'; document.getElementById('paneIos').style.display = isIos ? '' : 'none'; document.getElementById('paneDsk').style.display = isIos ? 'none' : ''; document.getElementById('tabIos').className = 'tab-btn' + (isIos ? ' active' : ''); document.getElementById('tabDsk').className = 'tab-btn' + (!isIos ? ' active' : ''); }
+    function showGrabModal() { document.getElementById('snippetBox').textContent = TOKEN_SNIPPET; var bm = document.getElementById('bmSnippetBox'); if (bm) bm.textContent = IOS_BOOKMARKLET; document.getElementById('grabModal').style.display = 'flex'; document.getElementById('copySnipBtn').textContent = '\uD83D\uDCCB Copy Snippet'; document.getElementById('copyBmBtn').textContent = '\uD83D\uDCCB Copy Bookmarklet'; switchTab(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'ios' : 'desktop'); }
+    function closeGrabModal(e) { if (!e || e.target === document.getElementById('grabModal')) document.getElementById('grabModal').style.display = 'none'; }
+    function selectSnippet() { var r = document.createRange(); r.selectNodeContents(document.getElementById('snippetBox')); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
+    function selectBmSnippet() { var r = document.createRange(); r.selectNodeContents(document.getElementById('bmSnippetBox')); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
 
-  showSenderModal(bm, t.name);
-  // Start polling for this task's status updates
-  startBmPoll();
-}
-function showSenderModal(bm, name) {
-  document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
-  document.getElementById('senderBmBox').textContent = bm;
-  document.getElementById('copySenderBtn').textContent = '\uD83D\uDCCB Copy Sender BM';
-  document.getElementById('senderModal').style.display = 'flex';
-}
-function closeSenderModal(e) {
-  if (!e || e.target === document.getElementById('senderModal'))
-    document.getElementById('senderModal').style.display = 'none';
-}
-function selectSenderBm() {
-  var r = document.createRange(); r.selectNodeContents(document.getElementById('senderBmBox'));
-  window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-}
-function copySenderBm() {
-  var bm = document.getElementById('senderBmBox').textContent;
-  var btn = document.getElementById('copySenderBtn');
-  iosSafeCopy(bm,
-    function() { btn.textContent = '\u2705 Copied!'; toast('\uD83D\uDCCB Sender bookmarklet copied!'); setTimeout(function(){ btn.textContent = '\uD83D\uDCCB Copy Sender BM'; }, 2500); },
-    function() { selectSenderBm(); btn.textContent = '\u270B Select all & copy manually'; }
-  );
-}
+    function iosSafeCopy(text, onOk, onFail) {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onOk).catch(function () { if (!execCommandCopy(text)) onFail(); else onOk(); }); return; }
+      if (!execCommandCopy(text)) onFail(); else onOk();
+    }
+    function execCommandCopy(text) { try { var ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;width:1px;height:1px;'; document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, text.length); var ok = document.execCommand('copy'); document.body.removeChild(ta); return ok; } catch (e) { return false; } }
+    function copyBookmarklet() { var btn = document.getElementById('copyBmBtn'); iosSafeCopy(IOS_BOOKMARKLET, function () { btn.textContent = '\u2705 Copied!'; toast('\uD83D\uDCCB Bookmarklet copied!'); setTimeout(function () { btn.textContent = '\uD83D\uDCCB Copy Bookmarklet'; }, 2500); }, function () { prompt('Select all and copy this bookmarklet:', IOS_BOOKMARKLET); }); }
+    function copySnippet() { var btn = document.getElementById('copySnipBtn'); iosSafeCopy(TOKEN_SNIPPET, function () { btn.textContent = '\u2705 Copied!'; setTimeout(function () { btn.textContent = '\uD83D\uDCCB Copy Snippet'; }, 2000); }, function () { selectSnippet(); btn.textContent = '\u270B Select & copy manually'; }); }
+    async function pasteToken() {
+      function applyRaw(txt) { if (!txt || !txt.trim()) return false; var clean = txt.trim().replace(/^(Bot |Bearer )/i, ''); if (clean.length < 20) return false; var inp = document.getElementById('tokenInput'); inp.value = clean; inp.type = 'text'; inp.style.letterSpacing = 'normal'; document.getElementById('eyeBtn').textContent = '\uD83D\uDE48'; updateTokenHint(clean); autoSave(); closeGrabModal(); log('Token pasted (' + clean.length + ' chars)', 'ok'); toast('\u2705 Token saved!'); return true; }
+      try { if (navigator.clipboard && navigator.clipboard.readText) { var txt = await navigator.clipboard.readText(); if (applyRaw(txt)) return; } } catch (e) { }
+      var manual = prompt('Paste your Discord token here:'); if (manual) applyRaw(manual);
+    }
 
-function log(msg,type,task){
-  logEntryCount++;var box=document.getElementById('logBox');
-  var now=new Date().toLocaleTimeString('en-GB');var div=document.createElement('div');div.className='log-entry';
-  var tag=task?'<span class="log-tag" style="color:'+task.color+'">['+escHtml(task.name)+'] </span>':'';
-  div.innerHTML='<span class="log-time">'+now+' </span>'+tag+'<span class="log-'+(type||'info')+'">'+escHtml(String(msg))+'</span>';
-  box.appendChild(div);
-  // Auto-open log on first real event so user notices activity
-  if(!logOpen){logOpen=true;box.classList.add('open');}
-  box.scrollTop=box.scrollHeight;
-  document.getElementById('logCount').textContent=logEntryCount;
-}
-function toggleLog(){logOpen=!logOpen;var box=document.getElementById('logBox');box.classList.toggle('open',logOpen);if(logOpen)box.scrollTop=box.scrollHeight;}
-
-// ─────────────────────────────────────────────────────────────────
-// iOS BM STATUS BRIDGE  (localStorage polling every 1.5 s)
-// Bookmarklet writes ds_bm_status_<tid> = {st,msg,cnt,ts}
-// We read it here and push into the log + update task badge
-// ─────────────────────────────────────────────────────────────────
-function startBmPoll(){
-  if(_bmPollTimer)return;   // already running
-  _bmPollTimer=setInterval(pollBmStatus,1500);
-}
-function pollBmStatus(){
-  // Scan all ds_bm_status_* keys
-  var keys=[];
-  try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(BM_STATUS_PREFIX)===0)keys.push(k);}}
-  catch(e){return;}
-  keys.forEach(function(k){
-    try{
-      var raw=localStorage.getItem(k);if(!raw)return;
-      var d=JSON.parse(raw);
-      var tid=parseInt(k.replace(BM_STATUS_PREFIX,''),10);
-      var t=tasks[tid];
-      // Deduplicate by timestamp
-      if(_bmLastTs[tid]&&_bmLastTs[tid]>=d.ts)return;
-      _bmLastTs[tid]=d.ts;
-      var tag=t?'[iOS BM] ':'[iOS BM #'+tid+'] ';
-      var typeMap={ok:'ok',err:'err',rl:'info',start:'info',stop:'info'};
-      var type=typeMap[d.st]||'info';
-      // Pick a user-friendly message
-      var display='';
-      if(d.st==='ok')display='\u2705 Sent ('+d.cnt+' total): "'+(d.msg&&d.msg.length>45?d.msg.slice(0,42)+'\u2026':d.msg)+'"';
-      else if(d.st==='rl')display='\u23F3 '+d.msg;
-      else if(d.st==='err')display='\u274C '+d.msg;
-      else if(d.st==='start')display='\uD83D\uDCF1 iOS BM sender started';
-      else if(d.st==='stop')display='\u23F9 iOS BM stopped \xB7 '+d.cnt+' sent';
-      else display=d.msg;
-      log(tag+display, type, t||null);
-      // Update task badge & sub-text
-      if(t){
-        var badge=document.getElementById('tbadge-'+tid);
-        if(badge)badge.textContent=(d.cnt||0)+' sent (iOS)';
-        var sub=document.getElementById('tsub-'+tid);
-        if(d.st==='ok'&&sub)sub.textContent='\uD83D\uDCF1 iOS BM \u25CF running \xB7 '+(d.cnt||0)+' sent';
-        if(d.st==='stop'&&sub)sub.textContent='\uD83D\uDCF1 iOS BM stopped \xB7 '+(d.cnt||0)+' sent';
-        if(d.st==='err'&&sub)sub.textContent='\u26A0 iOS BM error: '+(d.msg||'').slice(0,40);
-        if(d.st==='rl'&&sub)sub.textContent='\u23F3 iOS BM rate-limited';
-        // Update global totals only on sent events
-        if(d.st==='ok'){t.sentCount=d.cnt||t.sentCount;updateGlobal();}
-      }
-    }catch(e){}
-  });
-}
-function toggleEye(){var inp=document.getElementById('tokenInput');var btn=document.getElementById('eyeBtn');if(inp.type==='password'){inp.type='text';inp.style.letterSpacing='normal';btn.textContent='\uD83D\uDE48';}else{inp.type='password';inp.style.letterSpacing='3px';btn.textContent='\uD83D\uDC41';}}
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-function switchTab(tab){var isIos=tab==='ios';document.getElementById('paneIos').style.display=isIos?'':'none';document.getElementById('paneDsk').style.display=isIos?'none':'';document.getElementById('tabIos').className='tab-btn'+(isIos?' active':'');document.getElementById('tabDsk').className='tab-btn'+(!isIos?' active':'');}
-function showGrabModal(){document.getElementById('snippetBox').textContent=TOKEN_SNIPPET;var bm=document.getElementById('bmSnippetBox');if(bm)bm.textContent=IOS_BOOKMARKLET;document.getElementById('grabModal').style.display='flex';document.getElementById('copySnipBtn').textContent='\uD83D\uDCCB Copy Snippet';document.getElementById('copyBmBtn').textContent='\uD83D\uDCCB Copy Bookmarklet';switchTab(/iphone|ipad|ipod/i.test(navigator.userAgent)?'ios':'desktop');}
-function closeGrabModal(e){if(!e||e.target===document.getElementById('grabModal'))document.getElementById('grabModal').style.display='none';}
-function selectSnippet(){var r=document.createRange();r.selectNodeContents(document.getElementById('snippetBox'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);}
-function selectBmSnippet(){var r=document.createRange();r.selectNodeContents(document.getElementById('bmSnippetBox'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);}
-
-function iosSafeCopy(text,onOk,onFail){
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onOk).catch(function(){if(!execCommandCopy(text))onFail();else onOk();});return;}
-  if(!execCommandCopy(text))onFail();else onOk();
-}
-function execCommandCopy(text){try{var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;width:1px;height:1px;';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,text.length);var ok=document.execCommand('copy');document.body.removeChild(ta);return ok;}catch(e){return false;}}
-function copyBookmarklet(){var btn=document.getElementById('copyBmBtn');iosSafeCopy(IOS_BOOKMARKLET,function(){btn.textContent='\u2705 Copied!';toast('\uD83D\uDCCB Bookmarklet copied!');setTimeout(function(){btn.textContent='\uD83D\uDCCB Copy Bookmarklet';},2500);},function(){prompt('Select all and copy this bookmarklet:',IOS_BOOKMARKLET);});}
-function copySnippet(){var btn=document.getElementById('copySnipBtn');iosSafeCopy(TOKEN_SNIPPET,function(){btn.textContent='\u2705 Copied!';setTimeout(function(){btn.textContent='\uD83D\uDCCB Copy Snippet';},2000);},function(){selectSnippet();btn.textContent='\u270B Select & copy manually';});}
-async function pasteToken(){
-  function applyRaw(txt){if(!txt||!txt.trim())return false;var clean=txt.trim().replace(/^(Bot |Bearer )/i,'');if(clean.length<20)return false;var inp=document.getElementById('tokenInput');inp.value=clean;inp.type='text';inp.style.letterSpacing='normal';document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(clean);autoSave();closeGrabModal();log('Token pasted ('+clean.length+' chars)','ok');toast('\u2705 Token saved!');return true;}
-  try{if(navigator.clipboard&&navigator.clipboard.readText){var txt=await navigator.clipboard.readText();if(applyRaw(txt))return;}}catch(e){}
-  var manual=prompt('Paste your Discord token here:');if(manual)applyRaw(manual);
-}
-
-function showLoginModal(){document.getElementById('loginModal').style.display='flex';document.getElementById('loginErr').style.display='none';document.getElementById('mfaRow').style.display='none';document.getElementById('loginSubmitBtn').style.display='';document.getElementById('loginSubmitBtn').disabled=false;document.getElementById('loginSubmitBtn').textContent='Sign In';_mfaTicket=null;setTimeout(function(){document.getElementById('loginEmail').focus();},200);}
-function closeLoginModal(e){if(!e||e.target===document.getElementById('loginModal'))document.getElementById('loginModal').style.display='none';}
-function toggleLoginEye(){var inp=document.getElementById('loginPass');var btn=document.getElementById('loginEyeBtn');if(inp.type==='password'){inp.type='text';btn.textContent='\uD83D\uDE48';}else{inp.type='password';btn.textContent='\uD83D\uDC41';}}
-function setLoginErr(msg){var el=document.getElementById('loginErr');el.textContent=msg;el.style.display=msg?'block':'none';}
-function setLoginBtn(txt,disabled){var btn=document.getElementById('loginSubmitBtn');btn.textContent=txt;btn.disabled=!!disabled;}
-async function doLogin(){
-  var email=document.getElementById('loginEmail').value.trim();var pass=document.getElementById('loginPass').value;
-  if(!email||!pass){setLoginErr('Fill in email and password.');return;}
-  setLoginErr('');setLoginBtn('Signing in\u2026',true);
-  try{
-    var res=await fetch('https://discord.com/api/v9/auth/login',{method:'POST',headers:{'Content-Type':'application/json','User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'},body:JSON.stringify({login:email,password:pass,undelete:false,captcha_key:null,login_source:null,gift_code_sku_id:null})});
-    var data=await res.json();
-    log('Discord API ['+res.status+']: '+JSON.stringify(data).slice(0,120),'info');
-    if(data.token){applyToken(data.token,email);return;}
-    if(data.mfa&&data.ticket){_mfaTicket=data.ticket;document.getElementById('mfaRow').style.display='';setLoginBtn('Waiting for 2FA\u2026',true);setLoginErr('');document.getElementById('mfaCode').value='';setTimeout(function(){document.getElementById('mfaCode').focus();},100);log('2FA required \u2014 enter your code','info');return;}
-    if(data.captcha_key){setLoginBtn('Sign In',false);setLoginErr('\u26A0 CAPTCHA required \u2014 login in real Safari first then retry.');return;}
-    var errMsg=data.message||'';
-    if(data.errors){var fields=Object.keys(data.errors);for(var i=0;i<fields.length;i++){var f=data.errors[fields[i]];if(f&&f._errors&&f._errors[0]){errMsg=fields[i]+': '+(f._errors[0].message||f._errors[0].code||errMsg);break;}}}
-    setLoginBtn('Sign In',false);setLoginErr(errMsg||('HTTP '+res.status+' \u2014 check email/password'));
-  }catch(e){setLoginBtn('Sign In',false);setLoginErr(e.message&&e.message.toLowerCase().includes('fetch')?'CORS blocked \u2014 try hosting on GitHub Pages.':'Network error: '+e.message);log('Login error: '+e.message,'err');}
-}
-async function doMfa(){
-  var code=document.getElementById('mfaCode').value.trim().replace(/\s/g,'');
-  if(!code||code.length<6){setLoginErr('Enter your 6-digit 2FA code.');return;}
-  if(!_mfaTicket){setLoginErr('Session expired \u2014 try logging in again.');return;}
-  setLoginErr('');var vBtn=document.querySelector('#mfaRow .btn');vBtn.disabled=true;vBtn.textContent='\u2026';
-  try{
-    var res=await fetch('https://discord.com/api/v9/auth/mfa/totp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,ticket:_mfaTicket,login_source:null,gift_code_sku_id:null})});
-    var data=await res.json();
-    if(data.token){applyToken(data.token,document.getElementById('loginEmail').value.trim());return;}
-    vBtn.disabled=false;vBtn.textContent='Verify';setLoginErr(data.message||'Invalid 2FA code.');
-  }catch(e){vBtn.disabled=false;vBtn.textContent='Verify';setLoginErr('Network error: '+e.message);}
-}
-function applyToken(token,email){
-  var inp=document.getElementById('tokenInput');inp.value=token;inp.type='text';inp.style.letterSpacing='normal';
-  document.getElementById('eyeBtn').textContent='\uD83D\uDE48';updateTokenHint(token);autoSave();
-  closeLoginModal();_mfaTicket=null;log('Token acquired ('+token.length+' chars) \u2014 auto-saved','ok');toast('\u2705 Token saved!');
-}
-</script>
+    function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; document.getElementById('loginErr').style.display = 'none'; document.getElementById('mfaRow').style.display = 'none'; document.getElementById('loginSubmitBtn').style.display = ''; document.getElementById('loginSubmitBtn').disabled = false; document.getElementById('loginSubmitBtn').textContent = 'Sign In'; _mfaTicket = null; setTimeout(function () { document.getElementById('loginEmail').focus(); }, 200); }
+    function closeLoginModal(e) { if (!e || e.target === document.getElementById('loginModal')) document.getElementById('loginModal').style.display = 'none'; }
+    function toggleLoginEye() { var inp = document.getElementById('loginPass'); var btn = document.getElementById('loginEyeBtn'); if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '\uD83D\uDE48'; } else { inp.type = 'password'; btn.textContent = '\uD83D\uDC41'; } }
+    function setLoginErr(msg) { var el = document.getElementById('loginErr'); el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+    function setLoginBtn(txt, disabled) { var btn = document.getElementById('loginSubmitBtn'); btn.textContent = txt; btn.disabled = !!disabled; }
+    async function doLogin() {
+      var email = document.getElementById('loginEmail').value.trim(); var pass = document.getElementById('loginPass').value;
+      if (!email || !pass) { setLoginErr('Fill in email and password.'); return; }
+      setLoginErr(''); setLoginBtn('Signing in\u2026', true);
+      try {
+        var res = await fetch('https://discord.com/api/v9/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15' }, body: JSON.stringify({ login: email, password: pass, undelete: false, captcha_key: null, login_source: null, gift_code_sku_id: null }) });
+        var data = await res.json();
+        log('Discord API [' + res.status + ']: ' + JSON.stringify(data).slice(0, 120), 'info');
+        if (data.token) { applyToken(data.token, email); return; }
+        if (data.mfa && data.ticket) { _mfaTicket = data.ticket; document.getElementById('mfaRow').style.display = ''; setLoginBtn('Waiting for 2FA\u2026', true); setLoginErr(''); document.getElementById('mfaCode').value = ''; setTimeout(function () { document.getElementById('mfaCode').focus(); }, 100); log('2FA required \u2014 enter your code', 'info'); return; }
+        if (data.captcha_key) { setLoginBtn('Sign In', false); setLoginErr('\u26A0 CAPTCHA required \u2014 login in real Safari first then retry.'); return; }
+        var errMsg = data.message || '';
+        if (data.errors) { var fields = Object.keys(data.errors); for (var i = 0; i < fields.length; i++) { var f = data.errors[fields[i]]; if (f && f._errors && f._errors[0]) { errMsg = fields[i] + ': ' + (f._errors[0].message || f._errors[0].code || errMsg); break; } } }
+        setLoginBtn('Sign In', false); setLoginErr(errMsg || ('HTTP ' + res.status + ' \u2014 check email/password'));
+      } catch (e) { setLoginBtn('Sign In', false); setLoginErr(e.message && e.message.toLowerCase().includes('fetch') ? 'CORS blocked \u2014 try hosting on GitHub Pages.' : 'Network error: ' + e.message); log('Login error: ' + e.message, 'err'); }
+    }
+    async function doMfa() {
+      var code = document.getElementById('mfaCode').value.trim().replace(/\s/g, '');
+      if (!code || code.length < 6) { setLoginErr('Enter your 6-digit 2FA code.'); return; }
+      if (!_mfaTicket) { setLoginErr('Session expired \u2014 try logging in again.'); return; }
+      setLoginErr(''); var vBtn = document.querySelector('#mfaRow .btn'); vBtn.disabled = true; vBtn.textContent = '\u2026';
+      try {
+        var res = await fetch('https://discord.com/api/v9/auth/mfa/totp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code, ticket: _mfaTicket, login_source: null, gift_code_sku_id: null }) });
+        var data = await res.json();
+        if (data.token) { applyToken(data.token, document.getElementById('loginEmail').value.trim()); return; }
+        vBtn.disabled = false; vBtn.textContent = 'Verify'; setLoginErr(data.message || 'Invalid 2FA code.');
+      } catch (e) { vBtn.disabled = false; vBtn.textContent = 'Verify'; setLoginErr('Network error: ' + e.message); }
+    }
+    function applyToken(token, email) {
+      var inp = document.getElementById('tokenInput'); inp.value = token; inp.type = 'text'; inp.style.letterSpacing = 'normal';
+      document.getElementById('eyeBtn').textContent = '\uD83D\uDE48'; updateTokenHint(token); autoSave();
+      closeLoginModal(); _mfaTicket = null; log('Token acquired (' + token.length + ' chars) \u2014 auto-saved', 'ok'); toast('\u2705 Token saved!');
+    }
+  </script>
 </body>
+
 </html>
