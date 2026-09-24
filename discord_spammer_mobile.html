@@ -134,6 +134,14 @@
     .bb-add   { background:var(--accent); color:#fff; flex:none; width:50px; font-size:22px; border-radius:12px; }
     .bb-save  { background:var(--card2); color:var(--accent2); border:1px solid var(--border);
                 flex:none; width:50px; font-size:20px; border-radius:12px; }
+    /* Sender bookmarklet modal */
+    .sender-info-box { background:rgba(35,165,90,.1); border:1px solid rgba(35,165,90,.3);
+                       border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:12px; color:var(--green); line-height:1.6; }
+    .sender-step { display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.5; margin-bottom:8px; }
+    .sender-step-num { background:var(--green); color:#fff; width:20px; height:20px; border-radius:50%;
+                       font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+    .cors-notice { background:rgba(237,66,69,.1); border:1px solid rgba(237,66,69,.3);
+                   border-radius:10px; padding:10px 12px; font-size:12px; color:var(--red); line-height:1.6; margin-bottom:10px; }
     .log-toggle-btn { width:100%; background:var(--surface); border:1px solid var(--border);
                       border-radius:12px; color:var(--muted); font-family:'Inter',sans-serif;
                       font-size:13px; font-weight:500; padding:12px; cursor:pointer;
@@ -306,6 +314,30 @@
       </div>
     </div>
     <div style="margin-top:12px;text-align:center"><button onclick="closeGrabModal()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Sender Bookmarklet Modal -->
+<div class="modal-overlay" id="senderModal" style="display:none" onclick="closeSenderModal(event)">
+  <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">&#x1F4E4; iOS Sender Bookmarklet</div>
+    <div class="sender-info-box">
+      &#x2139;&#xFE0F; <strong>Why this exists:</strong> Safari blocks API calls from local HTML files (CORS). This bookmarklet runs directly <strong>on discord.com</strong> &mdash; same-origin, zero CORS. Keep the discord.com tab open and it keeps sending.
+    </div>
+    <div id="senderTaskName" style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;"></div>
+    <div class="sender-step"><div class="sender-step-num">1</div><span>Tap <strong>Copy Sender BM</strong> below</span></div>
+    <div class="sender-step"><div class="sender-step-num">2</div><span>Bookmark any page in Safari (Share &#x2192; Add Bookmark)</span></div>
+    <div class="sender-step"><div class="sender-step-num">3</div><span>Edit that bookmark &#x2192; clear URL &#x2192; paste &#x2192; Save</span></div>
+    <div class="sender-step"><div class="sender-step-num">4</div><span>Open <strong>discord.com</strong> in Safari (stay on that tab)</span></div>
+    <div class="sender-step"><div class="sender-step-num">5</div><span>Tap the bookmark &#x2192; it starts sending! Watch the tab title for status</span></div>
+    <div class="sender-step"><div class="sender-step-num">6</div><span>Close / navigate away from discord.com tab to stop</span></div>
+    <div style="margin:12px 0 6px;"><div class="field-label">SENDER CODE (tap to select)</div></div>
+    <div class="snippet-box" id="senderBmBox" onclick="selectSenderBm()" style="font-size:10px;max-height:90px;"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-start" id="copySenderBtn" onclick="copySenderBm()" style="flex:1;">&#x1F4CB; Copy Sender BM</button>
+      <button class="btn" style="background:var(--card2);color:var(--muted);border:1px solid var(--border);flex:none;width:70px;" onclick="closeSenderModal()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -513,6 +545,7 @@ function renderTask(t){
       '<div class="task-actions">'+
       '<button class="btn btn-start" id="startbtn-'+t.id+'" onclick="startTask('+t.id+')">\u25B6 Start</button>'+
       '<button class="btn btn-stop" id="stopbtn-'+t.id+'" onclick="stopTask('+t.id+')" disabled>\u23F9</button>'+
+      '<button class="btn" style="background:rgba(35,165,90,.12);color:var(--green);border:1px solid rgba(35,165,90,.25);font-size:12px;min-height:44px;" onclick="generateSenderBookmarklet('+t.id+')">\uD83D\uDCE4 iOS</button>'+
       '<button class="btn btn-remove" onclick="removeTask('+t.id+')">\u2715</button>'+
       '</div></div>';
   if(existing){list.replaceChild(el,existing);}else{list.appendChild(el);}
@@ -546,7 +579,18 @@ async function doSend(t){
     if(!res.ok){var d2=await res.json().catch(function(){return{};});throw new Error('HTTP '+res.status+': '+(d2.message||res.statusText));}
     t.sentCount++;var badge=document.getElementById('tbadge-'+t.id);if(badge)badge.textContent=t.sentCount+' sent';
     log('Sent: "'+(content.length>45?content.slice(0,42)+'\u2026':content)+'"','ok',t);updateGlobal();
-  }catch(e){log(e.message,'err',t);setDot(t,'error');var sub=document.getElementById('tsub-'+t.id);if(sub)sub.textContent='\u26A0 '+e.message.slice(0,40);}
+  }catch(e){
+    var msg=e.message||'';
+    // Detect CORS / network block from file:// origin
+    var isCors=/load failed|failed to fetch|network request failed|networkerror/i.test(msg);
+    var displayMsg=isCors
+      ? 'CORS blocked (file:// origin) \u2014 use \uD83D\uDCE4 iOS Send bookmarklet instead'
+      : msg;
+    log(displayMsg,'err',t);
+    setDot(t,'error');
+    var sub=document.getElementById('tsub-'+t.id);if(sub)sub.textContent='\u26A0 '+displayMsg.slice(0,50);
+    if(isCors)stopTask(t.id);
+  }
 }
 function pickMsg(t){if(!t.messages.length)return null;if(t.mode==='random')return t.messages[Math.floor(Math.random()*t.messages.length)];var m=t.messages[t.msgIndex%t.messages.length];t.msgIndex++;return m;}
 function getMs(t){var ms=t.intervalVal*t.intervalUnit;if(t.jitter)ms+=(Math.random()*2-1)*ms*0.3;return Math.max(ms,500);}
@@ -583,6 +627,72 @@ function updateGlobal(){
   var dot=document.getElementById('gDot');dot.className='pill-dot'+(running>0?' active':'');
   document.getElementById('gStatusText').textContent=running>0?running+' running':'Idle';
   document.getElementById('gTotal').textContent=total;
+}
+
+// ───────────────────────────────────────────────────────────────
+// SENDER BOOKMARKLET (iOS CORS fix)
+// Runs on discord.com so fetch is same-origin — no CORS
+// ───────────────────────────────────────────────────────────────
+function generateSenderBookmarklet(id) {
+  var t = tasks[id];
+  var tok = getToken();
+  if (!tok || tok.length < 20) { toast('\u26A0 Set your token first!'); return; }
+  if (!t.channelId) { toast('\u26A0 Set a Channel ID first!'); return; }
+  if (!t.messages.length) { toast('\u26A0 Add at least one message!'); return; }
+  // Embed config as JSON inside the bookmarklet
+  // Using relative URL /api/v9/... so it's always same-origin on discord.com
+  var cfg = JSON.stringify({
+    tok: tok,
+    ch: t.channelId,
+    msgs: t.messages,
+    mode: t.mode,
+    iv: Math.max(t.intervalVal * t.intervalUnit, 1000),
+    ji: t.jitter
+  });
+  var bm = 'javascript:(function(){';
+  bm += 'var c=' + cfg + ',';
+  bm += 'idx=0,running=true;';
+  bm += 'function pick(){if(c.mode==="random")return c.msgs[Math.floor(Math.random()*c.msgs.length)];return c.msgs[idx++%c.msgs.length];}';
+  bm += 'function getMs(){var ms=c.iv;if(c.ji)ms+=((Math.random()*2-1)*ms*0.3);return Math.max(ms,800);}';
+  bm += 'function send(){';
+  bm += 'if(!running)return;';
+  bm += 'var msg=pick();';
+  bm += 'fetch("/api/v9/channels/"+c.ch+"/messages",{method:"POST",headers:{"Authorization":c.tok,"Content-Type":"application/json"},body:JSON.stringify({content:msg})})';
+  bm += '.then(function(r){';
+  bm += 'if(r.status===429){r.json().then(function(d){document.title="\u23F3 RL "+d.retry_after+"s";setTimeout(send,(d.retry_after||5)*1000);});}';
+  bm += 'else if(r.ok){document.title="\u2705 Sent! "+new Date().toLocaleTimeString();setTimeout(send,getMs());}';
+  bm += 'else{r.json().then(function(d){document.title="\u274C "+d.message;setTimeout(send,getMs());});}';
+  bm += '}).catch(function(e){document.title="\u274C "+e.message;setTimeout(send,getMs());});';
+  bm += '}';
+  bm += 'if(window._dsSender){window._dsSender=false;document.title="\u23F9 Sender stopped";return;}';
+  bm += 'window._dsSender=true;';
+  bm += 'document.title="\u25CF Sender started...";';
+  bm += 'send();';
+  bm += 'alert("\u25CF Sender running (\'" + c.msgs.length + " msg(s), every ~"+(c.iv/1000)+"s).\\nTab title = status.\\nTap bookmark again to STOP.");';
+  bm += '})()';
+  showSenderModal(bm, t.name);
+}
+function showSenderModal(bm, name) {
+  document.getElementById('senderTaskName').textContent = '\uD83D\uDCCC Task: ' + name;
+  document.getElementById('senderBmBox').textContent = bm;
+  document.getElementById('copySenderBtn').textContent = '\uD83D\uDCCB Copy Sender BM';
+  document.getElementById('senderModal').style.display = 'flex';
+}
+function closeSenderModal(e) {
+  if (!e || e.target === document.getElementById('senderModal'))
+    document.getElementById('senderModal').style.display = 'none';
+}
+function selectSenderBm() {
+  var r = document.createRange(); r.selectNodeContents(document.getElementById('senderBmBox'));
+  window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+}
+function copySenderBm() {
+  var bm = document.getElementById('senderBmBox').textContent;
+  var btn = document.getElementById('copySenderBtn');
+  iosSafeCopy(bm,
+    function() { btn.textContent = '\u2705 Copied!'; toast('\uD83D\uDCCB Sender bookmarklet copied!'); setTimeout(function(){ btn.textContent = '\uD83D\uDCCB Copy Sender BM'; }, 2500); },
+    function() { selectSenderBm(); btn.textContent = '\u270B Select all & copy manually'; }
+  );
 }
 
 function log(msg,type,task){
