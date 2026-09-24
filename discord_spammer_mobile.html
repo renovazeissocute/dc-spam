@@ -694,8 +694,8 @@
     <div class="tab-panel active" id="panel-auth">
       <div class="section">
         <div class="alert-strip alert-info">
-          Paste your Discord <strong>Bot Token</strong> or <strong>User Token</strong>. Bot tokens give the safest
-          results.
+          Paste your Discord <strong>User Token</strong>. Open Discord in browser &rarr; DevTools &rarr; Network &rarr;
+          any request &rarr; find <code>Authorization</code> header.
         </div>
         <div id="userChip">
           <div class="user-avatar" id="avatarEl">&#129302;</div>
@@ -707,8 +707,8 @@
         </div>
         <div class="card">
           <div class="input-group">
-            <div class="input-label">&#128272; Token</div>
-            <input type="password" id="tokenInput" class="token-input" placeholder="Paste your token here..."
+            <div class="input-label">&#128272; User Token</div>
+            <input type="password" id="tokenInput" class="token-input" placeholder="Paste your user token here..."
               autocomplete="off" autocorrect="off" spellcheck="false" />
           </div>
           <div class="toggle-row" style="margin: 10px 0;">
@@ -718,37 +718,20 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <div class="divider"></div>
-          <div class="input-group">
-            <div class="input-label">Token Type</div>
-            <div style="display:flex;gap:8px;margin-top:4px;">
-              <label
-                style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;">
-                <input type="radio" name="tokenType" value="bot" checked onchange="updateTokenType()"
-                  style="accent-color:var(--primary);" />
-                <span style="font-size:13px;font-weight:500;">Bot Token</span>
-              </label>
-              <label
-                style="flex:1;display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;">
-                <input type="radio" name="tokenType" value="user" onchange="updateTokenType()"
-                  style="accent-color:var(--primary);" />
-                <span style="font-size:13px;font-weight:500;">User Token</span>
-              </label>
-            </div>
-          </div>
         </div>
-        <div class="hint">Note: User tokens violate Discord ToS. Use a bot token for safety.</div>
+        <div class="hint">Tip: Get token from Discord web app &mdash; DevTools &rarr; Application &rarr; Local Storage
+          &rarr; token key, or from Network tab Authorization header.</div>
       </div>
       <div class="section">
         <button class="btn btn-primary" id="verifyBtn" onclick="verifyToken()">Verify &amp; Connect</button>
       </div>
       <div class="section">
-        <div class="section-label">How to get a Bot Token</div>
+        <div class="section-label">How to get your User Token</div>
         <div class="card" style="font-size:13px;color:var(--text-dim);line-height:1.9;">
-          1&#46; Go to <strong style="color:var(--primary)">discord.com/developers</strong><br>
-          2&#46; New Application &#8594; Bot &#8594; Reset Token<br>
-          3&#46; Copy token &amp; paste above<br>
-          4&#46; Invite bot to your server with Send Messages permission
+          1&#46; Open <strong style="color:var(--primary)">discord.com/app</strong> in browser<br>
+          2&#46; Press <strong>F12</strong> &rarr; Network tab &rarr; reload page<br>
+          3&#46; Click any request &rarr; Headers &rarr; find <strong>Authorization</strong><br>
+          4&#46; Copy the value (no &ldquo;Bearer&rdquo; prefix) &amp; paste above
         </div>
       </div>
     </div>
@@ -884,7 +867,7 @@
 
   <script>
     var state = {
-      token: null, tokenType: "bot", running: false,
+      token: null, running: false,
       timer: null, countdownTimer: null, elapsedTimer: null,
       sent: 0, failed: 0, startTime: null
     };
@@ -907,9 +890,7 @@
       log("Log cleared.", "info");
     }
     function getAuthHeader() {
-      var t = document.getElementById("tokenInput").value.trim();
-      if (state.tokenType === "bot") return "Bot " + t;
-      return t;
+      return document.getElementById("tokenInput").value.trim();
     }
     function updateStats() {
       document.getElementById("statSent").textContent = state.sent;
@@ -937,22 +918,21 @@
     function toggleTokenVisibility() {
       document.getElementById("tokenInput").type = document.getElementById("showToken").checked ? "text" : "password";
     }
-    function updateTokenType() {
-      state.tokenType = document.querySelector("input[name=\"tokenType\"]:checked").value;
-    }
     function verifyToken() {
       var t = document.getElementById("tokenInput").value.trim();
       if (!t) { alert("Please enter a token first."); return; }
       var btn = document.getElementById("verifyBtn");
       btn.textContent = "Verifying...";
       btn.disabled = true;
-      fetch("https://corsproxy.io/?url=https://discord.com/api/v10/users/@me", { headers: { Authorization: getAuthHeader() } })
+      fetch("https://discord.com/api/v10/users/@me", {
+        headers: { Authorization: t }
+      })
         .then(function (res) {
           if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || "HTTP " + res.status); });
           return res.json();
         })
         .then(function (user) {
-          state.token = document.getElementById("tokenInput").value.trim();
+          state.token = t;
           var chip = document.getElementById("userChip");
           chip.style.display = "flex";
           document.getElementById("userNameEl").textContent = user.global_name || user.username;
@@ -984,7 +964,7 @@
       el.style.display = "block";
       el.style.color = "var(--text-muted)";
       el.textContent = "Checking channel...";
-      fetch("https://corsproxy.io/?url=https://discord.com/api/v10/channels/" + chId, { headers: { Authorization: getAuthHeader() } })
+      fetch("https://discord.com/api/v10/channels/" + chId, { headers: { Authorization: state.token } })
         .then(function (res) {
           if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || "HTTP " + res.status); });
           return res.json();
@@ -1006,9 +986,9 @@
       if (document.getElementById("randomizeMsg").checked) {
         content += " " + Math.random().toString(36).slice(2, 6);
       }
-      return fetch("https://corsproxy.io/?url=https://discord.com/api/v10/channels/" + channelId + "/messages", {
+      return fetch("https://discord.com/api/v10/channels/" + channelId + "/messages", {
         method: "POST",
-        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+        headers: { Authorization: state.token, "Content-Type": "application/json" },
         body: JSON.stringify({ content: content })
       }).then(function (res) {
         if (res.status === 429) {
