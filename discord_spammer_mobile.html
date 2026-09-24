@@ -946,7 +946,7 @@
       var btn = document.getElementById("verifyBtn");
       btn.textContent = "Verifying...";
       btn.disabled = true;
-      fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: getAuthHeader() } })
+      fetch("https://corsproxy.io/?url=https://discord.com/api/v10/users/@me", { headers: { Authorization: getAuthHeader() } })
         .then(function (res) {
           if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || "HTTP " + res.status); });
           return res.json();
@@ -984,7 +984,7 @@
       el.style.display = "block";
       el.style.color = "var(--text-muted)";
       el.textContent = "Checking channel...";
-      fetch("https://discord.com/api/v10/channels/" + chId, { headers: { Authorization: getAuthHeader() } })
+      fetch("https://corsproxy.io/?url=https://discord.com/api/v10/channels/" + chId, { headers: { Authorization: getAuthHeader() } })
         .then(function (res) {
           if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || "HTTP " + res.status); });
           return res.json();
@@ -1006,7 +1006,7 @@
       if (document.getElementById("randomizeMsg").checked) {
         content += " " + Math.random().toString(36).slice(2, 6);
       }
-      return fetch("https://discord.com/api/v10/channels/" + channelId + "/messages", {
+      return fetch("https://corsproxy.io/?url=https://discord.com/api/v10/channels/" + channelId + "/messages", {
         method: "POST",
         headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({ content: content })
