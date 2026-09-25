@@ -461,6 +461,24 @@
       white-space: nowrap;
     }
 
+    select.delay-unit-select {
+      padding: 12px 10px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select.delay-unit-select:focus {
+      border-color: var(--border-active);
+    }
+
     /* LOG */
     .log-container {
       background: #070710;
@@ -746,6 +764,51 @@
       font-size: 11px;
       color: var(--text-muted);
       white-space: nowrap;
+    }
+
+    select.job-delay-unit-select {
+      padding: 8px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select.job-delay-unit-select:focus {
+      border-color: var(--border-active);
+    }
+
+    .job-verify-btn {
+      background: transparent;
+      border: 1px solid var(--border-active);
+      border-radius: 7px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+
+    .job-verify-btn:active { opacity: 0.7; }
+
+    .job-channel-status {
+      font-size: 10px;
+      margin-top: 3px;
+      min-height: 14px;
+    }
+
+    .log-msg-countdown {
+      color: #a78bfa;
+      font-style: italic;
     }
 
     .job-btn-row {
@@ -1663,24 +1726,30 @@
           '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
         '</div>',
         '<div class="job-body">',
-          '<div class="job-field">',
-            '<div class="job-field-label">&#128272; Token</div>',
-            '<input class="job-input mono" id="jtoken-' + id + '" type="password" placeholder="Paste token or use auth tab token" autocomplete="off" autocorrect="off" spellcheck="false" />',
-            '<button class="job-use-auth" onclick="useAuthToken(' + id + ')">&#10003; Use connected token from Auth tab</button>',
-          '</div>',
+          // Channel ID with verify button
           '<div class="job-field">',
             '<div class="job-field-label">&#128226; Channel ID</div>',
-            '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="e.g. 123456789012345678" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
+            '<div class="job-input-row">',
+              '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="e.g. 123456789012345678" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
+              '<button class="job-verify-btn" onclick="verifyChannel(' + id + ')">&#128202; Check</button>',
+            '</div>',
+            '<div class="job-channel-status" id="jch-status-' + id + '"></div>',
           '</div>',
+          // Message — textarea, no auto-correct/spellcheck to preserve format
           '<div class="job-field">',
             '<div class="job-field-label">&#128172; Message</div>',
-            '<input class="job-input" id="jmsg-' + id + '" type="text" placeholder="Your message..." />',
+            '<textarea class="job-input" id="jmsg-' + id + '" rows="3" placeholder="Your message..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="resize:vertical;white-space:pre;overflow-wrap:normal;overflow-x:auto;"></textarea>',
           '</div>',
+          // Delay with unit select
           '<div class="job-field">',
-            '<div class="job-field-label">&#9201; Delay (seconds)</div>',
+            '<div class="job-field-label">&#9201; Delay</div>',
             '<div class="job-input-row">',
               '<input class="job-input" id="jdelay-' + id + '" type="number" value="5" min="1" max="86400" inputmode="numeric" />',
-              '<div class="job-delay-unit">sec</div>',
+              '<select class="job-delay-unit-select" id="jdelayunit-' + id + '">',
+                '<option value="1">sec</option>',
+                '<option value="60">min</option>',
+                '<option value="3600">hour</option>',
+              '</select>',
             '</div>',
           '</div>',
           '<div class="job-btn-row">',
@@ -1692,22 +1761,42 @@
       container.appendChild(div);
     }
 
-    function useAuthToken(id) {
-      var tok = globalToken || state.token;
-      if (!tok) { alert('No connected token found. Go to Auth tab and verify first.'); return; }
-      var inp = document.getElementById('jtoken-' + id);
-      if (inp) inp.value = tok;
-      log('[Job #' + id + '] Loaded token from Auth tab.', 'info');
+
+
+    function verifyChannel(id) {
+      var tok = (jobs[id] && jobs[id]._token) || globalToken || state.token;
+      var channelId = document.getElementById('jchannel-' + id).value.trim();
+      var statusEl = document.getElementById('jch-status-' + id);
+      if (!tok) { if (statusEl) { statusEl.textContent = '\u26a0 Load token first.'; statusEl.style.color = 'var(--yellow)'; } return; }
+      if (!channelId) { if (statusEl) { statusEl.textContent = '\u26a0 Enter a channel ID.'; statusEl.style.color = 'var(--yellow)'; } return; }
+      if (statusEl) { statusEl.textContent = 'Checking...'; statusEl.style.color = 'var(--text-muted)'; }
+      fetch('https://discord.com/api/v10/channels/' + channelId, {
+        headers: { Authorization: tok }
+      }).then(function(res) {
+        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+        return res.json();
+      }).then(function(ch) {
+        var name = ch.name ? '#' + ch.name : 'DM/' + channelId;
+        if (statusEl) { statusEl.textContent = '\u2713 ' + name; statusEl.style.color = 'var(--green)'; }
+        log('[Job #' + id + '] Channel OK: ' + name, 'ok');
+      }).catch(function(e) {
+        if (statusEl) { statusEl.textContent = '\u2717 ' + e.message; statusEl.style.color = 'var(--red)'; }
+        log('[Job #' + id + '] Channel check failed: ' + e.message, 'err');
+      });
     }
 
     function startJob(id) {
       var job = jobs[id];
       if (!job) return;
-      var token = document.getElementById('jtoken-' + id).value.trim();
+      var token = job._token || globalToken || state.token;
       var channelId = document.getElementById('jchannel-' + id).value.trim();
-      var msg = document.getElementById('jmsg-' + id).value.trim();
-      var delay = Math.max(1, parseInt(document.getElementById('jdelay-' + id).value) || 5);
-      if (!token) { alert('Job #' + id + ': Paste a token or use the Auth tab token.'); return; }
+      var msg = document.getElementById('jmsg-' + id).value; // keep raw (no trim — preserve user format)
+      var delayNum = Math.max(1, parseInt(document.getElementById('jdelay-' + id).value) || 5);
+      var delayMult = parseInt(document.getElementById('jdelayunit-' + id).value) || 1;
+      var delayMs = delayNum * delayMult * 1000;
+      var delayLabel = delayNum + (delayMult === 1 ? 's' : delayMult === 60 ? 'min' : 'h');
+
+      if (!token) { alert('Job #' + id + ': Load a token via the Auth tab button first.'); return; }
       if (!channelId) { alert('Job #' + id + ': Enter a channel ID.'); return; }
       if (!msg) { alert('Job #' + id + ': Enter a message.'); return; }
 
@@ -1718,25 +1807,64 @@
       job.sent = 0;
       job.failed = 0;
       job.startTime = Date.now();
+      job._delayMs = delayMs;
 
       document.getElementById('jstart-' + id).disabled = true;
       document.getElementById('jstop-' + id).disabled = false;
       document.getElementById('jdot-' + id).classList.add('running');
       document.getElementById('job-' + id).classList.add('job-running');
 
-      log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delay + 's', 'info');
+      log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
       switchTab('monitor');
       updateGlobalStats();
 
       function tick() {
         if (!job.running) return;
         jobSend(id, token, channelId, msg).then(function () {
-          if (job.running) {
-            job.timer = setTimeout(tick, delay * 1000);
-          }
+          if (!job.running) return;
+          // Live countdown
+          startCountdown(id, delayMs, function() {
+            if (job.running) tick();
+          });
         });
       }
       tick();
+    }
+
+    function startCountdown(id, delayMs, cb) {
+      var job = jobs[id];
+      if (!job) return;
+      var remaining = Math.ceil(delayMs / 1000);
+      var countdownLineId = 'countdown-' + id + '-' + Date.now();
+
+      // Create a dedicated log line for this countdown
+      var el = document.getElementById('logOutput');
+      var line = document.createElement('div');
+      line.className = 'log-line';
+      line.id = countdownLineId;
+      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-countdown" id="cd-text-' + countdownLineId + '">[Job #' + id + '] Next run in ' + remaining + 's...</span>';
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+
+      var interval = setInterval(function() {
+        if (!job || !job.running) {
+          clearInterval(interval);
+          var l = document.getElementById(countdownLineId);
+          if (l) l.remove();
+          return;
+        }
+        remaining--;
+        var textEl = document.getElementById('cd-text-' + countdownLineId);
+        if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + remaining + 's...';
+        if (remaining <= 0) {
+          clearInterval(interval);
+          var l2 = document.getElementById(countdownLineId);
+          if (l2) l2.remove();
+          if (cb) cb();
+        }
+      }, 1000);
+
+      job._countdownInterval = interval;
     }
 
     function stopJob(id) {
@@ -1744,6 +1872,7 @@
       if (!job) return;
       job.running = false;
       if (job.timer) { clearTimeout(job.timer); job.timer = null; }
+      if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
       document.getElementById('jstart-' + id).disabled = false;
       document.getElementById('jstop-' + id).disabled = true;
       document.getElementById('jdot-' + id).classList.remove('running');
@@ -1767,19 +1896,11 @@
         headers: { Authorization: token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: msg })
       }).then(function (res) {
-        if (res.status === 429) {
-          return res.json().then(function (data) {
-            var wait = (data.retry_after || 1) * 1000;
-            log('[Job #' + id + '] Rate limited \u2014 wait ' + (wait/1000).toFixed(1) + 's', 'warn');
-            return new Promise(function (r) { setTimeout(r, wait); }).then(function(){
-              return jobSend(id, token, channelId, msg);
-            });
-          });
-        }
         if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
         job.sent++;
         updateJobStats(id);
-        var preview = msg.length > 35 ? msg.slice(0, 35) + '\u2026' : msg;
+        var flat = msg.replace(/\n/g, ' ');
+        var preview = flat.length > 35 ? flat.slice(0, 35) + '\u2026' : flat;
         log('[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
       }).catch(function (e) {
         if (!job) return;
