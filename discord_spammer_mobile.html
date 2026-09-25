@@ -1589,7 +1589,7 @@
     <div class="tab-panel" id="panel-send">
       <div class="bg-banner" id="bgBanner" style="display:none;">
         <div class="bg-banner-dot"></div>
-        <span>Background keep-alive active &mdash; runs even when you leave Safari</span>
+        <span>Background keep-alive active &mdash; audio loop running, jobs fire while Safari is in background</span>
       </div>
       <div class="jobs-header">
         <div class="jobs-title">&#9889; Active Jobs</div>
@@ -1647,37 +1647,145 @@
   </nav>
 
   <script>
-    /* ── BACKGROUND KEEP-ALIVE (Web Audio API silent oscillator) ── */
+    /* ── BACKGROUND KEEP-ALIVE ── */
+    // Strategy: iOS Safari only keeps pages alive if there is an active audio session.
+    // A looping AudioBuffer (actual PCM samples) is far more reliable than an oscillator
+    // because iOS treats it as real audio output and won't suspend it as aggressively.
+    // We also use Screen Wake Lock (where supported) as a secondary measure.
     var _audioCtx = null;
-    var _silentNode = null;
+    var _loopSource = null;
+    var _wakeLock = null;
 
-    function startKeepAlive() {
-      try {
-        if (_audioCtx && _audioCtx.state !== 'closed') return;
-        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        // Create a near-silent oscillator — keeps audio session alive
-        var osc = _audioCtx.createOscillator();
-        var gain = _audioCtx.createGain();
-        gain.gain.value = 0.001; // inaudible
-        osc.connect(gain);
-        gain.connect(_audioCtx.destination);
-        osc.start();
-        _silentNode = osc;
-        document.getElementById('bgBanner').style.display = 'flex';
-      } catch (e) { /* audio not available */ }
+    function _buildSilentBuffer(ctx) {
+      // 0.5-second buffer of near-zero audio (1 Hz sine at -96 dB ≈ completely inaudible)
+      var sr = ctx.sampleRate;
+      var buf = ctx.createBuffer(1, sr / 2, sr);
+      var ch = buf.getChannelData(0);
+      for (var i = 0; i < ch.length; i++) {
+        ch[i] = Math.sin(2 * Math.PI * 1 * i / sr) * 0.0001;
+      }
+      return buf;
     }
 
-    function resumeKeepAlive() {
-      if (_audioCtx && _audioCtx.state === 'suspended') {
-        _audioCtx.resume();
-      } else if (!_audioCtx || _audioCtx.state === 'closed') {
-        startKeepAlive();
+    function startKeepAlive() {
+      // --- Audio keep-alive ---
+      try {
+        if (!_audioCtx || _audioCtx.state === 'closed') {
+          _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (_audioCtx.state === 'suspended') {
+          _audioCtx.resume();
+        }
+        if (!_loopSource) {
+          var buf = _buildSilentBuffer(_audioCtx);
+          var src = _audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.loop = true;
+          src.connect(_audioCtx.destination);
+          src.start(0);
+          _loopSource = src;
+          // If the source unexpectedly ends, restart it
+          src.onended = function() {
+            _loopSource = null;
+            var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+            if (anyRunning) startKeepAlive();
+          };
+        }
+        document.getElementById('bgBanner').style.display = 'flex';
+      } catch (e) { /* audio not available */ }
+
+      // --- Wake Lock (prevents screen-off throttling on supporting browsers) ---
+      if (navigator.wakeLock && !_wakeLock) {
+        navigator.wakeLock.request('screen').then(function(wl) {
+          _wakeLock = wl;
+          wl.addEventListener('release', function() { _wakeLock = null; });
+        }).catch(function() { /* not granted, no biggie */ });
       }
     }
 
-    // Resume audio when page becomes visible again (Safari resumes it)
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') resumeKeepAlive();
+    function stopKeepAlive() {
+      try {
+        if (_loopSource) { _loopSource.stop(); _loopSource.disconnect(); }
+        if (_audioCtx && _audioCtx.state !== 'closed') _audioCtx.close();
+      } catch(e) {}
+      _loopSource = null;
+      _audioCtx = null;
+      if (_wakeLock) { try { _wakeLock.release(); } catch(e) {} _wakeLock = null; }
+      document.getElementById('bgBanner').style.display = 'none';
+    }
+
+    function resumeKeepAlive() {
+      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+      if (!anyRunning) return;
+      // Re-acquire wake lock if lost (iOS releases it when screen dims)
+      if (navigator.wakeLock && !_wakeLock) {
+        navigator.wakeLock.request('screen').then(function(wl) {
+          _wakeLock = wl;
+          wl.addEventListener('release', function() { _wakeLock = null; });
+        }).catch(function(){});
+      }
+      // Resume or restart audio context
+      if (_audioCtx && _audioCtx.state === 'suspended') {
+        _audioCtx.resume().then(function() {
+          if (!_loopSource) startKeepAlive();
+        }).catch(function() { startKeepAlive(); });
+      } else if (!_audioCtx || _audioCtx.state === 'closed') {
+        startKeepAlive();
+      } else if (!_loopSource) {
+        // Context is running but loop stopped — restart the loop
+        var buf = _buildSilentBuffer(_audioCtx);
+        var src = _audioCtx.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        src.connect(_audioCtx.destination);
+        src.start(0);
+        _loopSource = src;
+        src.onended = function() {
+          _loopSource = null;
+          var ar = Object.values(jobs).some(function(j){ return j.running; });
+          if (ar) startKeepAlive();
+        };
+      }
+    }
+
+    // ── Visibility recovery: when user returns to Safari, fire overdue jobs immediately ──
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        resumeKeepAlive();
+        // Check each running job — if its nextFireAt has passed, fire NOW
+        Object.keys(jobs).forEach(function(id) {
+          var job = jobs[parseInt(id)];
+          if (!job || !job.running) return;
+          var now = Date.now();
+          if (job._nextFireAt && now >= job._nextFireAt - 200) {
+            // Clear the existing timeout and fire immediately
+            if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
+            if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
+            _fireJob(parseInt(id));
+          } else if (job._nextFireAt && !job._bgTimeout) {
+            // Timeout was killed — reschedule with remaining time
+            var remaining = job._nextFireAt - now;
+            _scheduleJob(parseInt(id), Math.max(0, remaining));
+          }
+        });
+      }
+    });
+
+    // Also handle page restore from bfcache (back-forward cache on iOS)
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        resumeKeepAlive();
+        Object.keys(jobs).forEach(function(id) {
+          var job = jobs[parseInt(id)];
+          if (!job || !job.running) return;
+          if (job._nextFireAt) {
+            var remaining = job._nextFireAt - Date.now();
+            if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
+            if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
+            _scheduleJob(parseInt(id), Math.max(0, remaining));
+          }
+        });
+      }
     });
 
     /* ── MULTI-INSTANCE JOB MANAGER ── */
@@ -1818,11 +1926,12 @@
       switchTab('monitor');
       updateGlobalStats();
 
+      // Kick off first send, then use absolute-timestamp scheduling
       function tick() {
         if (!job.running) return;
-        jobSend(id, token, channelId, msg).then(function () {
+        jobSend(id, token, channelId, msg).then(function() {
           if (!job.running) return;
-          // Live countdown
+          job._nextFireAt = Date.now() + delayMs;
           startCountdown(id, delayMs, function() {
             if (job.running) tick();
           });
@@ -1831,40 +1940,86 @@
       tick();
     }
 
+    // Schedule a job to fire after `ms` ms, storing the handle so visibilitychange can rescue it
+    function _scheduleJob(id, ms) {
+      var job = jobs[id];
+      if (!job) return;
+      job._nextFireAt = Date.now() + ms;
+      job._bgTimeout = setTimeout(function() {
+        job._bgTimeout = null;
+        _fireJob(id);
+      }, ms);
+    }
+
+    function _fireJob(id) {
+      var job = jobs[id];
+      if (!job || !job.running) return;
+      var token = job._token || globalToken || state.token;
+      var channelId = document.getElementById('jchannel-' + id).value.trim();
+      var msg = document.getElementById('jmsg-' + id).value;
+      var delayMs = job._delayMs || 5000;
+      jobSend(id, token, channelId, msg).then(function() {
+        if (!job.running) return;
+        job._nextFireAt = Date.now() + delayMs;
+        startCountdown(id, delayMs, function() {
+          if (job.running) _fireJob(id);
+        });
+      });
+    }
+
     function startCountdown(id, delayMs, cb) {
       var job = jobs[id];
       if (!job) return;
-      var remaining = Math.ceil(delayMs / 1000);
+
+      // Use absolute time so background throttling can't skew the countdown
+      var fireAt = Date.now() + delayMs;
       var countdownLineId = 'countdown-' + id + '-' + Date.now();
 
-      // Create a dedicated log line for this countdown
       var el = document.getElementById('logOutput');
       var line = document.createElement('div');
       line.className = 'log-line';
       line.id = countdownLineId;
-      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-countdown" id="cd-text-' + countdownLineId + '">[Job #' + id + '] Next run in ' + remaining + 's...</span>';
+      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-countdown" id="cd-text-' + countdownLineId + '">[Job #' + id + '] Next run in ' + Math.ceil(delayMs/1000) + 's...</span>';
       el.appendChild(line);
       el.scrollTop = el.scrollHeight;
 
-      var interval = setInterval(function() {
-        if (!job || !job.running) {
-          clearInterval(interval);
+      // Use setTimeout chain instead of setInterval to avoid iOS throttling drift
+      var cdStopped = false;
+      function cdTick() {
+        if (cdStopped || !job || !job.running) {
           var l = document.getElementById(countdownLineId);
           if (l) l.remove();
           return;
         }
-        remaining--;
-        var textEl = document.getElementById('cd-text-' + countdownLineId);
-        if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + remaining + 's...';
+        var remaining = Math.ceil((fireAt - Date.now()) / 1000);
         if (remaining <= 0) {
-          clearInterval(interval);
           var l2 = document.getElementById(countdownLineId);
           if (l2) l2.remove();
           if (cb) cb();
+          return;
         }
-      }, 1000);
+        var textEl = document.getElementById('cd-text-' + countdownLineId);
+        if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + remaining + 's...';
+        // Tick every 1s, but adjust for drift
+        var drift = (fireAt - Date.now()) % 1000;
+        setTimeout(cdTick, drift > 0 ? drift : 1000);
+      }
 
-      job._countdownInterval = interval;
+      // Store a stop handle on the job
+      job._countdownStop = function() { cdStopped = true; };
+      // Kick off countdown ticks
+      setTimeout(cdTick, 1000);
+
+      // Also schedule the actual send using absolute-time setTimeout
+      // (this ensures it fires even if countdown display is throttled)
+      if (job._bgTimeout) clearTimeout(job._bgTimeout);
+      job._bgTimeout = setTimeout(function() {
+        job._bgTimeout = null;
+        cdStopped = true;
+        var l3 = document.getElementById(countdownLineId);
+        if (l3) l3.remove();
+        if (cb) cb();
+      }, delayMs);
     }
 
     function stopJob(id) {
@@ -1872,20 +2027,19 @@
       if (!job) return;
       job.running = false;
       if (job.timer) { clearTimeout(job.timer); job.timer = null; }
+      if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
+      if (job._countdownStop) { job._countdownStop(); job._countdownStop = null; }
       if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
+      job._nextFireAt = null;
       document.getElementById('jstart-' + id).disabled = false;
       document.getElementById('jstop-' + id).disabled = true;
       document.getElementById('jdot-' + id).classList.remove('running');
       document.getElementById('job-' + id).classList.remove('job-running');
       log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
       updateGlobalStats();
-      // Stop keep-alive if no jobs running
+      // Stop keep-alive if no jobs are running
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
-      if (!anyRunning && _audioCtx) {
-        try { _silentNode && _silentNode.stop(); _audioCtx.close(); } catch(e){}
-        _audioCtx = null; _silentNode = null;
-        document.getElementById('bgBanner').style.display = 'none';
-      }
+      if (!anyRunning) stopKeepAlive();
     }
 
     function jobSend(id, token, channelId, msg) {
