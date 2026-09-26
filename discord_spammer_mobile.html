@@ -2014,14 +2014,12 @@
       // Kick off first send immediately, then hand off to heartbeat engine
       startHeartbeat();
       _heartbeatFiring[id] = true;
-      jobSend(id, token, channelId, msg).then(function() {
+      jobSend(id, token, channelId, msg).finally(function() {
         delete _heartbeatFiring[id];
         if (!job.running) return;
         job._nextFireAt = Date.now() + delayMs;
         _persistFireAt(id, job._nextFireAt);
         _showCountdownLine(id, delayMs);
-      }).catch(function() {
-        delete _heartbeatFiring[id];
       });
     }
 
@@ -2051,19 +2049,13 @@
             var token = job._token || globalToken || state.token;
             var channelId = document.getElementById('jchannel-' + id).value.trim();
             var msg = document.getElementById('jmsg-' + id).value;
-            jobSend(id, token, channelId, msg).then(function() {
+            jobSend(id, token, channelId, msg).finally(function() {
               delete _heartbeatFiring[id];
               if (!job.running) return;
               var delayMs = job._delayMs || 5000;
               job._nextFireAt = Date.now() + delayMs;
               _persistFireAt(id, job._nextFireAt);
               _showCountdownLine(id, delayMs);
-            }).catch(function() {
-              delete _heartbeatFiring[id];
-              if (!job.running) return;
-              var delayMs = job._delayMs || 5000;
-              job._nextFireAt = Date.now() + delayMs;
-              _persistFireAt(id, job._nextFireAt);
             });
           }
           // Also update countdown display
