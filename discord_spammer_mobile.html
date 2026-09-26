@@ -1748,24 +1748,34 @@
       }
     }
 
-    // ── Visibility recovery: when user returns to Safari, fire overdue jobs immediately ──
+    // ── Visibility recovery: when user returns to Safari, catch up immediately ──
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'visible') {
         resumeKeepAlive();
-        // Check each running job — if its nextFireAt has passed, fire NOW
-        Object.keys(jobs).forEach(function(id) {
-          var job = jobs[parseInt(id)];
+        // Restart heartbeat (it may have been frozen while backgrounded)
+        if (!_heartbeat) {
+          var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+          if (anyRunning) startHeartbeat();
+        }
+        // For each running job, restore _nextFireAt from localStorage if lost,
+        // then immediately nudge any overdue job by setting fireAt to now
+        Object.keys(jobs).forEach(function(sid) {
+          var id = parseInt(sid);
+          var job = jobs[id];
           if (!job || !job.running) return;
-          var now = Date.now();
-          if (job._nextFireAt && now >= job._nextFireAt - 200) {
-            // Clear the existing timeout and fire immediately
-            if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
-            if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
-            _fireJob(parseInt(id));
-          } else if (job._nextFireAt && !job._bgTimeout) {
-            // Timeout was killed — reschedule with remaining time
-            var remaining = job._nextFireAt - now;
-            _scheduleJob(parseInt(id), Math.max(0, remaining));
+          // Restore from localStorage if the in-memory value was wiped
+          if (!job._nextFireAt) {
+            var persisted = _loadPersistedFireAt(id);
+            if (persisted) job._nextFireAt = persisted;
+          }
+          // If overdue, fire immediately (heartbeat will pick it up within 500ms)
+          if (job._nextFireAt && Date.now() >= job._nextFireAt) {
+            job._nextFireAt = Date.now(); // fire on next heartbeat tick
+          }
+          // If nextFireAt is totally gone (chain broken), restart immediately
+          if (!job._nextFireAt && !_heartbeatFiring[id]) {
+            log('[Job #' + id + '] Chain lost — restarting now.', 'warn');
+            job._nextFireAt = Date.now(); // fire on next heartbeat tick
           }
         });
       }
@@ -1775,16 +1785,23 @@
     window.addEventListener('pageshow', function(e) {
       if (e.persisted) {
         resumeKeepAlive();
-        Object.keys(jobs).forEach(function(id) {
-          var job = jobs[parseInt(id)];
-          if (!job || !job.running) return;
-          if (job._nextFireAt) {
-            var remaining = job._nextFireAt - Date.now();
-            if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
-            if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
-            _scheduleJob(parseInt(id), Math.max(0, remaining));
-          }
-        });
+        // Ensure heartbeat is running
+        var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+        if (anyRunning) {
+          if (!_heartbeat) startHeartbeat();
+          // Nudge all overdue jobs to fire on next heartbeat
+          Object.keys(jobs).forEach(function(sid) {
+            var id = parseInt(sid);
+            var job = jobs[id];
+            if (!job || !job.running) return;
+            if (!job._nextFireAt) {
+              var persisted = _loadPersistedFireAt(id);
+              job._nextFireAt = persisted || Date.now();
+            } else if (Date.now() >= job._nextFireAt) {
+              job._nextFireAt = Date.now();
+            }
+          });
+        }
       }
     });
 
@@ -1796,7 +1813,53 @@
     // Kept for auth tab compat
     var state = { token: null };
 
-    function addJob() {
+    /* ── PERSISTENCE ─────────────────────────────────────────────────────────
+     * Saves all job configs + token to localStorage so everything survives
+     * a page refresh. Jobs that were running are auto-restarted on restore.
+     * ──────────────────────────────────────────────────────────────────────── */
+    var _saveTimer = null;
+    function _scheduleSave() {
+      if (_saveTimer) clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(saveJobs, 600);
+    }
+
+    function saveJobs() {
+      try {
+        var data = {
+          counter: jobCounter,
+          list: []
+        };
+        Object.keys(jobs).forEach(function(sid) {
+          var id = parseInt(sid);
+          var job = jobs[id];
+          var channelEl = document.getElementById('jchannel-' + id);
+          var msgEl     = document.getElementById('jmsg-'     + id);
+          var delayEl   = document.getElementById('jdelay-'   + id);
+          var unitEl    = document.getElementById('jdelayunit-'+ id);
+          data.list.push({
+            id:       id,
+            channel:  channelEl ? channelEl.value : '',
+            msg:      msgEl     ? msgEl.value     : '',
+            delay:    delayEl   ? delayEl.value   : '5',
+            unit:     unitEl    ? unitEl.value    : '1',
+            running:  job.running,
+            sent:     job.sent,
+            failed:   job.failed
+          });
+        });
+        localStorage.setItem('dc_jobs', JSON.stringify(data));
+      } catch(e) {}
+    }
+
+    function saveToken(tok) {
+      try { if (tok) localStorage.setItem('dc_token', tok); } catch(e) {}
+    }
+
+    function loadSavedToken() {
+      try { return localStorage.getItem('dc_token') || ''; } catch(e) { return ''; }
+    }
+
+    function addJob(opts) {
       var id = ++jobCounter;
       jobs[id] = {
         id: id,
@@ -1805,6 +1868,26 @@
         sent: 0, failed: 0, startTime: null
       };
       renderJob(id);
+      // Pre-fill from saved opts if provided
+      if (opts) {
+        var channelEl = document.getElementById('jchannel-' + id);
+        var msgEl     = document.getElementById('jmsg-'     + id);
+        var delayEl   = document.getElementById('jdelay-'   + id);
+        var unitEl    = document.getElementById('jdelayunit-'+ id);
+        if (channelEl && opts.channel) channelEl.value = opts.channel;
+        if (msgEl     && opts.msg    ) msgEl.value     = opts.msg;
+        if (delayEl   && opts.delay  ) delayEl.value   = opts.delay;
+        if (unitEl    && opts.unit   ) unitEl.value    = opts.unit;
+        if (opts.sent   ) jobs[id].sent   = opts.sent;
+        if (opts.failed ) jobs[id].failed = opts.failed;
+      }
+      // Auto-save on any field change
+      ['jchannel-', 'jmsg-', 'jdelay-', 'jdelayunit-'].forEach(function(prefix) {
+        var el = document.getElementById(prefix + id);
+        if (el) el.addEventListener('input', _scheduleSave);
+      });
+      _scheduleSave();
+      return id;
     }
 
     function removeJob(id) {
@@ -1815,6 +1898,7 @@
       var el = document.getElementById('job-' + id);
       if (el) el.remove();
       updateGlobalStats();
+      saveJobs();
     }
 
     function renderJob(id) {
@@ -1922,121 +2006,133 @@
       document.getElementById('jdot-' + id).classList.add('running');
       document.getElementById('job-' + id).classList.add('job-running');
 
+      saveJobs();
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
       switchTab('monitor');
       updateGlobalStats();
 
-      // Kick off first send, then use absolute-timestamp scheduling
-      function tick() {
-        if (!job.running) return;
-        jobSend(id, token, channelId, msg).then(function() {
-          if (!job.running) return;
-          job._nextFireAt = Date.now() + delayMs;
-          startCountdown(id, delayMs, function() {
-            if (job.running) tick();
-          });
-        });
-      }
-      tick();
-    }
-
-    // Schedule a job to fire after `ms` ms, storing the handle so visibilitychange can rescue it
-    function _scheduleJob(id, ms) {
-      var job = jobs[id];
-      if (!job) return;
-      job._nextFireAt = Date.now() + ms;
-      job._bgTimeout = setTimeout(function() {
-        job._bgTimeout = null;
-        _fireJob(id);
-      }, ms);
-    }
-
-    function _fireJob(id) {
-      var job = jobs[id];
-      if (!job || !job.running) return;
-      var token = job._token || globalToken || state.token;
-      var channelId = document.getElementById('jchannel-' + id).value.trim();
-      var msg = document.getElementById('jmsg-' + id).value;
-      var delayMs = job._delayMs || 5000;
+      // Kick off first send immediately, then hand off to heartbeat engine
+      startHeartbeat();
+      _heartbeatFiring[id] = true;
       jobSend(id, token, channelId, msg).then(function() {
+        delete _heartbeatFiring[id];
         if (!job.running) return;
         job._nextFireAt = Date.now() + delayMs;
-        startCountdown(id, delayMs, function() {
-          if (job.running) _fireJob(id);
-        });
+        _persistFireAt(id, job._nextFireAt);
+        _showCountdownLine(id, delayMs);
+      }).catch(function() {
+        delete _heartbeatFiring[id];
       });
     }
 
-    function startCountdown(id, delayMs, cb) {
+    /* ── GLOBAL HEARTBEAT ENGINE ──────────────────────────────────────────────
+     * Instead of chaining setTimeout calls (which iOS can freeze and break),
+     * we use a single setInterval that polls every 500 ms.
+     * Each running job stores _nextFireAt (absolute ms timestamp).
+     * The heartbeat fires any job whose time has come, regardless of
+     * how many ticks were throttled/skipped.
+     * ─────────────────────────────────────────────────────────────────────── */
+    var _heartbeat = null;
+    var _heartbeatFiring = {}; // guard: prevents double-firing a job
+
+    function startHeartbeat() {
+      if (_heartbeat) return; // already running
+      _heartbeat = setInterval(function() {
+        var ts = Date.now();
+        Object.keys(jobs).forEach(function(sid) {
+          var id = parseInt(sid);
+          var job = jobs[id];
+          if (!job || !job.running) return;
+          if (_heartbeatFiring[id]) return; // already in mid-send
+          if (job._nextFireAt && ts >= job._nextFireAt) {
+            _heartbeatFiring[id] = true;
+            job._nextFireAt = null; // clear so we don't double-fire
+            _removeCountdownLine(id);
+            var token = job._token || globalToken || state.token;
+            var channelId = document.getElementById('jchannel-' + id).value.trim();
+            var msg = document.getElementById('jmsg-' + id).value;
+            jobSend(id, token, channelId, msg).then(function() {
+              delete _heartbeatFiring[id];
+              if (!job.running) return;
+              var delayMs = job._delayMs || 5000;
+              job._nextFireAt = Date.now() + delayMs;
+              _persistFireAt(id, job._nextFireAt);
+              _showCountdownLine(id, delayMs);
+            }).catch(function() {
+              delete _heartbeatFiring[id];
+              if (!job.running) return;
+              var delayMs = job._delayMs || 5000;
+              job._nextFireAt = Date.now() + delayMs;
+              _persistFireAt(id, job._nextFireAt);
+            });
+          }
+          // Also update countdown display
+          if (job._nextFireAt && !_heartbeatFiring[id]) {
+            var rem = Math.ceil((job._nextFireAt - ts) / 1000);
+            var textEl = document.getElementById('cd-text-' + id);
+            if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + Math.max(0, rem) + 's...';
+          }
+        });
+      }, 500);
+    }
+
+    function stopHeartbeat() {
+      // Only stop if no jobs are running
+      var any = Object.values(jobs).some(function(j){ return j.running; });
+      if (!any && _heartbeat) {
+        clearInterval(_heartbeat);
+        _heartbeat = null;
+      }
+    }
+
+    function _showCountdownLine(id, delayMs) {
       var job = jobs[id];
       if (!job) return;
-
-      // Use absolute time so background throttling can't skew the countdown
-      var fireAt = Date.now() + delayMs;
-      var countdownLineId = 'countdown-' + id + '-' + Date.now();
-
+      _removeCountdownLine(id);
       var el = document.getElementById('logOutput');
       var line = document.createElement('div');
       line.className = 'log-line';
-      line.id = countdownLineId;
-      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-countdown" id="cd-text-' + countdownLineId + '">[Job #' + id + '] Next run in ' + Math.ceil(delayMs/1000) + 's...</span>';
+      line.id = 'cdline-' + id;
+      var rem = Math.ceil(delayMs / 1000);
+      line.innerHTML = '<span class="log-time">' + now() + '</span>' +
+        '<span class="log-msg-countdown" id="cd-text-' + id + '">[Job #' + id + '] Next run in ' + rem + 's...</span>';
       el.appendChild(line);
       el.scrollTop = el.scrollHeight;
+    }
 
-      // Use setTimeout chain instead of setInterval to avoid iOS throttling drift
-      var cdStopped = false;
-      function cdTick() {
-        if (cdStopped || !job || !job.running) {
-          var l = document.getElementById(countdownLineId);
-          if (l) l.remove();
-          return;
-        }
-        var remaining = Math.ceil((fireAt - Date.now()) / 1000);
-        if (remaining <= 0) {
-          var l2 = document.getElementById(countdownLineId);
-          if (l2) l2.remove();
-          if (cb) cb();
-          return;
-        }
-        var textEl = document.getElementById('cd-text-' + countdownLineId);
-        if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + remaining + 's...';
-        // Tick every 1s, but adjust for drift
-        var drift = (fireAt - Date.now()) % 1000;
-        setTimeout(cdTick, drift > 0 ? drift : 1000);
-      }
+    function _removeCountdownLine(id) {
+      var old = document.getElementById('cdline-' + id);
+      if (old) old.remove();
+    }
 
-      // Store a stop handle on the job
-      job._countdownStop = function() { cdStopped = true; };
-      // Kick off countdown ticks
-      setTimeout(cdTick, 1000);
-
-      // Also schedule the actual send using absolute-time setTimeout
-      // (this ensures it fires even if countdown display is throttled)
-      if (job._bgTimeout) clearTimeout(job._bgTimeout);
-      job._bgTimeout = setTimeout(function() {
-        job._bgTimeout = null;
-        cdStopped = true;
-        var l3 = document.getElementById(countdownLineId);
-        if (l3) l3.remove();
-        if (cb) cb();
-      }, delayMs);
+    /* localStorage persistence: save/load nextFireAt so catch-up works
+     * even if iOS fully suspends the page and you reopen Safari later */
+    function _persistFireAt(id, ts) {
+      try { localStorage.setItem('job_fire_' + id, ts); } catch(e) {}
+    }
+    function _clearPersistedFireAt(id) {
+      try { localStorage.removeItem('job_fire_' + id); } catch(e) {}
+    }
+    function _loadPersistedFireAt(id) {
+      try { return parseInt(localStorage.getItem('job_fire_' + id)) || 0; } catch(e) { return 0; }
     }
 
     function stopJob(id) {
       var job = jobs[id];
       if (!job) return;
       job.running = false;
-      if (job.timer) { clearTimeout(job.timer); job.timer = null; }
-      if (job._bgTimeout) { clearTimeout(job._bgTimeout); job._bgTimeout = null; }
-      if (job._countdownStop) { job._countdownStop(); job._countdownStop = null; }
-      if (job._countdownInterval) { clearInterval(job._countdownInterval); job._countdownInterval = null; }
       job._nextFireAt = null;
+      _clearPersistedFireAt(id);
+      _removeCountdownLine(id);
+      delete _heartbeatFiring[id];
       document.getElementById('jstart-' + id).disabled = false;
       document.getElementById('jstop-' + id).disabled = true;
       document.getElementById('jdot-' + id).classList.remove('running');
       document.getElementById('job-' + id).classList.remove('job-running');
       log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
+      saveJobs();
       updateGlobalStats();
+      stopHeartbeat();
       // Stop keep-alive if no jobs are running
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
       if (!anyRunning) stopKeepAlive();
@@ -2236,6 +2332,7 @@
             document.getElementById('avatarEl').innerHTML =
               '<img src="https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.webp?size=80" alt="av">';
           }
+          saveToken(t);
           log('Connected as ' + (user.global_name || user.username) + ' (' + user.id + ')', 'ok');
           setBadge('ok', 'OK');
           btn.textContent = 'Connected!';
@@ -2262,6 +2359,69 @@
       b.textContent = text || type.toUpperCase();
     }
 
-    /* Init: add one default job */
-    addJob();
+    /* ── INIT: restore saved jobs, or add a blank default ── */
+    (function initJobs() {
+      // Restore saved token into the input field
+      var savedTok = loadSavedToken();
+      if (savedTok) {
+        var tokInput = document.getElementById('tokenInput');
+        if (tokInput) tokInput.value = savedTok;
+        // Pre-populate global token so jobs can start without re-verifying
+        globalToken = savedTok;
+        state.token = savedTok;
+      }
+
+      var raw = null;
+      try { raw = JSON.parse(localStorage.getItem('dc_jobs')); } catch(e) {}
+
+      if (!raw || !raw.list || raw.list.length === 0) {
+        // No saved state — just add one blank job as before
+        addJob();
+        return;
+      }
+
+      // Restore saved counter so IDs never collide
+      jobCounter = raw.counter || 0;
+
+      // Rebuild each saved job
+      var toRestart = [];
+      raw.list.forEach(function(saved) {
+        // Override jobCounter so renderJob uses the original ID
+        jobCounter = saved.id - 1;
+        var id = addJob({
+          channel: saved.channel,
+          msg:     saved.msg,
+          delay:   saved.delay,
+          unit:    saved.unit,
+          sent:    saved.sent   || 0,
+          failed:  saved.failed || 0
+        });
+        // Update the stats display immediately
+        updateJobStats(id);
+        if (saved.running) toRestart.push(id);
+      });
+
+      // Restore jobCounter to the true max so next addJob() gets a fresh ID
+      var maxId = raw.list.reduce(function(m, s){ return Math.max(m, s.id); }, 0);
+      jobCounter = Math.max(jobCounter, maxId);
+
+      if (toRestart.length > 0) {
+        log('\u21bb Restored ' + raw.list.length + ' job(s) — ' + toRestart.length + ' will auto-restart.', 'info');
+        // Short delay to let the DOM settle before restarting
+        setTimeout(function() {
+          toRestart.forEach(function(id) {
+            var job = jobs[id];
+            if (!job) return;
+            var token = globalToken || state.token;
+            if (!token) {
+              log('[Job #' + id + '] Saved token missing — please verify token again to restart.', 'warn');
+              return;
+            }
+            startJob(id);
+          });
+        }, 300);
+      } else {
+        log('\u21bb Restored ' + raw.list.length + ' saved job(s).', 'info');
+      }
+    })();
   </script>
