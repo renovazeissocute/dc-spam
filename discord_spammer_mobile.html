@@ -606,8 +606,7 @@
       color: var(--text-dim);
     }
 
-    .btn-add-job {
-      background: linear-gradient(135deg, var(--primary), var(--discord));
+    .btn-add-job, .btn-start-all {
       color: #fff;
       border: none;
       border-radius: 20px;
@@ -616,10 +615,19 @@
       font-weight: 700;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
+    }
+
+    .btn-add-job {
+      background: linear-gradient(135deg, var(--primary), var(--discord));
       box-shadow: 0 2px 10px var(--primary-glow);
     }
 
-    .btn-add-job:active { opacity: 0.8; }
+    .btn-start-all {
+      background: linear-gradient(135deg, #16a34a, var(--green));
+      box-shadow: 0 2px 10px var(--green-glow);
+    }
+
+    .btn-add-job:active, .btn-start-all:active { opacity: 0.8; }
 
     .job-card {
       background: var(--surface);
@@ -1593,7 +1601,10 @@
       </div>
       <div class="jobs-header">
         <div class="jobs-title">&#9889; Active Jobs</div>
-        <button class="btn-add-job" onclick="addJob()">+ Add Job</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-start-all" id="btnStartAll" onclick="startAllJobs()">&#9654; Start All</button>
+          <button class="btn-add-job" onclick="addJob()">+ Add Job</button>
+        </div>
       </div>
       <div id="jobsContainer"></div>
     </div>
@@ -2128,6 +2139,17 @@
       // Stop keep-alive if no jobs are running
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
       if (!anyRunning) stopKeepAlive();
+    }
+
+    function startAllJobs() {
+      var ids = Object.keys(jobs).map(function(s){ return parseInt(s); });
+      if (ids.length === 0) { alert('No jobs to start. Add a job first.'); return; }
+      var started = 0;
+      ids.forEach(function(id) {
+        if (!jobs[id].running) { startJob(id); started++; }
+      });
+      if (started === 0) log('All jobs are already running.', 'warn');
+      else log('Started ' + started + ' job(s).', 'ok');
     }
 
     function jobSend(id, token, channelId, msg) {
