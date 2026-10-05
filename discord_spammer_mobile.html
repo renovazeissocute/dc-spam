@@ -2390,30 +2390,13 @@
         });
         // Update the stats display immediately
         updateJobStats(id);
-        if (saved.running) toRestart.push(id);
+        // Don't auto-restart — user must press Start manually after a refresh
       });
 
       // Restore jobCounter to the true max so next addJob() gets a fresh ID
       var maxId = raw.list.reduce(function(m, s){ return Math.max(m, s.id); }, 0);
       jobCounter = Math.max(jobCounter, maxId);
 
-      if (toRestart.length > 0) {
-        log('\u21bb Restored ' + raw.list.length + ' job(s) — ' + toRestart.length + ' will auto-restart.', 'info');
-        // Short delay to let the DOM settle before restarting
-        setTimeout(function() {
-          toRestart.forEach(function(id) {
-            var job = jobs[id];
-            if (!job) return;
-            var token = globalToken || state.token;
-            if (!token) {
-              log('[Job #' + id + '] Saved token missing — please verify token again to restart.', 'warn');
-              return;
-            }
-            startJob(id);
-          });
-        }, 300);
-      } else {
-        log('\u21bb Restored ' + raw.list.length + ' saved job(s).', 'info');
-      }
+      log('\u21bb Restored ' + raw.list.length + ' saved job(s). Press Start to run.', 'info');
     })();
   </script>
