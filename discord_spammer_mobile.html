@@ -1592,11 +1592,15 @@
     <div class="tab-panel" id="panel-send">
       <div class="bg-banner" id="bgBanner" style="display:none;">
         <div class="bg-banner-dot"></div>
-        <span>Background keep-alive active &mdash; audio loop running, jobs fire while Safari is in background</span>
+        <span>Audio keep-alive active &mdash; jobs will continue when you switch apps &bull; Keep phone unlocked &amp; volume not muted for best results</span>
       </div>
       <div class="jobs-header">
         <div class="jobs-title">&#9889; Active Jobs</div>
-        <button class="btn-add-job" onclick="addJob()">+ Add Job</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-add-job" id="startAllBtn" onclick="startAllJobs()" style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 2px 10px rgba(34,197,94,0.3);">&#9654; All</button>
+          <button class="btn-add-job" id="stopAllBtn" onclick="stopAllJobs()" style="background:linear-gradient(135deg,#b91c1c,#ef4444);box-shadow:0 2px 10px rgba(239,68,68,0.3);display:none;">&#9209; All</button>
+          <button class="btn-add-job" onclick="addJob()">+ Add</button>
+        </div>
       </div>
       <div id="jobsContainer"></div>
     </div>
@@ -1651,68 +1655,159 @@
 
   <script>
     /* ── BACKGROUND KEEP-ALIVE ── */
-    // Strategy: iOS Safari only keeps pages alive if there is an active audio session.
-    // A looping AudioBuffer (actual PCM samples) is far more reliable than an oscillator
-    // because iOS treats it as real audio output and won't suspend it as aggressively.
-    // We also use Screen Wake Lock (where supported) as a secondary measure.
-    var _audioCtx = null;
+    // PRIMARY strategy: HTML <audio> element with a generated WAV blob.
+    // iOS Safari treats <audio> like a native music player — it continues running
+    // in the background even when you switch apps, keeping JS alive enough for our
+    // heartbeat to fire. AudioContext alone gets suspended by iOS aggressively.
+    // SECONDARY: AudioContext looping buffer + Screen Wake Lock.
+    // TERTIARY: A "pinger" setInterval that auto-heals if the audio gets suspended.
+
+    var _audioCtx  = null;
     var _loopSource = null;
-    var _wakeLock = null;
+    var _wakeLock  = null;
+    var _bgAudio   = null;   // HTML <audio> — PRIMARY keep-alive
+    var _bgAudioUrl = null;  // blob URL for the WAV we generate
+    var _pinger    = null;   // secondary watchdog interval
+
+    /* Generate a 0.5 s WAV blob with a very quiet 1 Hz sine wave.
+     * iOS requires actual non-zero PCM data; a zero-byte data chunk
+     * won't prevent suspension. Volume is set to 0.001 in the element
+     * so it's essentially inaudible but still counts as "audio output". */
+    function _makeSilentWavUrl() {
+      try {
+        var sr = 44100, n = sr >> 1; // 0.5 s of samples
+        var ab = new ArrayBuffer(44 + n * 2);
+        var v  = new DataView(ab);
+        var ws = function(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+        ws(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); ws(8, 'WAVE');
+        ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+        v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+        v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+        ws(36, 'data'); v.setUint32(40, n * 2, true);
+        for (var i = 0; i < n; i++) {
+          // 1 Hz sine at ~0.003 % amplitude — inaudible, non-zero
+          v.setInt16(44 + i * 2, Math.round(Math.sin(2 * Math.PI * i / sr) * 100), true);
+        }
+        return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
+      } catch(e) { return null; }
+    }
 
     function _buildSilentBuffer(ctx) {
-      // 0.5-second buffer of near-zero audio (1 Hz sine at -96 dB ≈ completely inaudible)
       var sr = ctx.sampleRate;
-      var buf = ctx.createBuffer(1, sr / 2, sr);
+      var buf = ctx.createBuffer(1, sr >> 1, sr);
       var ch = buf.getChannelData(0);
-      for (var i = 0; i < ch.length; i++) {
-        ch[i] = Math.sin(2 * Math.PI * 1 * i / sr) * 0.0001;
-      }
+      for (var i = 0; i < ch.length; i++) ch[i] = Math.sin(2 * Math.PI * i / sr) * 0.0002;
       return buf;
     }
 
-    function startKeepAlive() {
-      // --- Audio keep-alive ---
+    function _startAudioElement() {
+      if (_bgAudio) {
+        if (_bgAudio.paused) _bgAudio.play().catch(function(){});
+        return;
+      }
+      var url = _makeSilentWavUrl();
+      if (!url) return;
+      _bgAudioUrl = url;
+      var a = document.createElement('audio');
+      a.src = url;
+      a.loop = true;
+      a.volume = 0.001; // near-inaudible
+      // Auto-heal: if iOS pauses us (e.g. incoming call), resume ASAP
+      a.addEventListener('pause', function() {
+        var any = Object.values(jobs).some(function(j){ return j.running; });
+        if (any) { setTimeout(function(){ try { a.play(); } catch(e){} }, 300); }
+      });
+      a.addEventListener('ended', function() { // shouldn't fire with loop, but safety
+        var any = Object.values(jobs).some(function(j){ return j.running; });
+        if (any) { a.load(); a.play().catch(function(){}); }
+      });
+      a.play().catch(function(){
+        /* Will be retried by _pinger if user gesture context is available */
+      });
+      _bgAudio = a;
+    }
+
+    function _startAudioContext() {
       try {
         if (!_audioCtx || _audioCtx.state === 'closed') {
           _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (_audioCtx.state === 'suspended') {
-          _audioCtx.resume();
-        }
+        if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(function(){});
+        // Auto-heal AudioContext suspension
+        _audioCtx.onstatechange = function() {
+          if (_audioCtx && _audioCtx.state === 'suspended') {
+            var any = Object.values(jobs).some(function(j){ return j.running; });
+            if (any) _audioCtx.resume().catch(function(){});
+          }
+        };
         if (!_loopSource) {
           var buf = _buildSilentBuffer(_audioCtx);
           var src = _audioCtx.createBufferSource();
-          src.buffer = buf;
-          src.loop = true;
+          src.buffer = buf; src.loop = true;
           src.connect(_audioCtx.destination);
           src.start(0);
           _loopSource = src;
-          // If the source unexpectedly ends, restart it
           src.onended = function() {
             _loopSource = null;
-            var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
-            if (anyRunning) startKeepAlive();
+            var any = Object.values(jobs).some(function(j){ return j.running; });
+            if (any) _startAudioContext();
           };
         }
-        document.getElementById('bgBanner').style.display = 'flex';
-      } catch (e) { /* audio not available */ }
+      } catch(e) {}
+    }
 
-      // --- Wake Lock (prevents screen-off throttling on supporting browsers) ---
+    function startKeepAlive() {
+      // PRIMARY: HTML audio element (survives app switching on iOS)
+      _startAudioElement();
+
+      // SECONDARY: AudioContext loop
+      _startAudioContext();
+
+      // TERTIARY: Watchdog pinger — checks every 8 s that audio is alive,
+      // restarts anything that got suspended while we were backgrounded.
+      if (!_pinger) {
+        _pinger = setInterval(function() {
+          var any = Object.values(jobs).some(function(j){ return j.running; });
+          if (!any) return;
+          if (_bgAudio && _bgAudio.paused) {
+            _bgAudio.play().catch(function(){});
+          }
+          if (_audioCtx && _audioCtx.state === 'suspended') {
+            _audioCtx.resume().catch(function(){});
+          }
+        }, 8000);
+      }
+
+      // Screen Wake Lock
       if (navigator.wakeLock && !_wakeLock) {
         navigator.wakeLock.request('screen').then(function(wl) {
           _wakeLock = wl;
           wl.addEventListener('release', function() { _wakeLock = null; });
-        }).catch(function() { /* not granted, no biggie */ });
+        }).catch(function(){});
       }
+
+      document.getElementById('bgBanner').style.display = 'flex';
     }
 
     function stopKeepAlive() {
+      // Stop pinger
+      if (_pinger) { clearInterval(_pinger); _pinger = null; }
+      // Stop HTML audio
+      if (_bgAudio) {
+        try { _bgAudio.pause(); _bgAudio.src = ''; } catch(e) {}
+        _bgAudio = null;
+      }
+      if (_bgAudioUrl) {
+        try { URL.revokeObjectURL(_bgAudioUrl); } catch(e) {}
+        _bgAudioUrl = null;
+      }
+      // Stop AudioContext
       try {
         if (_loopSource) { _loopSource.stop(); _loopSource.disconnect(); }
         if (_audioCtx && _audioCtx.state !== 'closed') _audioCtx.close();
       } catch(e) {}
-      _loopSource = null;
-      _audioCtx = null;
+      _loopSource = null; _audioCtx = null;
+      // Release Wake Lock
       if (_wakeLock) { try { _wakeLock.release(); } catch(e) {} _wakeLock = null; }
       document.getElementById('bgBanner').style.display = 'none';
     }
@@ -1720,34 +1815,33 @@
     function resumeKeepAlive() {
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
       if (!anyRunning) return;
-      // Re-acquire wake lock if lost (iOS releases it when screen dims)
+
+      // Resume HTML audio (primary)
+      if (_bgAudio && _bgAudio.paused) {
+        _bgAudio.play().catch(function(){});
+      } else if (!_bgAudio) {
+        // Lost completely — full restart
+        startKeepAlive();
+        return;
+      }
+
+      // Resume AudioContext (secondary)
+      if (_audioCtx && _audioCtx.state === 'suspended') {
+        _audioCtx.resume().then(function() {
+          if (!_loopSource) _startAudioContext();
+        }).catch(function() { _startAudioContext(); });
+      } else if (!_audioCtx || _audioCtx.state === 'closed') {
+        _startAudioContext();
+      } else if (!_loopSource) {
+        _startAudioContext();
+      }
+
+      // Re-acquire Wake Lock
       if (navigator.wakeLock && !_wakeLock) {
         navigator.wakeLock.request('screen').then(function(wl) {
           _wakeLock = wl;
           wl.addEventListener('release', function() { _wakeLock = null; });
         }).catch(function(){});
-      }
-      // Resume or restart audio context
-      if (_audioCtx && _audioCtx.state === 'suspended') {
-        _audioCtx.resume().then(function() {
-          if (!_loopSource) startKeepAlive();
-        }).catch(function() { startKeepAlive(); });
-      } else if (!_audioCtx || _audioCtx.state === 'closed') {
-        startKeepAlive();
-      } else if (!_loopSource) {
-        // Context is running but loop stopped — restart the loop
-        var buf = _buildSilentBuffer(_audioCtx);
-        var src = _audioCtx.createBufferSource();
-        src.buffer = buf;
-        src.loop = true;
-        src.connect(_audioCtx.destination);
-        src.start(0);
-        _loopSource = src;
-        src.onended = function() {
-          _loopSource = null;
-          var ar = Object.values(jobs).some(function(j){ return j.running; });
-          if (ar) startKeepAlive();
-        };
       }
     }
 
@@ -2013,17 +2107,78 @@
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
       switchTab('monitor');
       updateGlobalStats();
+      updateStartAllBtn();
 
-      // Kick off first send immediately, then hand off to heartbeat engine
       startHeartbeat();
+
+      // ── Slowmode pre-check ────────────────────────────────────────────────
+      // Fetch channel info to detect active slowmode cooldown BEFORE sending.
+      // This prevents the phantom-cooldown bug: if we fire immediately and the
+      // user is already in a slowmode window, Discord records the attempt,
+      // starts the timer, but the message fails. We pre-wait instead.
       _heartbeatFiring[id] = true;
-      jobSend(id, token, channelId, msg).finally(function() {
+      fetch('https://discord.com/api/v10/channels/' + channelId, {
+        headers: { Authorization: token }
+      }).then(function(res) {
+        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+        return res.json();
+      }).then(function(ch) {
+        if (!job.running) { delete _heartbeatFiring[id]; return; }
+        var slowmodeSec = ch.rate_limit_per_user || 0; // channel slowmode in seconds
+        // Discord doesn't expose the per-user cooldown via REST directly,
+        // but we can infer: if slowmode is set AND delayMs < slowmodeSec*1000,
+        // the job delay is too short — warn the user.
+        if (slowmodeSec > 0 && delayMs < slowmodeSec * 1000) {
+          log('[Job #' + id + '] \u26a0 Slowmode is ' + slowmodeSec + 's but your delay is ' +
+            (delayMs/1000).toFixed(0) + 's. Adjusting delay to ' + (slowmodeSec + 1) + 's to avoid hits.', 'warn');
+          job._delayMs = (slowmodeSec + 1) * 1000;
+        }
+        // Fire the first send now (channel is reachable, no preemptive waste)
+        jobSend(id, token, channelId, msg).finally(function() {
+          delete _heartbeatFiring[id];
+          if (!job.running) return;
+          job._nextFireAt = Date.now() + job._delayMs;
+          _persistFireAt(id, job._nextFireAt);
+          _showCountdownLine(id, job._delayMs);
+        });
+      }).catch(function(e) {
+        // Can't reach channel — don't burn the slowmode, schedule for later
         delete _heartbeatFiring[id];
         if (!job.running) return;
-        job._nextFireAt = Date.now() + delayMs;
+        log('[Job #' + id + '] Channel check failed (' + e.message + ') — will retry at next interval.', 'warn');
+        job._nextFireAt = Date.now() + job._delayMs;
         _persistFireAt(id, job._nextFireAt);
-        _showCountdownLine(id, delayMs);
+        _showCountdownLine(id, job._delayMs);
       });
+    }
+
+    function startAllJobs() {
+      var started = 0;
+      Object.keys(jobs).forEach(function(sid) {
+        var id = parseInt(sid);
+        var job = jobs[id];
+        if (job && !job.running) {
+          startJob(id);
+          started++;
+        }
+      });
+      if (started === 0) log('\u26a0 No stopped jobs to start.', 'warn');
+    }
+
+    function stopAllJobs() {
+      Object.keys(jobs).forEach(function(sid) {
+        var id = parseInt(sid);
+        var job = jobs[id];
+        if (job && job.running) stopJob(id);
+      });
+    }
+
+    function updateStartAllBtn() {
+      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+      var startAllBtn = document.getElementById('startAllBtn');
+      var stopAllBtn = document.getElementById('stopAllBtn');
+      if (startAllBtn) startAllBtn.style.display = anyRunning ? 'none' : '';
+      if (stopAllBtn) stopAllBtn.style.display = anyRunning ? '' : 'none';
     }
 
     /* ── GLOBAL HEARTBEAT ENGINE ──────────────────────────────────────────────
@@ -2127,6 +2282,7 @@
       log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
       saveJobs();
       updateGlobalStats();
+      updateStartAllBtn();
       stopHeartbeat();
       // Stop keep-alive if no jobs are running
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
