@@ -2138,7 +2138,40 @@
         headers: { Authorization: token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: msg })
       }).then(function (res) {
-        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
+        if (res.status === 429 || !res.ok) {
+          return res.json().then(function (e) {
+            // Slowmode or global rate-limit: retry_after tells us how long to wait
+            var retryAfter = e.retry_after || 0; // seconds (float)
+            if (retryAfter > 0) {
+              var waitMs = Math.ceil(retryAfter * 1000) + 200; // small buffer
+              log('[Job #' + id + '] Slowmode — waiting ' + retryAfter.toFixed(1) + 's then retrying...', 'warn');
+              return new Promise(function(resolve) {
+                setTimeout(function() {
+                  if (!job || !job.running) { resolve(); return; }
+                  // Retry once
+                  fetch('https://discord.com/api/v10/channels/' + channelId + '/messages', {
+                    method: 'POST',
+                    headers: { Authorization: token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: msg })
+                  }).then(function(res2) {
+                    if (!res2.ok) return res2.json().then(function(e2){ throw new Error(e2.message || 'HTTP ' + res2.status); });
+                    job.sent++;
+                    updateJobStats(id);
+                    var flat = msg.replace(/\n/g, ' ');
+                    var preview = flat.length > 35 ? flat.slice(0, 35) + '\u2026' : flat;
+                    log('[Job #' + id + '] Sent #' + job.sent + ' (after slowmode): "' + preview + '"', 'ok');
+                  }).catch(function(e2) {
+                    if (!job) return;
+                    job.failed++;
+                    updateJobStats(id);
+                    log('[Job #' + id + '] Failed after retry: ' + e2.message, 'err');
+                  }).finally(resolve);
+                }, waitMs);
+              });
+            }
+            throw new Error(e.message || 'HTTP ' + res.status);
+          });
+        }
         job.sent++;
         updateJobStats(id);
         var flat = msg.replace(/\n/g, ' ');
