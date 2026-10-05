@@ -2074,6 +2074,9 @@
       });
     }
 
+    // Flag set during startAllJobs() to suppress per-job side-effects
+    var _bulkStarting = false;
+
     function startJob(id) {
       var job = jobs[id];
       if (!job) return;
@@ -2085,12 +2088,13 @@
       var delayMs = delayNum * delayMult * 1000;
       var delayLabel = delayNum + (delayMult === 1 ? 's' : delayMult === 60 ? 'min' : 'h');
 
-      if (!token) { alert('Job #' + id + ': Load a token via the Auth tab button first.'); return; }
-      if (!channelId) { alert('Job #' + id + ': Enter a channel ID.'); return; }
-      if (!msg) { alert('Job #' + id + ': Enter a message.'); return; }
+      if (!token) { if (!_bulkStarting) alert('Job #' + id + ': Load a token via the Auth tab button first.'); return; }
+      if (!channelId) { if (!_bulkStarting) alert('Job #' + id + ': Enter a channel ID.'); return; }
+      if (!msg) { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return; }
 
       // Start keep-alive audio on first job start (requires user gesture)
-      startKeepAlive();
+      // When bulk-starting, caller handles this once to avoid redundant calls
+      if (!_bulkStarting) startKeepAlive();
 
       job.running = true;
       job.sent = 0;
@@ -2105,9 +2109,12 @@
 
       saveJobs();
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
-      switchTab('monitor');
-      updateGlobalStats();
-      updateStartAllBtn();
+      // Tab switch & global UI update: skip during bulk start (caller handles once)
+      if (!_bulkStarting) {
+        switchTab('monitor');
+        updateGlobalStats();
+        updateStartAllBtn();
+      }
 
       startHeartbeat();
 
@@ -2116,6 +2123,17 @@
       // This prevents the phantom-cooldown bug: if we fire immediately and the
       // user is already in a slowmode window, Discord records the attempt,
       // starts the timer, but the message fails. We pre-wait instead.
+      //
+      // IMPORTANT: When bulk-starting many jobs we do NOT fire the initial send
+      // immediately — we schedule each job's first fire staggered via _nextFireAt
+      // so we don't hammer Discord with N simultaneous requests.
+      if (_bulkStarting) {
+        // Just schedule first fire at current time so heartbeat picks it up
+        // (the stagger offset is already applied by startAllJobs via job._nextFireAt)
+        delete _heartbeatFiring[id];
+        return;
+      }
+
       _heartbeatFiring[id] = true;
       fetch('https://discord.com/api/v10/channels/' + channelId, {
         headers: { Authorization: token }
@@ -2153,16 +2171,57 @@
     }
 
     function startAllJobs() {
-      var started = 0;
+      // Collect all stopped jobs first
+      var toStart = [];
       Object.keys(jobs).forEach(function(sid) {
         var id = parseInt(sid);
         var job = jobs[id];
-        if (job && !job.running) {
-          startJob(id);
-          started++;
-        }
+        if (job && !job.running) toStart.push(id);
       });
-      if (started === 0) log('\u26a0 No stopped jobs to start.', 'warn');
+
+      if (toStart.length === 0) { log('\u26a0 No stopped jobs to start.', 'warn'); return; }
+
+      log('\u25b6 Starting ' + toStart.length + ' job(s) — staggering to avoid rate-limits...', 'info');
+
+      // One-time setup
+      startKeepAlive();
+      switchTab('monitor');
+
+      _bulkStarting = true;
+
+      // Initialize jobs one-by-one using a sequential chain so _bulkStarting
+      // stays true for ALL inits and cannot be reset prematurely by a race.
+      // Each job's first fire is spread 1200 ms apart so Discord never sees
+      // a burst of 40 simultaneous POST requests.
+      var INIT_STEP_MS  = 300;  // gap between each job's init call
+      var FIRE_STAGGER  = 1200; // gap between each job's FIRST send
+
+      function initNext(idx) {
+        if (idx >= toStart.length) {
+          // All jobs initialised — release flag and refresh UI once
+          _bulkStarting = false;
+          updateGlobalStats();
+          updateStartAllBtn();
+          return;
+        }
+
+        var id  = toStart[idx];
+        var job = jobs[id];
+        if (!job) { initNext(idx + 1); return; } // removed in the meantime
+
+        startJob(id); // sets job._delayMs, marks running, starts heartbeat
+
+        // Spread first fires: job[0] fires after its own delay,
+        // each subsequent job fires FIRE_STAGGER ms later than the previous.
+        var firstFireOffset = job._delayMs + (idx * FIRE_STAGGER);
+        job._nextFireAt = Date.now() + firstFireOffset;
+        _persistFireAt(id, job._nextFireAt);
+        _showCountdownLine(id, firstFireOffset);
+
+        setTimeout(function() { initNext(idx + 1); }, INIT_STEP_MS);
+      }
+
+      initNext(0);
     }
 
     function stopAllJobs() {
@@ -2297,40 +2356,35 @@
         headers: { Authorization: token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: msg })
       }).then(function (res) {
-        if (res.status === 429 || !res.ok) {
+        if (res.status === 429) {
+          // Rate-limited: DO NOT count as failure.
+          // Parse retry_after and reschedule via _nextFireAt so the heartbeat
+          // picks it up cleanly — no blind retry that would cascade.
           return res.json().then(function (e) {
-            // Slowmode or global rate-limit: retry_after tells us how long to wait
-            var retryAfter = e.retry_after || 0; // seconds (float)
-            if (retryAfter > 0) {
-              var waitMs = Math.ceil(retryAfter * 1000) + 200; // small buffer
-              log('[Job #' + id + '] Slowmode — waiting ' + retryAfter.toFixed(1) + 's then retrying...', 'warn');
-              return new Promise(function(resolve) {
-                setTimeout(function() {
-                  if (!job || !job.running) { resolve(); return; }
-                  // Retry once
-                  fetch('https://discord.com/api/v10/channels/' + channelId + '/messages', {
-                    method: 'POST',
-                    headers: { Authorization: token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: msg })
-                  }).then(function(res2) {
-                    if (!res2.ok) return res2.json().then(function(e2){ throw new Error(e2.message || 'HTTP ' + res2.status); });
-                    job.sent++;
-                    updateJobStats(id);
-                    var flat = msg.replace(/\n/g, ' ');
-                    var preview = flat.length > 35 ? flat.slice(0, 35) + '\u2026' : flat;
-                    log('[Job #' + id + '] Sent #' + job.sent + ' (after slowmode): "' + preview + '"', 'ok');
-                  }).catch(function(e2) {
-                    if (!job) return;
-                    job.failed++;
-                    updateJobStats(id);
-                    log('[Job #' + id + '] Failed after retry: ' + e2.message, 'err');
-                  }).finally(resolve);
-                }, waitMs);
-              });
+            var retryAfter = (typeof e.retry_after === 'number' ? e.retry_after : 1);
+            var waitMs = Math.ceil(retryAfter * 1000) + 500; // 500 ms safety buffer
+            log('[Job #' + id + '] Rate-limited — rescheduling in ' +
+              retryAfter.toFixed(1) + 's (retry_after from Discord).', 'warn');
+            // Reschedule this job's next fire instead of retrying immediately
+            if (job.running) {
+              job._nextFireAt = Date.now() + waitMs;
+              _persistFireAt(id, job._nextFireAt);
+              _showCountdownLine(id, waitMs);
             }
-            throw new Error(e.message || 'HTTP ' + res.status);
+            // Resolve cleanly — the heartbeat loop will handle the retry
+            return;
           });
         }
+        if (!res.ok) {
+          return res.json().then(function (e) {
+            throw new Error(e.message || 'HTTP ' + res.status);
+          }).catch(function(e) {
+            // res.json() itself might fail on non-JSON error bodies
+            if (e.message && e.message !== 'HTTP ' + res.status) throw e;
+            throw new Error('HTTP ' + res.status);
+          });
+        }
+        // Success
         job.sent++;
         updateJobStats(id);
         var flat = msg.replace(/\n/g, ' ');
