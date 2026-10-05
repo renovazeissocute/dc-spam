@@ -1763,7 +1763,26 @@
       // SECONDARY: AudioContext loop
       _startAudioContext();
 
-      // TERTIARY: Watchdog pinger — checks every 8 s that audio is alive,
+      // QUATERNARY: MediaSession API — tells iOS this page is a "music player".
+      // iOS grants music players full background execution priority, so JS timers
+      // (setInterval heartbeat) keep firing even with the screen locked.
+      // This is the strongest background trick available on iOS Safari.
+      try {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: 'Running',
+            artist: 'Jobs Active',
+            album: 'Background'
+          });
+          navigator.mediaSession.playbackState = 'playing';
+          // Swallow media key events so iOS doesn't pause us
+          ['play','pause','stop','nexttrack','previoustrack'].forEach(function(a) {
+            try { navigator.mediaSession.setActionHandler(a, function(){}); } catch(e){}
+          });
+        }
+      } catch(e) {}
+
+      // TERTIARY: Watchdog pinger — checks every 5 s that audio is alive,
       // restarts anything that got suspended while we were backgrounded.
       if (!_pinger) {
         _pinger = setInterval(function() {
@@ -1775,7 +1794,13 @@
           if (_audioCtx && _audioCtx.state === 'suspended') {
             _audioCtx.resume().catch(function(){});
           }
-        }, 8000);
+          // Keep mediaSession alive (iOS can reset it)
+          try {
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'playing';
+            }
+          } catch(e) {}
+        }, 5000);
       }
 
       // Screen Wake Lock
