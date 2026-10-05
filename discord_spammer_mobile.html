@@ -1363,6 +1363,9 @@
         <button class="btn btn-primary" id="verifyBtn" onclick="verifyToken()" style="margin-top:10px;">
           &#10003; Verify &amp; Connect
         </button>
+        <button class="btn btn-secondary" onclick="clearAllData()" style="margin-top:8px;font-size:13px;">
+          &#128465; Clear All Saved Data
+        </button>
       </div>
 
       <!-- HOW TO GET TOKEN -->
@@ -2211,6 +2214,14 @@
     }
 
     /* ── UTILS ── */
+    function clearAllData() {
+      if (!confirm('Clear all saved data?\nThis removes your token, all jobs, and resets the app.')) return;
+      // Stop everything first
+      Object.keys(jobs).forEach(function(sid) { try { stopJob(parseInt(sid)); } catch(e){} });
+      try { localStorage.clear(); } catch(e) {}
+      location.reload();
+    }
+
     function now() {
       return new Date().toLocaleTimeString('en-GB', { hour12: false });
     }
