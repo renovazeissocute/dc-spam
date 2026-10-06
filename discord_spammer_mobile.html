@@ -2206,27 +2206,28 @@
 
       if (toStart.length === 0) { log('\u26a0 No stopped jobs to start.', 'warn'); return; }
 
-      log('\u25b6 Starting ' + toStart.length + ' job(s) — staggering to avoid rate-limits...', 'info');
+      log('\u25b6 Starting ' + toStart.length + ' job(s) \u2014 queueing sequentially...', 'info');
 
-      // One-time setup
+      // One-time setup (requires user gesture — must be called synchronously here)
       startKeepAlive();
       switchTab('monitor');
 
       _bulkStarting = true;
 
-      // Initialize jobs one-by-one using a sequential chain so _bulkStarting
-      // stays true for ALL inits and cannot be reset prematurely by a race.
-      // Each job's first fire is spread 1200 ms apart so Discord never sees
-      // a burst of 40 simultaneous POST requests.
-      var INIT_STEP_MS  = 300;  // gap between each job's init call
-      var FIRE_STAGGER  = 1200; // gap between each job's FIRST send
+      // Sequential init chain: initialise one job every INIT_STEP_MS.
+      // _bulkStarting stays true for ALL inits to suppress per-job UI side-effects.
+      // First fires are staggered: job[idx] fires after its own delay + idx * FIRE_STAGGER.
+      // The send queue (MAX_CONCURRENT) handles the actual throttling after that.
+      var INIT_STEP_MS = 100;  // gap between each job's init call (ms) — faster init
+      var FIRE_STAGGER = 600;  // extra delay per job for first send (ms)
 
       function initNext(idx) {
         if (idx >= toStart.length) {
-          // All jobs initialised — release flag and refresh UI once
+          // All jobs initialised — release bulk flag and refresh UI once
           _bulkStarting = false;
           updateGlobalStats();
           updateStartAllBtn();
+          log('\u2713 All ' + toStart.length + ' job(s) queued and running.', 'ok');
           return;
         }
 
@@ -2236,9 +2237,9 @@
 
         startJob(id); // sets job._delayMs, marks running, starts heartbeat
 
-        // Spread first fires: job[0] fires after its own delay,
-        // each subsequent job fires FIRE_STAGGER ms later than the previous.
-        var firstFireOffset = job._delayMs + (idx * FIRE_STAGGER);
+        // Spread first fires so the send queue never gets flooded.
+        // job[0] fires after its own delay; each next job waits FIRE_STAGGER more.
+        var firstFireOffset = (job._delayMs || 5000) + (idx * FIRE_STAGGER);
         job._nextFireAt = Date.now() + firstFireOffset;
         _persistFireAt(id, job._nextFireAt);
         _showCountdownLine(id, firstFireOffset);
@@ -2265,15 +2266,81 @@
       if (stopAllBtn) stopAllBtn.style.display = anyRunning ? '' : 'none';
     }
 
-    /* ── GLOBAL HEARTBEAT ENGINE ──────────────────────────────────────────────
-     * Instead of chaining setTimeout calls (which iOS can freeze and break),
-     * we use a single setInterval that polls every 500 ms.
-     * Each running job stores _nextFireAt (absolute ms timestamp).
-     * The heartbeat fires any job whose time has come, regardless of
-     * how many ticks were throttled/skipped.
+    /* ── GLOBAL HEARTBEAT ENGINE + SEND QUEUE ──────────────────────────────────
+     * A single setInterval polls every 500 ms. Each running job stores
+     * _nextFireAt (absolute ms timestamp). When a job is due, it's pushed into
+     * _sendQueue instead of fired directly.
+     *
+     * SEND QUEUE: Caps concurrent Discord API calls at MAX_CONCURRENT (3) and
+     * enforces a minimum SEND_GAP_MS (400ms) between dispatches. With 40+ jobs
+     * this prevents bursts of simultaneous POSTs that trigger 429s or make iOS
+     * drop the JS thread entirely. Jobs that all become due at once are safely
+     * queued and dispatched one-by-one with rate awareness.
      * ─────────────────────────────────────────────────────────────────────── */
     var _heartbeat = null;
-    var _heartbeatFiring = {}; // guard: prevents double-firing a job
+    var _heartbeatFiring = {}; // id -> true when job is queued or in-flight
+
+    var _sendQueue    = [];   // [{id, token, channelId, msg}]
+    var _sendInFlight = 0;    // current concurrent sends
+    var MAX_CONCURRENT = 3;   // max simultaneous Discord API calls
+    var SEND_GAP_MS   = 400;  // minimum ms between queue dispatches
+    var _lastDispatch  = 0;   // timestamp of last dispatch
+
+    function _enqueueJob(id) {
+      if (_heartbeatFiring[id]) return; // already queued/in-flight — skip
+      var job = jobs[id];
+      if (!job || !job.running) return;
+      var token     = job._token || globalToken || state.token;
+      var channelId = document.getElementById('jchannel-' + id).value.trim();
+      var msg       = document.getElementById('jmsg-'     + id).value;
+      _heartbeatFiring[id] = true; // mark immediately to prevent double-enqueue
+      _sendQueue.push({ id: id, token: token, channelId: channelId, msg: msg });
+    }
+
+    function _drainQueue() {
+      if (_sendQueue.length === 0) return;
+      if (_sendInFlight >= MAX_CONCURRENT) return;
+      var now = Date.now();
+      if (now - _lastDispatch < SEND_GAP_MS) {
+        // Try again after the gap expires — avoids busy-waiting
+        setTimeout(_drainQueue, SEND_GAP_MS - (now - _lastDispatch) + 10);
+        return;
+      }
+
+      var item = _sendQueue.shift();
+      if (!item) return;
+
+      var job = jobs[item.id];
+      if (!job || !job.running) {
+        // Job was stopped while waiting in the queue — release guard, try next
+        delete _heartbeatFiring[item.id];
+        _drainQueue();
+        return;
+      }
+
+      _sendInFlight++;
+      _lastDispatch = Date.now();
+      _removeCountdownLine(item.id);
+
+      jobSend(item.id, item.token, item.channelId, item.msg).finally(function() {
+        _sendInFlight--;
+        delete _heartbeatFiring[item.id];
+        var j = jobs[item.id];
+        if (j && j.running) {
+          var delayMs = j._delayMs || 5000;
+          j._nextFireAt = Date.now() + delayMs;
+          _persistFireAt(item.id, j._nextFireAt);
+          _showCountdownLine(item.id, delayMs);
+        }
+        // Drain the next queued item after the minimum gap
+        setTimeout(_drainQueue, SEND_GAP_MS);
+      });
+
+      // Try to fill another concurrent slot immediately if one is free
+      if (_sendInFlight < MAX_CONCURRENT && _sendQueue.length > 0) {
+        setTimeout(_drainQueue, SEND_GAP_MS);
+      }
+    }
 
     function startHeartbeat() {
       if (_heartbeat) return; // already running
@@ -2283,30 +2350,30 @@
           var id = parseInt(sid);
           var job = jobs[id];
           if (!job || !job.running) return;
-          if (_heartbeatFiring[id]) return; // already in mid-send
-          if (job._nextFireAt && ts >= job._nextFireAt) {
-            _heartbeatFiring[id] = true;
-            job._nextFireAt = null; // clear so we don't double-fire
-            _removeCountdownLine(id);
-            var token = job._token || globalToken || state.token;
-            var channelId = document.getElementById('jchannel-' + id).value.trim();
-            var msg = document.getElementById('jmsg-' + id).value;
-            jobSend(id, token, channelId, msg).finally(function() {
-              delete _heartbeatFiring[id];
-              if (!job.running) return;
-              var delayMs = job._delayMs || 5000;
-              job._nextFireAt = Date.now() + delayMs;
-              _persistFireAt(id, job._nextFireAt);
-              _showCountdownLine(id, delayMs);
-            });
+
+          if (_heartbeatFiring[id]) {
+            // Queued or in-flight — show "Sending..." in countdown label
+            var textEl = document.getElementById('cd-text-' + id);
+            if (textEl && textEl.textContent.indexOf('Sending') === -1)
+              textEl.textContent = '[Job #' + id + '] Sending...';
+            return;
           }
-          // Also update countdown display
-          if (job._nextFireAt && !_heartbeatFiring[id]) {
+
+          if (job._nextFireAt && ts >= job._nextFireAt) {
+            job._nextFireAt = null; // clear so we don't re-enqueue next tick
+            _enqueueJob(id);
+          } else if (job._nextFireAt) {
+            // Update countdown display
             var rem = Math.ceil((job._nextFireAt - ts) / 1000);
             var textEl = document.getElementById('cd-text-' + id);
             if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + Math.max(0, rem) + 's...';
           }
         });
+
+        // Keep draining the queue every tick in case slots freed up
+        if (_sendQueue.length > 0 && _sendInFlight < MAX_CONCURRENT) {
+          _drainQueue();
+        }
       }, 500);
     }
 
@@ -2318,6 +2385,7 @@
         _heartbeat = null;
       }
     }
+
 
     function _showCountdownLine(id, delayMs) {
       var job = jobs[id];
@@ -2359,6 +2427,8 @@
       _clearPersistedFireAt(id);
       _removeCountdownLine(id);
       delete _heartbeatFiring[id];
+      // Purge any pending queue entry for this job so it never fires after stop
+      _sendQueue = _sendQueue.filter(function(item) { return item.id !== id; });
       document.getElementById('jstart-' + id).disabled = false;
       document.getElementById('jstop-' + id).disabled = true;
       document.getElementById('jdot-' + id).classList.remove('running');
