@@ -2418,46 +2418,16 @@
         return;
       }
 
-      // ── Slowmode-safe first schedule ──────────────────────────────────────
-      // NEVER fire the first send immediately on start.
-      //
-      // WHY: Discord's per-user slowmode cooldown is server-side and is NOT
-      // exposed via the channel REST endpoint. That endpoint only returns the
-      // channel's configured rate_limit_per_user (the setting), NOT whether
-      // this specific user is currently in a cooldown window.
-      //
-      // If the user sent a message in Discord directly within the slowmode
-      // window and then hits Start here, firing immediately causes a 429 /
-      // slowmode-blocked response — the job appears stuck for no visible reason
-      // even though no message was ever sent from this app.
-      //
-      // Fix: fetch channel info ONLY to auto-correct delay if it is shorter
-      // than the channel slowmode setting, then schedule the first fire AFTER
-      // delayMs. The heartbeat picks it up and sends normally.
-      fetch('https://discord.com/api/v10/channels/' + channelId, {
-        headers: { Authorization: token }
-      }).then(function(res) {
-        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
-        return res.json();
-      }).then(function(ch) {
-        if (!job.running) return;
-        var slowmodeSec = ch.rate_limit_per_user || 0;
-        if (slowmodeSec > 0 && job._delayMs < slowmodeSec * 1000) {
-          job._delayMs = (slowmodeSec + 1) * 1000;
-          log('[Job #' + id + '] \u26a0 Slowmode ' + slowmodeSec + 's detected — auto-adjusted delay to ' +
-            (slowmodeSec + 1) + 's.', 'warn');
-        }
-        job._nextFireAt = Date.now() + job._delayMs;
-        _persistFireAt(id, job._nextFireAt);
-        _showCountdownLine(id, job._delayMs);
-      }).catch(function(e) {
-        if (!job.running) return;
-        // Channel fetch failed — schedule normally anyway, don't abort
-        log('[Job #' + id + '] Channel info fetch failed (' + e.message + ') — scheduling with current delay.', 'warn');
-        job._nextFireAt = Date.now() + job._delayMs;
-        _persistFireAt(id, job._nextFireAt);
-        _showCountdownLine(id, job._delayMs);
-      });
+      // ── Schedule first fire after the user-configured delay ─────────────
+      // We do NOT fetch channel info to check rate_limit_per_user here.
+      // rate_limit_per_user is the channel's configured slowmode SETTING,
+      // NOT whether this specific user is currently in a cooldown window.
+      // Enforcing it would permanently block sending in any channel that has
+      // slowmode enabled, even when the user has no active cooldown.
+      // If Discord actually rate-limits us mid-run, jobSend() handles it.
+      job._nextFireAt = Date.now() + job._delayMs;
+      _persistFireAt(id, job._nextFireAt);
+      _showCountdownLine(id, job._delayMs);
     }
 
     function startAllJobs() {
@@ -2717,29 +2687,44 @@
         body: JSON.stringify({ content: msg })
       }).then(function (res) {
         if (res.status === 429) {
-          // Rate-limited: DO NOT count as failure.
-          // Parse retry_after and reschedule via _nextFireAt so the heartbeat
-          // picks it up cleanly — no blind retry that would cascade.
+          // Global rate-limit or Discord 429: reschedule, don't count as failure.
           return res.json().then(function (e) {
             var retryAfter = (typeof e.retry_after === 'number' ? e.retry_after : 1);
             var waitMs = Math.ceil(retryAfter * 1000) + 500; // 500 ms safety buffer
             log('[Job #' + id + '] Rate-limited — rescheduling in ' +
-              retryAfter.toFixed(1) + 's (retry_after from Discord).', 'warn');
-            // Reschedule this job's next fire instead of retrying immediately
+              retryAfter.toFixed(1) + 's.', 'warn');
             if (job.running) {
               job._nextFireAt = Date.now() + waitMs;
               _persistFireAt(id, job._nextFireAt);
               _showCountdownLine(id, waitMs);
             }
-            // Resolve cleanly — the heartbeat loop will handle the retry
             return;
           });
         }
         if (!res.ok) {
-          return res.json().then(function (e) {
-            throw new Error(e.message || 'HTTP ' + res.status);
+          return res.json().then(function (body) {
+            // Discord error code 20016 = slowmode active for this user.
+            // Treat exactly like a 429: reschedule after retry_after (or
+            // job delay), do NOT count as a failure — it's a transient cooldown.
+            if (body.code === 20016) {
+              var retryAfter = (typeof body.retry_after === 'number' ? body.retry_after : 0);
+              // If Discord gives us a retry_after, honor it; otherwise fall back
+              // to the job's own delay (user will hit it again on the next cycle).
+              var waitMs = retryAfter > 0
+                ? Math.ceil(retryAfter * 1000) + 500
+                : (job._delayMs || 5000);
+              log('[Job #' + id + '] Slowmode — retrying in ' +
+                (waitMs / 1000).toFixed(1) + 's.', 'warn');
+              if (job.running) {
+                job._nextFireAt = Date.now() + waitMs;
+                _persistFireAt(id, job._nextFireAt);
+                _showCountdownLine(id, waitMs);
+              }
+              // Resolve cleanly — heartbeat will retry
+              return;
+            }
+            throw new Error(body.message || 'HTTP ' + res.status);
           }).catch(function(e) {
-            // res.json() itself might fail on non-JSON error bodies
             if (e.message && e.message !== 'HTTP ' + res.status) throw e;
             throw new Error('HTTP ' + res.status);
           });
