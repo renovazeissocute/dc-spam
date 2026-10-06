@@ -2852,16 +2852,28 @@
       if (!job) return;
       var token = job._token || globalToken || state.token;
       var channelIdEl = document.getElementById('jchannel-id-' + id);
-      var channelId = channelIdEl ? channelIdEl.value.trim() : '';
-      var msg = document.getElementById('jmsg-' + id).value; // keep raw (no trim — preserve user format)
+      // Also fall back to the select's value in case hidden input wasn't set yet
+      var selectEl = document.getElementById('jchannel-' + id);
+      var channelId = (channelIdEl ? channelIdEl.value.trim() : '') ||
+                      (selectEl && selectEl.value ? selectEl.value.trim() : '');
+      // Sync hidden input if select had the value
+      if (!channelId && selectEl && selectEl.value) channelId = selectEl.value.trim();
+      if (channelIdEl && selectEl && selectEl.value && !channelIdEl.value)
+        channelIdEl.value = selectEl.value;
+      var msg = document.getElementById('jmsg-' + id).value;
       var delayNum = Math.max(1, parseInt(document.getElementById('jdelay-' + id).value) || 5);
       var delayMult = parseInt(document.getElementById('jdelayunit-' + id).value) || 1;
       var delayMs = delayNum * delayMult * 1000;
       var delayLabel = delayNum + (delayMult === 1 ? 's' : delayMult === 60 ? 'min' : 'h');
 
-      if (!token) { if (!_bulkStarting) alert('Job #' + id + ': Load a token via the Auth tab button first.'); return false; }
-      if (!channelId) { if (!_bulkStarting) alert('Job #' + id + ': Enter a channel ID.'); return false; }
-      if (!msg) { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return false; }
+      if (!token)     { if (!_bulkStarting) alert('Job #' + id + ': Load a token first.'); return false; }
+      if (!channelId) { if (!_bulkStarting) alert('Job #' + id + ': Select a channel.'); return false; }
+      if (!msg)       { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return false; }
+
+      // Cache everything on the job object so _enqueueJob never reads stale DOM
+      job._cachedToken     = token;
+      job._cachedChannelId = channelId;
+      job._cachedMsg       = msg;
 
       job.running = true;
       job.sent = 0;
@@ -2878,20 +2890,17 @@
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
 
       if (!_bulkStarting) {
-        // Single-job start — do everything right here
         startKeepAlive();
         switchTab('monitor');
         updateGlobalStats();
         updateStartAllBtn();
         saveJobs();
-        // Fire IMMEDIATELY on first start, then schedule next after delayMs
-        job._nextFireAt = Date.now(); // fire on next heartbeat tick (≤500ms)
+        job._nextFireAt = Date.now();
         _persistFireAt(id, job._nextFireAt);
         _showCountdownLine(id, 0);
         startHeartbeat();
         _scheduleSlowPoll(id);
       }
-      // In bulk mode: caller sets _nextFireAt to Date.now() for immediate first fire.
       return true;
     }
 
@@ -2991,18 +3000,23 @@
 
     var _sendQueue    = [];   // [{id, token, channelId, msg}]
     var _sendInFlight = 0;    // current concurrent sends
-    var MAX_CONCURRENT = 3;   // max simultaneous Discord API calls
-    var SEND_GAP_MS   = 400;  // minimum ms between queue dispatches
+    var MAX_CONCURRENT = 8;   // max simultaneous Discord API calls (handles 40+ jobs)
+    var SEND_GAP_MS   = 150;  // minimum ms between queue dispatches
     var _lastDispatch  = 0;   // timestamp of last dispatch
 
     function _enqueueJob(id) {
       if (_heartbeatFiring[id]) return; // already queued/in-flight — skip
       var job = jobs[id];
       if (!job || !job.running) return;
-      var token     = job._token || globalToken || state.token;
-      var channelId = document.getElementById('jchannel-' + id).value.trim();
-      var msg       = document.getElementById('jmsg-'     + id).value;
-      _heartbeatFiring[id] = true; // mark immediately to prevent double-enqueue
+      // Use cached values set at startJob() time — never read stale DOM
+      var token     = job._cachedToken     || job._token || globalToken || state.token;
+      var channelId = job._cachedChannelId || '';
+      var msg       = job._cachedMsg       || '';
+      if (!channelId) {
+        log('[Job #' + id + '] \u26a0 No channel selected — skipping.', 'err');
+        return;
+      }
+      _heartbeatFiring[id] = true;
       _sendQueue.push({ id: id, token: token, channelId: channelId, msg: msg });
     }
 
@@ -3066,9 +3080,10 @@
         var job = jobs[id];
         if (!job || !job.running) return;
         var tok = job._token || globalToken || state.token;
-        var channelId = document.getElementById('jchannel-' + id);
-        if (!tok || !channelId || !channelId.value.trim()) return;
-        fetch('https://discord.com/api/v10/channels/' + channelId.value.trim(), {
+        var channelId = document.getElementById('jchannel-id-' + id);
+        var chIdVal = (channelId && channelId.value.trim()) || job._cachedChannelId || '';
+        if (!tok || !chIdVal) return;
+        fetch('https://discord.com/api/v10/channels/' + chIdVal, {
           headers: { Authorization: tok }
         }).then(function(res) {
           if (!res.ok) return;
