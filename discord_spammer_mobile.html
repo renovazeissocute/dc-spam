@@ -1307,6 +1307,274 @@
     .shake {
       animation: shake 0.4s ease;
     }
+
+    /* ── CHANNEL PICKER MODAL ── */
+    .picker-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 300;
+      display: flex;
+      align-items: flex-end;
+      animation: overlayIn 0.22s ease;
+    }
+
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .picker-sheet {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: 22px 22px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      max-height: 82dvh;
+      display: flex;
+      flex-direction: column;
+      animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0);    }
+    }
+
+    .picker-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    .picker-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .picker-title {
+      font-size: 15px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .picker-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+
+    .picker-search {
+      margin: 10px 16px 6px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 9px 12px;
+      outline: none;
+      width: calc(100% - 32px);
+      flex-shrink: 0;
+    }
+
+    .picker-search:focus {
+      border-color: var(--border-active);
+    }
+
+    .picker-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 4px 0 12px;
+    }
+
+    .picker-body::-webkit-scrollbar { width: 3px; }
+    .picker-body::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+
+    .picker-loading {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .picker-loading-spin {
+      font-size: 26px;
+      animation: spin 1s linear infinite;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .guild-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(99,102,241,0.07);
+    }
+
+    .guild-row:active { background: var(--surface2); }
+
+    .guild-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-dark), var(--discord));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      overflow: hidden;
+      letter-spacing: -1px;
+    }
+
+    .guild-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .guild-info { flex: 1; min-width: 0; }
+
+    .guild-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .guild-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .guild-chevron {
+      color: var(--text-muted);
+      font-size: 14px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .guild-chevron.open { transform: rotate(90deg); }
+
+    .guild-channels {
+      display: none;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .guild-channels.open { display: block; }
+
+    .ch-loading {
+      padding: 12px 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .cat-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 20px 4px;
+    }
+
+    .ch-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .ch-row:active { background: var(--surface3); }
+
+    .ch-hash {
+      color: var(--text-muted);
+      font-size: 15px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .ch-name {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ch-slow {
+      font-size: 10px;
+      background: rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.35);
+      border-radius: 6px;
+      padding: 2px 6px;
+      color: var(--yellow);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .ch-pick-btn {
+      font-size: 10px;
+      background: linear-gradient(135deg,var(--primary),var(--discord));
+      border: none;
+      border-radius: 6px;
+      padding: 4px 9px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .ch-pick-btn:active { opacity: 0.75; }
+
+    .job-browse-btn {
+      background: linear-gradient(135deg,var(--primary),var(--discord));
+      border: none;
+      border-radius: 7px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .job-browse-btn:active { opacity: 0.75; }
   </style>
 </head>
 
@@ -2040,12 +2308,13 @@
           '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
         '</div>',
         '<div class="job-body">',
-          // Channel ID with verify button
+          // Channel ID with browse + verify buttons
           '<div class="job-field">',
             '<div class="job-field-label">&#128226; Channel ID</div>',
             '<div class="job-input-row">',
               '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="e.g. 123456789012345678" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
-              '<button class="job-verify-btn" onclick="verifyChannel(' + id + ')">&#128202; Check</button>',
+              '<button class="job-browse-btn" onclick="openChannelPicker(' + id + ')">&#127758; Browse</button>',
+              '<button class="job-verify-btn" onclick="verifyChannel(' + id + ')">&#10003;</button>',
             '</div>',
             '<div class="job-channel-status" id="jch-status-' + id + '"></div>',
           '</div>',
@@ -2143,52 +2412,48 @@
 
       startHeartbeat();
 
-      // ── Slowmode pre-check ────────────────────────────────────────────────
-      // Fetch channel info to detect active slowmode cooldown BEFORE sending.
-      // This prevents the phantom-cooldown bug: if we fire immediately and the
-      // user is already in a slowmode window, Discord records the attempt,
-      // starts the timer, but the message fails. We pre-wait instead.
-      //
-      // IMPORTANT: When bulk-starting many jobs we do NOT fire the initial send
-      // immediately — we schedule each job's first fire staggered via _nextFireAt
-      // so we don't hammer Discord with N simultaneous requests.
       if (_bulkStarting) {
-        // Just schedule first fire at current time so heartbeat picks it up
-        // (the stagger offset is already applied by startAllJobs via job._nextFireAt)
+        // Bulk mode: stagger offset applied by startAllJobs() — just return.
         delete _heartbeatFiring[id];
         return;
       }
 
-      _heartbeatFiring[id] = true;
+      // ── Slowmode-safe first schedule ──────────────────────────────────────
+      // NEVER fire the first send immediately on start.
+      //
+      // WHY: Discord's per-user slowmode cooldown is server-side and is NOT
+      // exposed via the channel REST endpoint. That endpoint only returns the
+      // channel's configured rate_limit_per_user (the setting), NOT whether
+      // this specific user is currently in a cooldown window.
+      //
+      // If the user sent a message in Discord directly within the slowmode
+      // window and then hits Start here, firing immediately causes a 429 /
+      // slowmode-blocked response — the job appears stuck for no visible reason
+      // even though no message was ever sent from this app.
+      //
+      // Fix: fetch channel info ONLY to auto-correct delay if it is shorter
+      // than the channel slowmode setting, then schedule the first fire AFTER
+      // delayMs. The heartbeat picks it up and sends normally.
       fetch('https://discord.com/api/v10/channels/' + channelId, {
         headers: { Authorization: token }
       }).then(function(res) {
         if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
         return res.json();
       }).then(function(ch) {
-        if (!job.running) { delete _heartbeatFiring[id]; return; }
-        var slowmodeSec = ch.rate_limit_per_user || 0; // channel slowmode in seconds
-        // Discord doesn't expose the per-user cooldown via REST directly,
-        // but we can infer: if slowmode is set AND delayMs < slowmodeSec*1000,
-        // the job delay is too short — warn the user.
-        if (slowmodeSec > 0 && delayMs < slowmodeSec * 1000) {
-          log('[Job #' + id + '] \u26a0 Slowmode is ' + slowmodeSec + 's but your delay is ' +
-            (delayMs/1000).toFixed(0) + 's. Adjusting delay to ' + (slowmodeSec + 1) + 's to avoid hits.', 'warn');
-          job._delayMs = (slowmodeSec + 1) * 1000;
-        }
-        // Fire the first send now (channel is reachable, no preemptive waste)
-        jobSend(id, token, channelId, msg).finally(function() {
-          delete _heartbeatFiring[id];
-          if (!job.running) return;
-          job._nextFireAt = Date.now() + job._delayMs;
-          _persistFireAt(id, job._nextFireAt);
-          _showCountdownLine(id, job._delayMs);
-        });
-      }).catch(function(e) {
-        // Can't reach channel — don't burn the slowmode, schedule for later
-        delete _heartbeatFiring[id];
         if (!job.running) return;
-        log('[Job #' + id + '] Channel check failed (' + e.message + ') — will retry at next interval.', 'warn');
+        var slowmodeSec = ch.rate_limit_per_user || 0;
+        if (slowmodeSec > 0 && job._delayMs < slowmodeSec * 1000) {
+          job._delayMs = (slowmodeSec + 1) * 1000;
+          log('[Job #' + id + '] \u26a0 Slowmode ' + slowmodeSec + 's detected — auto-adjusted delay to ' +
+            (slowmodeSec + 1) + 's.', 'warn');
+        }
+        job._nextFireAt = Date.now() + job._delayMs;
+        _persistFireAt(id, job._nextFireAt);
+        _showCountdownLine(id, job._delayMs);
+      }).catch(function(e) {
+        if (!job.running) return;
+        // Channel fetch failed — schedule normally anyway, don't abort
+        log('[Job #' + id + '] Channel info fetch failed (' + e.message + ') — scheduling with current delay.', 'warn');
         job._nextFireAt = Date.now() + job._delayMs;
         _persistFireAt(id, job._nextFireAt);
         _showCountdownLine(id, job._delayMs);
@@ -2698,6 +2963,304 @@
       var map = { running: 'badge-running', error: 'badge-error', ok: 'badge-ok', idle: 'badge-idle' };
       b.classList.add(map[type] || 'badge-idle');
       b.textContent = text || type.toUpperCase();
+    }
+
+    /* ── CHANNEL PICKER ──────────────────────────────────────────────────────
+     * Opens a bottom-sheet modal that lets the user browse their Discord
+     * servers and channels. Tapping a channel auto-fills the Channel ID
+     * in the job card and auto-runs a verify check.
+     * ─────────────────────────────────────────────────────────────────────── */
+    var _pickerJobId = null;      // which job the picker is for
+    var _pickerOpen  = false;
+    var _guildCache  = null;      // cached guild list after first load
+    var _chCache     = {};        // channelCache[guildId] = [...channels]
+
+    function openChannelPicker(jobId) {
+      var tok = (jobs[jobId] && jobs[jobId]._token) || globalToken || state.token;
+      if (!tok) {
+        alert('Verify your token on the Auth tab first.');
+        return;
+      }
+      _pickerJobId = jobId;
+      _pickerOpen  = true;
+
+      // Build the modal DOM
+      var overlay = document.createElement('div');
+      overlay.className = 'picker-overlay';
+      overlay.id = 'pickerOverlay';
+      overlay.innerHTML = [
+        '<div class="picker-sheet" id="pickerSheet">',
+          '<div class="picker-handle"></div>',
+          '<div class="picker-header">',
+            '<span class="picker-title">&#127758; Pick a Channel</span>',
+            '<button class="picker-close" onclick="closeChannelPicker()">&#10005;</button>',
+          '</div>',
+          '<input class="picker-search" id="pickerSearch" placeholder="&#128269; Search servers or channels..." autocomplete="off" autocorrect="off" spellcheck="false" />',
+          '<div class="picker-body" id="pickerBody">',
+            '<div class="picker-loading">',
+              '<span class="picker-loading-spin">&#9881;</span>',
+              'Loading your servers...',
+            '</div>',
+          '</div>',
+        '</div>'
+      ].join('');
+
+      // Close on backdrop tap
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeChannelPicker();
+      });
+
+      document.body.appendChild(overlay);
+
+      // Attach search handler
+      var searchEl = document.getElementById('pickerSearch');
+      searchEl.addEventListener('input', function() {
+        _pickerFilterGuilds(searchEl.value.trim().toLowerCase());
+      });
+
+      // Load guilds
+      _pickerLoadGuilds(tok);
+    }
+
+    function closeChannelPicker() {
+      var overlay = document.getElementById('pickerOverlay');
+      if (overlay) overlay.remove();
+      _pickerOpen  = false;
+      _pickerJobId = null;
+    }
+
+    function _pickerLoadGuilds(tok) {
+      if (_guildCache) {
+        _pickerRenderGuilds(_guildCache);
+        return;
+      }
+      fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: { Authorization: tok }
+      }).then(function(res) {
+        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+        return res.json();
+      }).then(function(guilds) {
+        // Sort: servers where user has owner/admin first
+        guilds.sort(function(a, b) {
+          var aP = (a.owner || (a.permissions & 8)) ? 1 : 0;
+          var bP = (b.owner || (b.permissions & 8)) ? 1 : 0;
+          return bP - aP || a.name.localeCompare(b.name);
+        });
+        _guildCache = guilds;
+        _pickerRenderGuilds(guilds);
+      }).catch(function(e) {
+        var body = document.getElementById('pickerBody');
+        if (body) body.innerHTML = '<div class="picker-loading" style="color:var(--red);">' +
+          '&#10007; Failed to load servers:<br>' + e.message + '</div>';
+      });
+    }
+
+    function _pickerRenderGuilds(guilds) {
+      var body = document.getElementById('pickerBody');
+      if (!body) return;
+
+      if (!guilds || guilds.length === 0) {
+        body.innerHTML = '<div class="picker-loading">No servers found.</div>';
+        return;
+      }
+
+      body.innerHTML = '';
+      guilds.forEach(function(g) {
+        var iconHtml = g.icon
+          ? '<img src="https://cdn.discordapp.com/icons/' + g.id + '/' + g.icon + '.webp?size=64" alt="" loading="lazy">'
+          : _guildInitials(g.name);
+
+        var row = document.createElement('div');
+        row.className = 'guild-row';
+        row.dataset.guildId   = g.id;
+        row.dataset.guildName = g.name.toLowerCase();
+        row.innerHTML = [
+          '<div class="guild-icon">' + iconHtml + '</div>',
+          '<div class="guild-info">',
+            '<div class="guild-name">' + _esc(g.name) + '</div>',
+            '<div class="guild-meta">' + (g.owner ? '&#9733; Owner' : 'Member') + '</div>',
+          '</div>',
+          '<span class="guild-chevron" id="gchev-' + g.id + '">&#8250;</span>'
+        ].join('');
+
+        var channels = document.createElement('div');
+        channels.className = 'guild-channels';
+        channels.id = 'gch-' + g.id;
+
+        row.addEventListener('click', function() {
+          _pickerToggleGuild(g.id);
+        });
+
+        body.appendChild(row);
+        body.appendChild(channels);
+      });
+    }
+
+    function _pickerToggleGuild(guildId) {
+      var chDiv = document.getElementById('gch-' + guildId);
+      var chev  = document.getElementById('gchev-' + guildId);
+      if (!chDiv) return;
+
+      var isOpen = chDiv.classList.contains('open');
+
+      // Close all other open guild panels
+      document.querySelectorAll('.guild-channels.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      document.querySelectorAll('.guild-chevron.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+
+      if (isOpen) return; // was open — just close
+
+      chDiv.classList.add('open');
+      if (chev) chev.classList.add('open');
+
+      // Scroll into view
+      setTimeout(function() {
+        chDiv.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 60);
+
+      // Load channels if not cached
+      if (_chCache[guildId]) {
+        _pickerRenderChannels(guildId, _chCache[guildId]);
+        return;
+      }
+
+      chDiv.innerHTML = '<div class="ch-loading">&#9881; Loading channels...</div>';
+
+      var tok = (jobs[_pickerJobId] && jobs[_pickerJobId]._token) || globalToken || state.token;
+      fetch('https://discord.com/api/v10/guilds/' + guildId + '/channels', {
+        headers: { Authorization: tok }
+      }).then(function(res) {
+        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+        return res.json();
+      }).then(function(channels) {
+        _chCache[guildId] = channels;
+        _pickerRenderChannels(guildId, channels);
+      }).catch(function(e) {
+        if (chDiv) chDiv.innerHTML = '<div class="ch-loading" style="color:var(--red);">&#10007; ' + e.message + '</div>';
+      });
+    }
+
+    function _pickerRenderChannels(guildId, allChannels) {
+      var chDiv = document.getElementById('gch-' + guildId);
+      if (!chDiv) return;
+
+      // Filter text channels only (type 0 = GUILD_TEXT, type 5 = GUILD_ANNOUNCEMENT)
+      var textChannels = allChannels.filter(function(c) {
+        return c.type === 0 || c.type === 5;
+      });
+
+      // Build category map
+      var categories = {}; // catId -> { name, position, channels: [] }
+      var noCat = [];
+
+      allChannels.filter(function(c){ return c.type === 4; }).forEach(function(cat) {
+        categories[cat.id] = { name: cat.name, position: cat.position, channels: [] };
+      });
+
+      textChannels.forEach(function(c) {
+        if (c.parent_id && categories[c.parent_id]) {
+          categories[c.parent_id].channels.push(c);
+        } else {
+          noCat.push(c);
+        }
+      });
+
+      var html = '';
+
+      if (textChannels.length === 0) {
+        html = '<div class="ch-loading" style="color:var(--text-muted);">No text channels found.</div>';
+        chDiv.innerHTML = html;
+        return;
+      }
+
+      // Uncategorised first
+      noCat.sort(function(a,b){ return a.position - b.position; }).forEach(function(c) {
+        html += _pickerChannelHtml(c);
+      });
+
+      // Then categories sorted by position
+      Object.values(categories)
+        .sort(function(a,b){ return a.position - b.position; })
+        .forEach(function(cat) {
+          if (cat.channels.length === 0) return;
+          html += '<div class="cat-label">' + _esc(cat.name) + '</div>';
+          cat.channels.sort(function(a,b){ return a.position - b.position; }).forEach(function(c) {
+            html += _pickerChannelHtml(c);
+          });
+        });
+
+      chDiv.innerHTML = html;
+
+      // Attach pick button listeners
+      chDiv.querySelectorAll('.ch-pick-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var chId   = btn.dataset.chid;
+          var chName = btn.dataset.chname;
+          _pickerSelectChannel(chId, chName);
+        });
+      });
+    }
+
+    function _pickerChannelHtml(c) {
+      var slowBadge = c.rate_limit_per_user
+        ? '<span class="ch-slow">&#128337; ' + c.rate_limit_per_user + 's</span>'
+        : '';
+      var icon = c.type === 5 ? '&#128226;' : '#';
+      return '<div class="ch-row" data-chid="' + c.id + '">' +
+        '<span class="ch-hash">' + icon + '</span>' +
+        '<span class="ch-name">' + _esc(c.name) + '</span>' +
+        slowBadge +
+        '<button class="ch-pick-btn" data-chid="' + c.id + '" data-chname="' + _esc(c.name) + '">Select</button>' +
+        '</div>';
+    }
+
+    function _pickerSelectChannel(channelId, channelName) {
+      var id = _pickerJobId;
+      if (!id) return;
+      var el = document.getElementById('jchannel-' + id);
+      if (el) {
+        el.value = channelId;
+        // Trigger input event so auto-save fires
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      closeChannelPicker();
+      // Auto-verify the selected channel
+      verifyChannel(id);
+      log('[Job #' + id + '] Channel selected from picker: #' + channelName + ' (' + channelId + ')', 'info');
+    }
+
+    function _pickerFilterGuilds(query) {
+      if (!query) {
+        // Show all, collapse channels
+        document.querySelectorAll('.guild-row').forEach(function(r){ r.style.display = ''; });
+        document.querySelectorAll('.guild-channels').forEach(function(c){ c.classList.remove('open'); });
+        document.querySelectorAll('.guild-chevron').forEach(function(c){ c.classList.remove('open'); });
+        return;
+      }
+      document.querySelectorAll('.guild-row').forEach(function(row) {
+        var gName = (row.dataset.guildName || '').toLowerCase();
+        row.style.display = gName.includes(query) ? '' : 'none';
+        // Hide corresponding channel div too
+        var gid  = row.dataset.guildId;
+        var chDiv = document.getElementById('gch-' + gid);
+        if (chDiv) chDiv.style.display = gName.includes(query) ? '' : 'none';
+      });
+    }
+
+    function _guildInitials(name) {
+      return name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ')
+        .filter(Boolean).slice(0, 2).map(function(w){ return w[0].toUpperCase(); }).join('')
+        || name[0].toUpperCase();
+    }
+
+    function _esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     /* ── INIT: restore saved jobs, or add a blank default ── */
