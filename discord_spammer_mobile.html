@@ -806,6 +806,35 @@
       min-height: 14px;
     }
 
+    .job-link-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 10px;
+      color: #c4b5fd;
+      font-weight: 600;
+      animation: fadeIn 0.18s ease;
+    }
+
+    .job-paste-ch-btn {
+      background: rgba(99,102,241,0.18);
+      border: 1px solid var(--border-active);
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-size: 13px;
+      color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+      transition: background 0.15s;
+    }
+
+    .job-paste-ch-btn:active { background: rgba(99,102,241,0.35); }
+
     .log-msg-countdown {
       color: #a78bfa;
       font-style: italic;
@@ -2271,11 +2300,22 @@
         if (opts.sent   ) jobs[id].sent   = opts.sent;
         if (opts.failed ) jobs[id].failed = opts.failed;
       }
-      // Auto-save on any field change
+      // Auto-save on any field change + link-parse on channel field
       ['jchannel-', 'jmsg-', 'jdelay-', 'jdelayunit-'].forEach(function(prefix) {
         var el = document.getElementById(prefix + id);
         if (el) el.addEventListener('input', _scheduleSave);
       });
+      // Parse Discord links pasted into the channel field
+      var chEl = document.getElementById('jchannel-' + id);
+      if (chEl) {
+        chEl.addEventListener('paste', function() {
+          // Let browser update value first, then parse
+          setTimeout(function() { _maybeParseChannelLink(id); }, 0);
+        });
+        chEl.addEventListener('input', function() {
+          _maybeParseChannelLink(id);
+        });
+      }
       _scheduleSave();
       return id;
     }
@@ -2308,12 +2348,12 @@
           '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
         '</div>',
         '<div class="job-body">',
-          // Channel ID with browse + verify buttons
           '<div class="job-field">',
-            '<div class="job-field-label">&#128226; Channel ID</div>',
+            '<div class="job-field-label">&#128226; Channel</div>',
             '<div class="job-input-row">',
-              '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="e.g. 123456789012345678" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
-              '<button class="job-browse-btn" onclick="openChannelPicker(' + id + ')">&#127758; Browse</button>',
+              '<input class="job-input" id="jchannel-' + id + '" type="text" placeholder="ID or paste discord.com/channels/… link" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" />',
+              '<button class="job-paste-ch-btn" title="Paste link or ID from clipboard" onclick="pasteChannelFromClipboard(' + id + ')">&#128203;</button>',
+              '<button class="job-browse-btn" onclick="openChannelPicker(' + id + ')">&#127758;</button>',
               '<button class="job-verify-btn" onclick="verifyChannel(' + id + ')">&#10003;</button>',
             '</div>',
             '<div class="job-channel-status" id="jch-status-' + id + '"></div>',
@@ -2346,6 +2386,68 @@
 
 
 
+    /* ── DISCORD LINK AUTO-PARSER ─────────────────────────────────────────────
+     * Accepts full Discord deep-links like:
+     *   https://discord.com/channels/GUILD_ID/CHANNEL_ID
+     *   https://discord.com/channels/@me/DM_CHANNEL_ID
+     *   https://discordapp.com/channels/…
+     * Extracts the last numeric segment as the channel ID,
+     * updates the field, shows a "From link" badge, and auto-verifies.
+     * ─────────────────────────────────────────────────────────────────────── */
+    function _maybeParseChannelLink(jobId) {
+      var el = document.getElementById('jchannel-' + jobId);
+      if (!el) return;
+      var val = el.value.trim();
+
+      // Match discord.com/channels/<any>/<CHANNEL_ID> — channel ID is always last
+      var m = val.match(/discord(?:app)?\.com\/channels\/[^/]+\/(\d{10,20})/);
+      if (!m) {
+        // Also try if they just pasted the path without https://
+        m = val.match(/\/channels\/[^/]+\/(\d{10,20})/);
+      }
+      if (!m) return; // plain ID — no action, user typed it themselves
+
+      var channelId = m[1];
+      // Replace field value with just the bare ID
+      el.value = channelId;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Show a styled "From link" badge in the status area
+      var statusEl = document.getElementById('jch-status-' + jobId);
+      if (statusEl) {
+        statusEl.innerHTML =
+          '<span class="job-link-badge">&#128279; Parsed from link &mdash; verifying&hellip;</span>';
+      }
+
+      // Auto-verify so the channel name shows up immediately
+      verifyChannel(jobId);
+    }
+
+    function pasteChannelFromClipboard(jobId) {
+      var el = document.getElementById('jchannel-' + jobId);
+      if (!el) return;
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function(text) {
+          text = text.trim();
+          if (!text) { alert('Clipboard is empty.'); return; }
+          el.value = text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('paste', { bubbles: true }));
+          // Try link parse; if no link found, just auto-verify the raw value
+          setTimeout(function() {
+            var parsed = el.value !== text; // link was parsed if value changed
+            if (!parsed) verifyChannel(jobId);
+          }, 50);
+        }).catch(function() {
+          el.focus();
+          alert('Clipboard permission denied.\nTap the field and long-press \u2192 Paste.');
+        });
+      } else {
+        el.focus();
+        alert('Tap the channel field and long-press \u2192 Paste.');
+      }
+    }
+
     function verifyChannel(id) {
       var tok = (jobs[id] && jobs[id]._token) || globalToken || state.token;
       var channelId = document.getElementById('jchannel-' + id).value.trim();
@@ -2360,12 +2462,43 @@
         return res.json();
       }).then(function(ch) {
         var name = ch.name ? '#' + ch.name : 'DM/' + channelId;
-        if (statusEl) { statusEl.textContent = '\u2713 ' + name; statusEl.style.color = 'var(--green)'; }
-        log('[Job #' + id + '] Channel OK: ' + name, 'ok');
+        var slowSec = ch.rate_limit_per_user || 0;
+        // Build status HTML: channel name + live slowmode badge
+        var slowBadge = '';
+        if (slowSec > 0) {
+          var delayEl  = document.getElementById('jdelay-' + id);
+          var unitEl   = document.getElementById('jdelayunit-' + id);
+          var jobDelay = delayEl && unitEl
+            ? (parseInt(delayEl.value) || 5) * (parseInt(unitEl.value) || 1)
+            : 0;
+          var tooFast  = jobDelay > 0 && jobDelay < slowSec;
+          slowBadge = ' <span style="display:inline-flex;align-items:center;gap:3px;' +
+            'background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.4);' +
+            'border-radius:5px;padding:1px 6px;font-size:9px;color:#fbbf24;font-weight:700;">' +
+            '\u23f1 ' + _fmtDuration(slowSec) + ' slowmode</span>';
+          if (tooFast) {
+            slowBadge += ' <span style="color:var(--red);font-size:9px;font-weight:700;">\u26a0 delay shorter than slowmode!</span>';
+          }
+        }
+        if (statusEl) {
+          statusEl.innerHTML = '<span style="color:var(--green);font-weight:600;">\u2713 ' +
+            _esc(name) + '</span>' + slowBadge;
+        }
+        // Store live slowmode on the job so the poller can compare later
+        if (jobs[id]) jobs[id]._liveSlow = slowSec;
+        log('[Job #' + id + '] Channel OK: ' + name +
+          (slowSec ? ' (slowmode: ' + _fmtDuration(slowSec) + ')' : ''), 'ok');
       }).catch(function(e) {
         if (statusEl) { statusEl.textContent = '\u2717 ' + e.message; statusEl.style.color = 'var(--red)'; }
         log('[Job #' + id + '] Channel check failed: ' + e.message, 'err');
       });
+    }
+
+    /* Format seconds as human-readable e.g. 30s, 5min, 1h */
+    function _fmtDuration(sec) {
+      if (sec < 60)  return sec + 's';
+      if (sec < 3600) return Math.round(sec / 60) + 'min';
+      return (sec / 3600).toFixed(1).replace(/\.0$/, '') + 'h';
     }
 
     // Flag set during startAllJobs() to suppress per-job side-effects
@@ -2411,6 +2544,8 @@
       }
 
       startHeartbeat();
+      // Start realtime slowmode polling for this job
+      _scheduleSlowPoll(id);
 
       if (_bulkStarting) {
         // Bulk mode: stagger offset applied by startAllJobs() — just return.
@@ -2577,6 +2712,74 @@
       }
     }
 
+    /* ── SLOWMODE POLLER ───────────────────────────────────────────────────────
+     * For each running job, re-fetch the channel's rate_limit_per_user every
+     * SLOW_POLL_MS. If it changed, update job._delayMs and log a notice.
+     * This keeps the app in sync with Discord channel setting changes in realtime.
+     * ─────────────────────────────────────────────────────────────────────── */
+    var SLOW_POLL_MS = 60000; // re-check slowmode every 60 s
+    var _slowPollTimers = {}; // jobId -> setTimeout handle
+
+    function _scheduleSlowPoll(id) {
+      _clearSlowPoll(id);
+      _slowPollTimers[id] = setTimeout(function() {
+        delete _slowPollTimers[id];
+        var job = jobs[id];
+        if (!job || !job.running) return;
+        var tok = job._token || globalToken || state.token;
+        var channelId = document.getElementById('jchannel-' + id);
+        if (!tok || !channelId || !channelId.value.trim()) return;
+        fetch('https://discord.com/api/v10/channels/' + channelId.value.trim(), {
+          headers: { Authorization: tok }
+        }).then(function(res) {
+          if (!res.ok) return;
+          return res.json();
+        }).then(function(ch) {
+          if (!ch || !job.running) return;
+          var slowSec = ch.rate_limit_per_user || 0;
+          var prev    = job._liveSlow || 0;
+          job._liveSlow = slowSec;
+          // Update the channel status badge with fresh info
+          var statusEl = document.getElementById('jch-status-' + id);
+          if (statusEl && ch.name) {
+            var slowBadge = slowSec > 0
+              ? ' <span style="display:inline-flex;align-items:center;gap:3px;' +
+                'background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.4);' +
+                'border-radius:5px;padding:1px 6px;font-size:9px;color:#fbbf24;font-weight:700;">' +
+                '\u23f1 ' + _fmtDuration(slowSec) + ' slowmode</span>'
+              : '';
+            statusEl.innerHTML = '<span style="color:var(--green);font-weight:600;">\u2713 #' +
+              _esc(ch.name) + '</span>' + slowBadge;
+          }
+          // If slowmode changed, update delay and log
+          if (slowSec !== prev) {
+            if (slowSec > 0 && job._delayMs < slowSec * 1000) {
+              var newDelay = (slowSec + 1) * 1000;
+              job._delayMs = newDelay;
+              log('[Job #' + id + '] Slowmode changed to ' + _fmtDuration(slowSec) +
+                ' \u2014 delay auto-updated to ' + _fmtDuration(slowSec + 1) + '.', 'warn');
+            } else if (prev > 0 && slowSec === 0) {
+              log('[Job #' + id + '] Slowmode removed on channel.', 'info');
+            } else if (slowSec > 0) {
+              log('[Job #' + id + '] Slowmode updated: ' + _fmtDuration(slowSec) + '.', 'info');
+            }
+          }
+          // Schedule next poll while job is still running
+          if (job.running) _scheduleSlowPoll(id);
+        }).catch(function() {
+          // Network hiccup — just try again next cycle
+          if (jobs[id] && jobs[id].running) _scheduleSlowPoll(id);
+        });
+      }, SLOW_POLL_MS);
+    }
+
+    function _clearSlowPoll(id) {
+      if (_slowPollTimers[id]) {
+        clearTimeout(_slowPollTimers[id]);
+        delete _slowPollTimers[id];
+      }
+    }
+
     function startHeartbeat() {
       if (_heartbeat) return; // already running
       _heartbeat = setInterval(function() {
@@ -2672,6 +2875,8 @@
       saveJobs();
       updateGlobalStats();
       updateStartAllBtn();
+      // Cancel slowmode poller for this job
+      _clearSlowPoll(id);
       stopHeartbeat();
       // Stop keep-alive if no jobs are running
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
@@ -2968,6 +3173,8 @@
       }
       _pickerJobId = jobId;
       _pickerOpen  = true;
+      // Always clear channel cache so slowmode values are fresh from Discord
+      _chCache = {};
 
       // Build the modal DOM
       var overlay = document.createElement('div');
