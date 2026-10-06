@@ -613,7 +613,9 @@
       -webkit-user-select: none;
     }
 
-    .server-picker-header:active { background: var(--surface3); }
+    .server-picker-header:active {
+      background: var(--surface3);
+    }
 
     .server-picker-label {
       font-size: 13px;
@@ -639,14 +641,18 @@
       flex-shrink: 0;
     }
 
-    .server-picker-chevron.open { transform: rotate(90deg); }
+    .server-picker-chevron.open {
+      transform: rotate(90deg);
+    }
 
     .server-picker-body {
       display: none;
       border-top: 1px solid var(--border);
     }
 
-    .server-picker-body.open { display: block; }
+    .server-picker-body.open {
+      display: block;
+    }
 
     .server-search {
       width: calc(100% - 28px);
@@ -663,7 +669,9 @@
       display: block;
     }
 
-    .server-search:focus { border-color: var(--border-active); }
+    .server-search:focus {
+      border-color: var(--border-active);
+    }
 
     .server-list {
       max-height: 220px;
@@ -671,8 +679,14 @@
       padding: 4px 0 8px;
     }
 
-    .server-list::-webkit-scrollbar { width: 3px; }
-    .server-list::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+    .server-list::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .server-list::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 2px;
+    }
 
     .server-item {
       display: flex;
@@ -683,8 +697,13 @@
       transition: background 0.15s;
     }
 
-    .server-item:active { background: var(--surface2); }
-    .server-item.selected { background: rgba(99,102,241,0.12); }
+    .server-item:active {
+      background: var(--surface2);
+    }
+
+    .server-item.selected {
+      background: rgba(99, 102, 241, 0.12);
+    }
 
     .server-icon {
       width: 32px;
@@ -703,7 +722,8 @@
     }
 
     .server-icon img {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       border-radius: 10px;
     }
@@ -757,7 +777,9 @@
       box-shadow: 0 2px 10px var(--primary-glow);
     }
 
-    .btn-add-job:active { opacity: 0.8; }
+    .btn-add-job:active {
+      opacity: 0.8;
+    }
 
     .job-card {
       background: var(--surface);
@@ -812,8 +834,15 @@
     }
 
     @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
     }
 
     .job-label {
@@ -828,8 +857,13 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    .job-stats-inline .jstat-ok { color: var(--green); }
-    .job-stats-inline .jstat-err { color: var(--red); }
+    .job-stats-inline .jstat-ok {
+      color: var(--green);
+    }
+
+    .job-stats-inline .jstat-err {
+      color: var(--red);
+    }
 
     .job-remove-btn {
       background: transparent;
@@ -841,7 +875,9 @@
       line-height: 1;
     }
 
-    .job-remove-btn:active { color: var(--red); }
+    .job-remove-btn:active {
+      color: var(--red);
+    }
 
     .job-body {
       padding: 12px 14px;
@@ -892,7 +928,9 @@
       align-items: flex-end;
     }
 
-    .job-input-row .job-input { flex: 1; }
+    .job-input-row .job-input {
+      flex: 1;
+    }
 
     .job-delay-unit {
       padding: 8px 10px;
@@ -936,7 +974,9 @@
       margin-top: 2px;
     }
 
-    .job-verify-btn:active { opacity: 0.7; }
+    .job-verify-btn:active {
+      opacity: 0.7;
+    }
 
     .job-channel-status {
       font-size: 10px;
@@ -959,7 +999,7 @@
     }
 
     .job-paste-ch-btn {
-      background: rgba(99,102,241,0.18);
+      background: rgba(99, 102, 241, 0.18);
       border: 1px solid var(--border-active);
       border-radius: 7px;
       padding: 5px 8px;
@@ -971,7 +1011,9 @@
       transition: background 0.15s;
     }
 
-    .job-paste-ch-btn:active { background: rgba(99,102,241,0.35); }
+    .job-paste-ch-btn:active {
+      background: rgba(99, 102, 241, 0.35);
+    }
 
     .log-msg-countdown {
       color: #a78bfa;
@@ -996,8 +1038,14 @@
       -webkit-appearance: none;
     }
 
-    .job-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .job-btn:active:not(:disabled) { transform: scale(0.97); }
+    .job-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .job-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
 
     .job-btn-start {
       background: linear-gradient(135deg, #16a34a, var(--green));
@@ -1479,7 +1527,7 @@
     .picker-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.72);
+      background: rgba(0, 0, 0, 0.72);
       z-index: 300;
       display: flex;
       align-items: flex-end;
@@ -1487,8 +1535,13 @@
     }
 
     @keyframes overlayIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .picker-sheet {
@@ -1502,19 +1555,24 @@
       max-height: 82dvh;
       display: flex;
       flex-direction: column;
-      animation: sheetUp 0.28s cubic-bezier(0.22,1,0.36,1);
+      animation: sheetUp 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     @keyframes sheetUp {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0);    }
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
     }
 
     .picker-handle {
       width: 36px;
       height: 4px;
-      background: rgba(255,255,255,0.18);
+      background: rgba(255, 255, 255, 0.18);
       border-radius: 2px;
       margin: 10px auto 0;
       flex-shrink: 0;
@@ -1569,8 +1627,14 @@
       padding: 4px 0 12px;
     }
 
-    .picker-body::-webkit-scrollbar { width: 3px; }
-    .picker-body::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+    .picker-body::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .picker-body::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 2px;
+    }
 
     .picker-loading {
       text-align: center;
@@ -1587,8 +1651,13 @@
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .guild-row {
@@ -1598,10 +1667,12 @@
       padding: 10px 16px;
       cursor: pointer;
       transition: background 0.15s;
-      border-bottom: 1px solid rgba(99,102,241,0.07);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.07);
     }
 
-    .guild-row:active { background: var(--surface2); }
+    .guild-row:active {
+      background: var(--surface2);
+    }
 
     .guild-icon {
       width: 38px;
@@ -1626,7 +1697,10 @@
       border-radius: 12px;
     }
 
-    .guild-info { flex: 1; min-width: 0; }
+    .guild-info {
+      flex: 1;
+      min-width: 0;
+    }
 
     .guild-name {
       font-size: 13px;
@@ -1649,7 +1723,9 @@
       flex-shrink: 0;
     }
 
-    .guild-chevron.open { transform: rotate(90deg); }
+    .guild-chevron.open {
+      transform: rotate(90deg);
+    }
 
     .guild-channels {
       display: none;
@@ -1657,7 +1733,9 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .guild-channels.open { display: block; }
+    .guild-channels.open {
+      display: block;
+    }
 
     .ch-loading {
       padding: 12px 20px;
@@ -1683,7 +1761,9 @@
       transition: background 0.15s;
     }
 
-    .ch-row:active { background: var(--surface3); }
+    .ch-row:active {
+      background: var(--surface3);
+    }
 
     .ch-hash {
       color: var(--text-muted);
@@ -1703,8 +1783,8 @@
 
     .ch-slow {
       font-size: 10px;
-      background: rgba(245,158,11,0.15);
-      border: 1px solid rgba(245,158,11,0.35);
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
       border-radius: 6px;
       padding: 2px 6px;
       color: var(--yellow);
@@ -1714,7 +1794,7 @@
 
     .ch-pick-btn {
       font-size: 10px;
-      background: linear-gradient(135deg,var(--primary),var(--discord));
+      background: linear-gradient(135deg, var(--primary), var(--discord));
       border: none;
       border-radius: 6px;
       padding: 4px 9px;
@@ -1725,10 +1805,12 @@
       flex-shrink: 0;
     }
 
-    .ch-pick-btn:active { opacity: 0.75; }
+    .ch-pick-btn:active {
+      opacity: 0.75;
+    }
 
     .job-browse-btn {
-      background: linear-gradient(135deg,var(--primary),var(--discord));
+      background: linear-gradient(135deg, var(--primary), var(--discord));
       border: none;
       border-radius: 7px;
       padding: 5px 10px;
@@ -1741,7 +1823,9 @@
       flex-shrink: 0;
     }
 
-    .job-browse-btn:active { opacity: 0.75; }
+    .job-browse-btn:active {
+      opacity: 0.75;
+    }
   </style>
 </head>
 
@@ -2027,7 +2111,8 @@
     <div class="tab-panel" id="panel-send">
       <div class="bg-banner" id="bgBanner" style="display:none;">
         <div class="bg-banner-dot"></div>
-        <span>Audio keep-alive active &mdash; jobs will continue when you switch apps &bull; Keep phone unlocked &amp; volume not muted for best results</span>
+        <span>Audio keep-alive active &mdash; jobs will continue when you switch apps &bull; Keep phone unlocked &amp;
+          volume not muted for best results</span>
       </div>
 
       <!-- SERVER PICKER (top of page) -->
@@ -2039,7 +2124,8 @@
           <span class="server-picker-chevron" id="serverPickerChev">&rsaquo;</span>
         </div>
         <div class="server-picker-body" id="serverPickerBody">
-          <input class="server-search" id="serverSearchInput" placeholder="&#128269; Search servers..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterServers(this.value)" />
+          <input class="server-search" id="serverSearchInput" placeholder="&#128269; Search servers..."
+            autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterServers(this.value)" />
           <div class="server-list" id="serverList">
             <div class="server-loading">Verify your token first, then tap here to load servers.</div>
           </div>
@@ -2049,8 +2135,12 @@
       <div class="jobs-header">
         <div class="jobs-title">&#9889; Active Jobs</div>
         <div style="display:flex;gap:6px;">
-          <button class="btn-add-job" id="startAllBtn" onclick="startAllJobs()" style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 2px 10px rgba(34,197,94,0.3);">&#9654; All</button>
-          <button class="btn-add-job" id="stopAllBtn" onclick="stopAllJobs()" style="background:linear-gradient(135deg,#b91c1c,#ef4444);box-shadow:0 2px 10px rgba(239,68,68,0.3);display:none;">&#9209; All</button>
+          <button class="btn-add-job" id="startAllBtn" onclick="startAllJobs()"
+            style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 2px 10px rgba(34,197,94,0.3);">&#9654;
+            All</button>
+          <button class="btn-add-job" id="stopAllBtn" onclick="stopAllJobs()"
+            style="background:linear-gradient(135deg,#b91c1c,#ef4444);box-shadow:0 2px 10px rgba(239,68,68,0.3);display:none;">&#9209;
+            All</button>
           <button class="btn-add-job" onclick="addJob()">+ Add</button>
         </div>
       </div>
@@ -2114,12 +2204,12 @@
     // SECONDARY: AudioContext looping buffer + Screen Wake Lock.
     // TERTIARY: A "pinger" setInterval that auto-heals if the audio gets suspended.
 
-    var _audioCtx  = null;
+    var _audioCtx = null;
     var _loopSource = null;
-    var _wakeLock  = null;
-    var _bgAudio   = null;   // HTML <audio> — PRIMARY keep-alive
+    var _wakeLock = null;
+    var _bgAudio = null;   // HTML <audio> — PRIMARY keep-alive
     var _bgAudioUrl = null;  // blob URL for the WAV we generate
-    var _pinger    = null;   // secondary watchdog interval
+    var _pinger = null;   // secondary watchdog interval
 
     /* Generate a 0.5 s WAV blob with a very quiet 1 Hz sine wave.
      * iOS requires actual non-zero PCM data; a zero-byte data chunk
@@ -2129,8 +2219,8 @@
       try {
         var sr = 44100, n = sr >> 1; // 0.5 s of samples
         var ab = new ArrayBuffer(44 + n * 2);
-        var v  = new DataView(ab);
-        var ws = function(o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+        var v = new DataView(ab);
+        var ws = function (o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
         ws(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); ws(8, 'WAVE');
         ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
         v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
@@ -2141,7 +2231,7 @@
           v.setInt16(44 + i * 2, Math.round(Math.sin(2 * Math.PI * i / sr) * 100), true);
         }
         return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
-      } catch(e) { return null; }
+      } catch (e) { return null; }
     }
 
     function _buildSilentBuffer(ctx) {
@@ -2154,7 +2244,7 @@
 
     function _startAudioElement() {
       if (_bgAudio) {
-        if (_bgAudio.paused) _bgAudio.play().catch(function(){});
+        if (_bgAudio.paused) _bgAudio.play().catch(function () { });
         return;
       }
       var url = _makeSilentWavUrl();
@@ -2165,15 +2255,15 @@
       a.loop = true;
       a.volume = 0.001; // near-inaudible
       // Auto-heal: if iOS pauses us (e.g. incoming call), resume ASAP
-      a.addEventListener('pause', function() {
-        var any = Object.values(jobs).some(function(j){ return j.running; });
-        if (any) { setTimeout(function(){ try { a.play(); } catch(e){} }, 300); }
+      a.addEventListener('pause', function () {
+        var any = Object.values(jobs).some(function (j) { return j.running; });
+        if (any) { setTimeout(function () { try { a.play(); } catch (e) { } }, 300); }
       });
-      a.addEventListener('ended', function() { // shouldn't fire with loop, but safety
-        var any = Object.values(jobs).some(function(j){ return j.running; });
-        if (any) { a.load(); a.play().catch(function(){}); }
+      a.addEventListener('ended', function () { // shouldn't fire with loop, but safety
+        var any = Object.values(jobs).some(function (j) { return j.running; });
+        if (any) { a.load(); a.play().catch(function () { }); }
       });
-      a.play().catch(function(){
+      a.play().catch(function () {
         /* Will be retried by _pinger if user gesture context is available */
       });
       _bgAudio = a;
@@ -2184,12 +2274,12 @@
         if (!_audioCtx || _audioCtx.state === 'closed') {
           _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(function(){});
+        if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(function () { });
         // Auto-heal AudioContext suspension
-        _audioCtx.onstatechange = function() {
+        _audioCtx.onstatechange = function () {
           if (_audioCtx && _audioCtx.state === 'suspended') {
-            var any = Object.values(jobs).some(function(j){ return j.running; });
-            if (any) _audioCtx.resume().catch(function(){});
+            var any = Object.values(jobs).some(function (j) { return j.running; });
+            if (any) _audioCtx.resume().catch(function () { });
           }
         };
         if (!_loopSource) {
@@ -2199,13 +2289,13 @@
           src.connect(_audioCtx.destination);
           src.start(0);
           _loopSource = src;
-          src.onended = function() {
+          src.onended = function () {
             _loopSource = null;
-            var any = Object.values(jobs).some(function(j){ return j.running; });
+            var any = Object.values(jobs).some(function (j) { return j.running; });
             if (any) _startAudioContext();
           };
         }
-      } catch(e) {}
+      } catch (e) { }
     }
 
     function startKeepAlive() {
@@ -2228,39 +2318,39 @@
           });
           navigator.mediaSession.playbackState = 'playing';
           // Swallow media key events so iOS doesn't pause us
-          ['play','pause','stop','nexttrack','previoustrack'].forEach(function(a) {
-            try { navigator.mediaSession.setActionHandler(a, function(){}); } catch(e){}
+          ['play', 'pause', 'stop', 'nexttrack', 'previoustrack'].forEach(function (a) {
+            try { navigator.mediaSession.setActionHandler(a, function () { }); } catch (e) { }
           });
         }
-      } catch(e) {}
+      } catch (e) { }
 
       // TERTIARY: Watchdog pinger — checks every 5 s that audio is alive,
       // restarts anything that got suspended while we were backgrounded.
       if (!_pinger) {
-        _pinger = setInterval(function() {
-          var any = Object.values(jobs).some(function(j){ return j.running; });
+        _pinger = setInterval(function () {
+          var any = Object.values(jobs).some(function (j) { return j.running; });
           if (!any) return;
           if (_bgAudio && _bgAudio.paused) {
-            _bgAudio.play().catch(function(){});
+            _bgAudio.play().catch(function () { });
           }
           if (_audioCtx && _audioCtx.state === 'suspended') {
-            _audioCtx.resume().catch(function(){});
+            _audioCtx.resume().catch(function () { });
           }
           // Keep mediaSession alive (iOS can reset it)
           try {
             if ('mediaSession' in navigator) {
               navigator.mediaSession.playbackState = 'playing';
             }
-          } catch(e) {}
+          } catch (e) { }
         }, 5000);
       }
 
       // Screen Wake Lock
       if (navigator.wakeLock && !_wakeLock) {
-        navigator.wakeLock.request('screen').then(function(wl) {
+        navigator.wakeLock.request('screen').then(function (wl) {
           _wakeLock = wl;
-          wl.addEventListener('release', function() { _wakeLock = null; });
-        }).catch(function(){});
+          wl.addEventListener('release', function () { _wakeLock = null; });
+        }).catch(function () { });
       }
 
       document.getElementById('bgBanner').style.display = 'flex';
@@ -2271,31 +2361,31 @@
       if (_pinger) { clearInterval(_pinger); _pinger = null; }
       // Stop HTML audio
       if (_bgAudio) {
-        try { _bgAudio.pause(); _bgAudio.src = ''; } catch(e) {}
+        try { _bgAudio.pause(); _bgAudio.src = ''; } catch (e) { }
         _bgAudio = null;
       }
       if (_bgAudioUrl) {
-        try { URL.revokeObjectURL(_bgAudioUrl); } catch(e) {}
+        try { URL.revokeObjectURL(_bgAudioUrl); } catch (e) { }
         _bgAudioUrl = null;
       }
       // Stop AudioContext
       try {
         if (_loopSource) { _loopSource.stop(); _loopSource.disconnect(); }
         if (_audioCtx && _audioCtx.state !== 'closed') _audioCtx.close();
-      } catch(e) {}
+      } catch (e) { }
       _loopSource = null; _audioCtx = null;
       // Release Wake Lock
-      if (_wakeLock) { try { _wakeLock.release(); } catch(e) {} _wakeLock = null; }
+      if (_wakeLock) { try { _wakeLock.release(); } catch (e) { } _wakeLock = null; }
       document.getElementById('bgBanner').style.display = 'none';
     }
 
     function resumeKeepAlive() {
-      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+      var anyRunning = Object.values(jobs).some(function (j) { return j.running; });
       if (!anyRunning) return;
 
       // Resume HTML audio (primary)
       if (_bgAudio && _bgAudio.paused) {
-        _bgAudio.play().catch(function(){});
+        _bgAudio.play().catch(function () { });
       } else if (!_bgAudio) {
         // Lost completely — full restart
         startKeepAlive();
@@ -2304,9 +2394,9 @@
 
       // Resume AudioContext (secondary)
       if (_audioCtx && _audioCtx.state === 'suspended') {
-        _audioCtx.resume().then(function() {
+        _audioCtx.resume().then(function () {
           if (!_loopSource) _startAudioContext();
-        }).catch(function() { _startAudioContext(); });
+        }).catch(function () { _startAudioContext(); });
       } else if (!_audioCtx || _audioCtx.state === 'closed') {
         _startAudioContext();
       } else if (!_loopSource) {
@@ -2315,25 +2405,25 @@
 
       // Re-acquire Wake Lock
       if (navigator.wakeLock && !_wakeLock) {
-        navigator.wakeLock.request('screen').then(function(wl) {
+        navigator.wakeLock.request('screen').then(function (wl) {
           _wakeLock = wl;
-          wl.addEventListener('release', function() { _wakeLock = null; });
-        }).catch(function(){});
+          wl.addEventListener('release', function () { _wakeLock = null; });
+        }).catch(function () { });
       }
     }
 
     // ── Visibility recovery: when user returns to Safari, catch up immediately ──
-    document.addEventListener('visibilitychange', function() {
+    document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'visible') {
         resumeKeepAlive();
         // Restart heartbeat (it may have been frozen while backgrounded)
         if (!_heartbeat) {
-          var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+          var anyRunning = Object.values(jobs).some(function (j) { return j.running; });
           if (anyRunning) startHeartbeat();
         }
         // For each running job, restore _nextFireAt from localStorage if lost,
         // then immediately nudge any overdue job by setting fireAt to now
-        Object.keys(jobs).forEach(function(sid) {
+        Object.keys(jobs).forEach(function (sid) {
           var id = parseInt(sid);
           var job = jobs[id];
           if (!job || !job.running) return;
@@ -2356,15 +2446,15 @@
     });
 
     // Also handle page restore from bfcache (back-forward cache on iOS)
-    window.addEventListener('pageshow', function(e) {
+    window.addEventListener('pageshow', function (e) {
       if (e.persisted) {
         resumeKeepAlive();
         // Ensure heartbeat is running
-        var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+        var anyRunning = Object.values(jobs).some(function (j) { return j.running; });
         if (anyRunning) {
           if (!_heartbeat) startHeartbeat();
           // Nudge all overdue jobs to fire on next heartbeat
-          Object.keys(jobs).forEach(function(sid) {
+          Object.keys(jobs).forEach(function (sid) {
             var id = parseInt(sid);
             var job = jobs[id];
             if (!job || !job.running) return;
@@ -2391,11 +2481,11 @@
      * One server is selected globally. All job cards then show a searchable
      * channel dropdown populated from that server.
      * ─────────────────────────────────────────────────────────────────────── */
-    var _selectedGuildId   = null;
+    var _selectedGuildId = null;
     var _selectedGuildName = null;
-    var _serverGuildCache  = null;   // full guild list
-    var _serverChCache     = {};     // guildId -> channels[]
-    var _serverPickerOpen  = false;
+    var _serverGuildCache = null;   // full guild list
+    var _serverChCache = {};     // guildId -> channels[]
+    var _serverPickerOpen = false;
 
     function toggleServerPicker() {
       var body = document.getElementById('serverPickerBody');
@@ -2418,15 +2508,15 @@
       if (listEl) listEl.innerHTML = '<div class="server-loading">&#9881; Loading servers...</div>';
       fetch('https://discord.com/api/v10/users/@me/guilds', {
         headers: { Authorization: tok }
-      }).then(function(r){ return r.json(); }).then(function(guilds) {
-        guilds.sort(function(a,b){
+      }).then(function (r) { return r.json(); }).then(function (guilds) {
+        guilds.sort(function (a, b) {
           var aP = (a.owner || (a.permissions & 8)) ? 1 : 0;
           var bP = (b.owner || (b.permissions & 8)) ? 1 : 0;
           return bP - aP || a.name.localeCompare(b.name);
         });
         _serverGuildCache = guilds;
         _renderServerList(guilds);
-      }).catch(function(e){
+      }).catch(function (e) {
         if (listEl) listEl.innerHTML = '<div class="server-loading" style="color:var(--red);">&#10007; ' + e.message + '</div>';
       });
     }
@@ -2439,10 +2529,10 @@
         return;
       }
       listEl.innerHTML = '';
-      guilds.forEach(function(g) {
+      guilds.forEach(function (g) {
         var item = document.createElement('div');
         item.className = 'server-item' + (g.id === _selectedGuildId ? ' selected' : '');
-        item.dataset.guildId   = g.id;
+        item.dataset.guildId = g.id;
         item.dataset.guildName = g.name.toLowerCase();
         var iconHtml = g.icon
           ? '<img src="https://cdn.discordapp.com/icons/' + g.id + '/' + g.icon + '.webp?size=64" alt="" loading="lazy">'
@@ -2451,7 +2541,7 @@
           '<div class="server-icon">' + iconHtml + '</div>' +
           '<span class="server-name">' + _esc(g.name) + '</span>' +
           (g.id === _selectedGuildId ? '<span class="server-check">&#10003;</span>' : '');
-        item.addEventListener('click', function() { selectServer(g.id, g.name); });
+        item.addEventListener('click', function () { selectServer(g.id, g.name); });
         listEl.appendChild(item);
       });
     }
@@ -2460,14 +2550,14 @@
       var listEl = document.getElementById('serverList');
       if (!listEl) return;
       var q = query.toLowerCase().trim();
-      listEl.querySelectorAll('.server-item').forEach(function(item) {
+      listEl.querySelectorAll('.server-item').forEach(function (item) {
         var n = (item.dataset.guildName || '');
         item.style.display = (!q || n.includes(q)) ? '' : 'none';
       });
     }
 
     function selectServer(guildId, guildName) {
-      _selectedGuildId   = guildId;
+      _selectedGuildId = guildId;
       _selectedGuildName = guildName;
       // Update header label
       var sel = document.getElementById('serverPickerSelected');
@@ -2479,9 +2569,9 @@
       if (chev) chev.classList.remove('open');
       _serverPickerOpen = false;
       // Load channels for this server
-      _loadServerChannels(guildId, function() {
+      _loadServerChannels(guildId, function () {
         // Populate every job card dropdown
-        Object.keys(jobs).forEach(function(sid) { _refreshJobChannels(parseInt(sid)); });
+        Object.keys(jobs).forEach(function (sid) { _refreshJobChannels(parseInt(sid)); });
       });
       saveJobs();
     }
@@ -2492,10 +2582,10 @@
       if (!tok) return;
       fetch('https://discord.com/api/v10/guilds/' + guildId + '/channels', {
         headers: { Authorization: tok }
-      }).then(function(r){ return r.json(); }).then(function(channels) {
+      }).then(function (r) { return r.json(); }).then(function (channels) {
         _serverChCache[guildId] = channels;
         if (cb) cb();
-      }).catch(function(){});
+      }).catch(function () { });
     }
 
     /* Rebuild <select> options in a job card from the cached channel list */
@@ -2508,15 +2598,15 @@
         return;
       }
       // Filter text + announcement channels, sort by position
-      var text = channels.filter(function(c){ return c.type === 0 || c.type === 5; })
-        .sort(function(a,b){ return a.position - b.position; });
+      var text = channels.filter(function (c) { return c.type === 0 || c.type === 5; })
+        .sort(function (a, b) { return a.position - b.position; });
       // Build category map for grouping
       var cats = {};
-      channels.filter(function(c){ return c.type === 4; }).forEach(function(c){
+      channels.filter(function (c) { return c.type === 4; }).forEach(function (c) {
         cats[c.id] = { name: c.name, position: c.position, items: [] };
       });
       var noCat = [];
-      text.forEach(function(c){
+      text.forEach(function (c) {
         if (c.parent_id && cats[c.parent_id]) cats[c.parent_id].items.push(c);
         else noCat.push(c);
       });
@@ -2526,16 +2616,16 @@
         sel.innerHTML = html;
         return;
       }
-      noCat.forEach(function(c){
+      noCat.forEach(function (c) {
         var slow = c.rate_limit_per_user ? ' \u23f1' + c.rate_limit_per_user + 's' : '';
-        html += '<option value="' + c.id + '">' + (c.type===5?'\uD83D\uDCE2':'#') + ' ' + _esc(c.name) + slow + '</option>';
+        html += '<option value="' + c.id + '">' + (c.type === 5 ? '\uD83D\uDCE2' : '#') + ' ' + _esc(c.name) + slow + '</option>';
       });
-      Object.values(cats).sort(function(a,b){ return a.position-b.position; }).forEach(function(cat){
+      Object.values(cats).sort(function (a, b) { return a.position - b.position; }).forEach(function (cat) {
         if (cat.items.length === 0) return;
         html += '<optgroup label="' + _esc(cat.name) + '">';
-        cat.items.forEach(function(c){
+        cat.items.forEach(function (c) {
           var slow = c.rate_limit_per_user ? ' \u23f1' + c.rate_limit_per_user + 's' : '';
-          html += '<option value="' + c.id + '">' + (c.type===5?'\uD83D\uDCE2':'#') + ' ' + _esc(c.name) + slow + '</option>';
+          html += '<option value="' + c.id + '">' + (c.type === 5 ? '\uD83D\uDCE2' : '#') + ' ' + _esc(c.name) + slow + '</option>';
         });
         html += '</optgroup>';
       });
@@ -2596,34 +2686,34 @@
           list: [],
           selectedGuildId: _selectedGuildId
         };
-        Object.keys(jobs).forEach(function(sid) {
+        Object.keys(jobs).forEach(function (sid) {
           var id = parseInt(sid);
           var job = jobs[id];
           var channelIdEl = document.getElementById('jchannel-id-' + id);
-          var msgEl       = document.getElementById('jmsg-'        + id);
-          var delayEl     = document.getElementById('jdelay-'      + id);
-          var unitEl      = document.getElementById('jdelayunit-'  + id);
+          var msgEl = document.getElementById('jmsg-' + id);
+          var delayEl = document.getElementById('jdelay-' + id);
+          var unitEl = document.getElementById('jdelayunit-' + id);
           data.list.push({
-            id:        id,
+            id: id,
             channelId: channelIdEl ? channelIdEl.value : '',
-            msg:       msgEl       ? msgEl.value       : '',
-            delay:     delayEl     ? delayEl.value     : '5',
-            unit:      unitEl      ? unitEl.value      : '1',
-            running:   job.running,
-            sent:      job.sent,
-            failed:    job.failed
+            msg: msgEl ? msgEl.value : '',
+            delay: delayEl ? delayEl.value : '5',
+            unit: unitEl ? unitEl.value : '1',
+            running: job.running,
+            sent: job.sent,
+            failed: job.failed
           });
         });
         localStorage.setItem('dc_jobs', JSON.stringify(data));
-      } catch(e) {}
+      } catch (e) { }
     }
 
     function saveToken(tok) {
-      try { if (tok) localStorage.setItem('dc_token', tok); } catch(e) {}
+      try { if (tok) localStorage.setItem('dc_token', tok); } catch (e) { }
     }
 
     function loadSavedToken() {
-      try { return localStorage.getItem('dc_token') || ''; } catch(e) { return ''; }
+      try { return localStorage.getItem('dc_token') || ''; } catch (e) { return ''; }
     }
 
     function addJob(opts) {
@@ -2638,22 +2728,22 @@
       // Pre-fill from saved opts if provided
       if (opts) {
         var channelIdEl = document.getElementById('jchannel-id-' + id);
-        var msgEl       = document.getElementById('jmsg-'        + id);
-        var delayEl     = document.getElementById('jdelay-'      + id);
-        var unitEl      = document.getElementById('jdelayunit-'  + id);
+        var msgEl = document.getElementById('jmsg-' + id);
+        var delayEl = document.getElementById('jdelay-' + id);
+        var unitEl = document.getElementById('jdelayunit-' + id);
         if (channelIdEl && opts.channelId) {
           channelIdEl.value = opts.channelId;
           // Restore selected option in the dropdown when channels load
           jobs[id]._savedChannelId = opts.channelId;
         }
-        if (msgEl     && opts.msg    ) msgEl.value   = opts.msg;
-        if (delayEl   && opts.delay  ) delayEl.value = opts.delay;
-        if (unitEl    && opts.unit   ) unitEl.value  = opts.unit;
-        if (opts.sent   ) jobs[id].sent   = opts.sent;
-        if (opts.failed ) jobs[id].failed = opts.failed;
+        if (msgEl && opts.msg) msgEl.value = opts.msg;
+        if (delayEl && opts.delay) delayEl.value = opts.delay;
+        if (unitEl && opts.unit) unitEl.value = opts.unit;
+        if (opts.sent) jobs[id].sent = opts.sent;
+        if (opts.failed) jobs[id].failed = opts.failed;
       }
       // Auto-save on any field change
-      ['jmsg-', 'jdelay-', 'jdelayunit-'].forEach(function(prefix) {
+      ['jmsg-', 'jdelay-', 'jdelayunit-'].forEach(function (prefix) {
         var el = document.getElementById(prefix + id);
         if (el) el.addEventListener('input', _scheduleSave);
       });
@@ -2679,47 +2769,47 @@
       div.id = 'job-' + id;
       div.innerHTML = [
         '<div class="job-header">',
-          '<div class="job-num">' + id + '</div>',
-          '<div class="job-status-dot" id="jdot-' + id + '"></div>',
-          '<div class="job-label">Job #' + id + '</div>',
-          '<div class="job-stats-inline" id="jstats-' + id + '">',
-            '<span class="jstat-ok" id="jsent-' + id + '">0</span>&#8593;',
-            ' <span class="jstat-err" id="jfail-' + id + '">0</span>&#8595;',
-          '</div>',
-          '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
+        '<div class="job-num">' + id + '</div>',
+        '<div class="job-status-dot" id="jdot-' + id + '"></div>',
+        '<div class="job-label">Job #' + id + '</div>',
+        '<div class="job-stats-inline" id="jstats-' + id + '">',
+        '<span class="jstat-ok" id="jsent-' + id + '">0</span>&#8593;',
+        ' <span class="jstat-err" id="jfail-' + id + '">0</span>&#8595;',
+        '</div>',
+        '<button class="job-remove-btn" onclick="removeJob(' + id + ')" title="Remove">&#10005;</button>',
         '</div>',
         '<div class="job-body">',
-          // Channel: search + dropdown (populated from selected server)
-          '<div class="job-field">',
-            '<div class="job-field-label">&#128226; Channel</div>',
-            '<input class="job-input" id="jchsearch-' + id + '" type="text" placeholder="&#128269; Search channels..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterJobChannels(' + id + ', this.value)" style="margin-bottom:5px;" />',
-            '<select class="job-input" id="jchannel-' + id + '" size="3" style="height:auto;padding:4px 0;" onchange="onJobChannelChange(' + id + ')">',
-              '<option value="" disabled selected>— select server above first —</option>',
-            '</select>',
-            '<input type="hidden" id="jchannel-id-' + id + '" />',
-            '<div class="job-channel-status" id="jch-status-' + id + '"></div>',
-          '</div>',
-          // Message
-          '<div class="job-field">',
-            '<div class="job-field-label">&#128172; Message</div>',
-            '<textarea class="job-input" id="jmsg-' + id + '" rows="3" placeholder="Your message..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="resize:vertical;white-space:pre;overflow-wrap:normal;overflow-x:auto;"></textarea>',
-          '</div>',
-          // Delay with unit select
-          '<div class="job-field">',
-            '<div class="job-field-label">&#9201; Delay between sends</div>',
-            '<div class="job-input-row">',
-              '<input class="job-input" id="jdelay-' + id + '" type="number" value="5" min="1" max="86400" inputmode="numeric" />',
-              '<select class="job-delay-unit-select" id="jdelayunit-' + id + '">',
-                '<option value="1">sec</option>',
-                '<option value="60">min</option>',
-                '<option value="3600">hour</option>',
-              '</select>',
-            '</div>',
-          '</div>',
-          '<div class="job-btn-row">',
-            '<button class="job-btn job-btn-start" id="jstart-' + id + '" onclick="startJob(' + id + ')">&#9654; Start</button>',
-            '<button class="job-btn job-btn-stop" id="jstop-' + id + '" onclick="stopJob(' + id + ')" disabled>&#9209; Stop</button>',
-          '</div>',
+        // Channel: search + dropdown (populated from selected server)
+        '<div class="job-field">',
+        '<div class="job-field-label">&#128226; Channel</div>',
+        '<input class="job-input" id="jchsearch-' + id + '" type="text" placeholder="&#128269; Search channels..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="filterJobChannels(' + id + ', this.value)" style="margin-bottom:5px;" />',
+        '<select class="job-input" id="jchannel-' + id + '" size="3" style="height:auto;padding:4px 0;" onchange="onJobChannelChange(' + id + ')">',
+        '<option value="" disabled selected>— select server above first —</option>',
+        '</select>',
+        '<input type="hidden" id="jchannel-id-' + id + '" />',
+        '<div class="job-channel-status" id="jch-status-' + id + '"></div>',
+        '</div>',
+        // Message
+        '<div class="job-field">',
+        '<div class="job-field-label">&#128172; Message</div>',
+        '<textarea class="job-input" id="jmsg-' + id + '" rows="3" placeholder="Your message..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="resize:vertical;white-space:pre;overflow-wrap:normal;overflow-x:auto;"></textarea>',
+        '</div>',
+        // Delay with unit select
+        '<div class="job-field">',
+        '<div class="job-field-label">&#9201; Delay between sends</div>',
+        '<div class="job-input-row">',
+        '<input class="job-input" id="jdelay-' + id + '" type="number" value="5" min="1" max="86400" inputmode="numeric" />',
+        '<select class="job-delay-unit-select" id="jdelayunit-' + id + '">',
+        '<option value="1">sec</option>',
+        '<option value="60">min</option>',
+        '<option value="3600">hour</option>',
+        '</select>',
+        '</div>',
+        '</div>',
+        '<div class="job-btn-row">',
+        '<button class="job-btn job-btn-start" id="jstart-' + id + '" onclick="startJob(' + id + ')">&#9654; Start</button>',
+        '<button class="job-btn job-btn-stop" id="jstop-' + id + '" onclick="stopJob(' + id + ')" disabled>&#9209; Stop</button>',
+        '</div>',
         '</div>'
       ].join('');
       container.appendChild(div);
@@ -2770,18 +2860,18 @@
       var el = document.getElementById('jchannel-' + jobId);
       if (!el) return;
       if (navigator.clipboard && navigator.clipboard.readText) {
-        navigator.clipboard.readText().then(function(text) {
+        navigator.clipboard.readText().then(function (text) {
           text = text.trim();
           if (!text) { alert('Clipboard is empty.'); return; }
           el.value = text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('paste', { bubbles: true }));
           // Try link parse; if no link found, just auto-verify the raw value
-          setTimeout(function() {
+          setTimeout(function () {
             var parsed = el.value !== text; // link was parsed if value changed
             if (!parsed) verifyChannel(jobId);
           }, 50);
-        }).catch(function() {
+        }).catch(function () {
           el.focus();
           alert('Clipboard permission denied.\nTap the field and long-press \u2192 Paste.');
         });
@@ -2800,21 +2890,21 @@
       if (statusEl) { statusEl.textContent = 'Checking...'; statusEl.style.color = 'var(--text-muted)'; }
       fetch('https://discord.com/api/v10/channels/' + channelId, {
         headers: { Authorization: tok }
-      }).then(function(res) {
-        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+      }).then(function (res) {
+        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
         return res.json();
-      }).then(function(ch) {
+      }).then(function (ch) {
         var name = ch.name ? '#' + ch.name : 'DM/' + channelId;
         var slowSec = ch.rate_limit_per_user || 0;
         // Build status HTML: channel name + live slowmode badge
         var slowBadge = '';
         if (slowSec > 0) {
-          var delayEl  = document.getElementById('jdelay-' + id);
-          var unitEl   = document.getElementById('jdelayunit-' + id);
+          var delayEl = document.getElementById('jdelay-' + id);
+          var unitEl = document.getElementById('jdelayunit-' + id);
           var jobDelay = delayEl && unitEl
             ? (parseInt(delayEl.value) || 5) * (parseInt(unitEl.value) || 1)
             : 0;
-          var tooFast  = jobDelay > 0 && jobDelay < slowSec;
+          var tooFast = jobDelay > 0 && jobDelay < slowSec;
           slowBadge = ' <span style="display:inline-flex;align-items:center;gap:3px;' +
             'background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.4);' +
             'border-radius:5px;padding:1px 6px;font-size:9px;color:#fbbf24;font-weight:700;">' +
@@ -2831,7 +2921,7 @@
         if (jobs[id]) jobs[id]._liveSlow = slowSec;
         log('[Job #' + id + '] Channel OK: ' + name +
           (slowSec ? ' (slowmode: ' + _fmtDuration(slowSec) + ')' : ''), 'ok');
-      }).catch(function(e) {
+      }).catch(function (e) {
         if (statusEl) { statusEl.textContent = '\u2717 ' + e.message; statusEl.style.color = 'var(--red)'; }
         log('[Job #' + id + '] Channel check failed: ' + e.message, 'err');
       });
@@ -2839,7 +2929,7 @@
 
     /* Format seconds as human-readable e.g. 30s, 5min, 1h */
     function _fmtDuration(sec) {
-      if (sec < 60)  return sec + 's';
+      if (sec < 60) return sec + 's';
       if (sec < 3600) return Math.round(sec / 60) + 'min';
       return (sec / 3600).toFixed(1).replace(/\.0$/, '') + 'h';
     }
@@ -2847,123 +2937,100 @@
     // Flag set during startAllJobs() to suppress per-job side-effects
     var _bulkStarting = false;
 
+    /* ── PER-JOB LOOP ────────────────────────────────────────────────────────
+     * Each job has its own independent recursive loop.
+     * Flow: send immediately → wait delayMs → send again → repeat.
+     * No shared queue, no heartbeat interval, no race conditions.
+     * ──────────────────────────────────────────────────────────────────────── */
+    function _jobLoop(id) {
+      var job = jobs[id];
+      if (!job || !job.running) return;
+
+      _showCountdownLine(id, -1); // show "Sending..."
+
+      jobSend(id, job._cachedToken, job._cachedChannelId, job._cachedMsg)
+        .then(function(retryMs) {
+          var j = jobs[id];
+          if (!j || !j.running) return;
+          var wait = (typeof retryMs === 'number' && retryMs > 0) ? retryMs : j._delayMs;
+          _showCountdownLine(id, wait);
+          j._loopTimer = setTimeout(function() { _jobLoop(id); }, wait);
+        });
+    }
+
     function startJob(id) {
       var job = jobs[id];
-      if (!job) return;
-      var token = job._token || globalToken || state.token;
-      var channelIdEl = document.getElementById('jchannel-id-' + id);
-      // Also fall back to the select's value in case hidden input wasn't set yet
-      var selectEl = document.getElementById('jchannel-' + id);
-      var channelId = (channelIdEl ? channelIdEl.value.trim() : '') ||
-                      (selectEl && selectEl.value ? selectEl.value.trim() : '');
-      // Sync hidden input if select had the value
-      if (!channelId && selectEl && selectEl.value) channelId = selectEl.value.trim();
-      if (channelIdEl && selectEl && selectEl.value && !channelIdEl.value)
-        channelIdEl.value = selectEl.value;
-      var msg = document.getElementById('jmsg-' + id).value;
-      var delayNum = Math.max(1, parseInt(document.getElementById('jdelay-' + id).value) || 5);
-      var delayMult = parseInt(document.getElementById('jdelayunit-' + id).value) || 1;
-      var delayMs = delayNum * delayMult * 1000;
+      if (!job) return false;
+
+      var token     = job._token || globalToken || state.token;
+      var hidEl     = document.getElementById('jchannel-id-' + id);
+      var selEl     = document.getElementById('jchannel-'    + id);
+      var channelId = (hidEl && hidEl.value.trim()) ||
+                      (selEl && selEl.value && selEl.value.trim()) || '';
+      if (hidEl && !hidEl.value && channelId) hidEl.value = channelId;
+
+      var msgEl     = document.getElementById('jmsg-'       + id);
+      var delayEl   = document.getElementById('jdelay-'     + id);
+      var unitEl    = document.getElementById('jdelayunit-' + id);
+      var msg       = msgEl  ? msgEl.value  : '';
+      var delayNum  = Math.max(1, parseInt(delayEl ? delayEl.value : '5') || 5);
+      var delayMult = parseInt(unitEl ? unitEl.value : '1') || 1;
+      var delayMs   = delayNum * delayMult * 1000;
       var delayLabel = delayNum + (delayMult === 1 ? 's' : delayMult === 60 ? 'min' : 'h');
 
-      if (!token)     { if (!_bulkStarting) alert('Job #' + id + ': Load a token first.'); return false; }
-      if (!channelId) { if (!_bulkStarting) alert('Job #' + id + ': Select a channel.'); return false; }
-      if (!msg)       { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return false; }
+      if (!token)      { if (!_bulkStarting) alert('Job #' + id + ': Load a token (Auth tab).'); return false; }
+      if (!channelId)  { if (!_bulkStarting) alert('Job #' + id + ': Select a channel.'); log('[Job #' + id + '] \u26a0 No channel \u2014 skipped.', 'err'); return false; }
+      if (!msg.trim()) { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return false; }
 
-      // Cache everything on the job object so _enqueueJob never reads stale DOM
       job._cachedToken     = token;
       job._cachedChannelId = channelId;
       job._cachedMsg       = msg;
-
-      job.running = true;
-      job.sent = 0;
-      job.failed = 0;
+      job._delayMs         = delayMs;
+      job.running   = true;
+      job.sent      = 0;
+      job.failed    = 0;
       job.startTime = Date.now();
-      job._delayMs = delayMs;
-      delete _heartbeatFiring[id];
+      job._loopTimer = null;
 
       document.getElementById('jstart-' + id).disabled = true;
-      document.getElementById('jstop-' + id).disabled = false;
-      document.getElementById('jdot-' + id).classList.add('running');
-      document.getElementById('job-' + id).classList.add('job-running');
+      document.getElementById('jstop-'  + id).disabled = false;
+      document.getElementById('jdot-'   + id).classList.add('running');
+      document.getElementById('job-'    + id).classList.add('job-running');
 
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
-
-      if (!_bulkStarting) {
-        startKeepAlive();
-        switchTab('monitor');
-        updateGlobalStats();
-        updateStartAllBtn();
-        saveJobs();
-        job._nextFireAt = Date.now();
-        _persistFireAt(id, job._nextFireAt);
-        _showCountdownLine(id, 0);
-        startHeartbeat();
-        _scheduleSlowPoll(id);
-      }
       return true;
     }
 
     function startAllJobs() {
-      // Collect all stopped jobs first
       var toStart = [];
       Object.keys(jobs).forEach(function(sid) {
         var id = parseInt(sid);
-        var job = jobs[id];
-        if (job && !job.running) toStart.push(id);
+        if (jobs[id] && !jobs[id].running) toStart.push(id);
       });
-
       if (toStart.length === 0) { log('\u26a0 No stopped jobs to start.', 'warn'); return; }
 
-      log('\u25b6 Starting ' + toStart.length + ' job(s)...', 'info');
-
-      // Must be called synchronously in user gesture context
-      startKeepAlive();
+      startKeepAlive();   // must be synchronous (user gesture context)
       switchTab('monitor');
 
       _bulkStarting = true;
-
-      // FIRE_STAGGER: spread first fires so send queue isn't flooded.
-      // job[0] fires after its own delay, each next job waits FIRE_STAGGER more.
-      var FIRE_STAGGER = 500;
-      var now = Date.now();
       var started = 0;
-
-      // Initialize ALL jobs synchronously — no setTimeout chain.
-      // This guarantees _nextFireAt is set before the heartbeat ever ticks.
-      // First send is immediate for each job, staggered by FIRE_STAGGER to
-      // avoid hitting the API at the exact same millisecond.
-      toStart.forEach(function(id, idx) {
-        var job = jobs[id];
-        if (!job) return;
-        var ok = startJob(id); // marks running, sets _delayMs, updates UI
-        if (!ok) return;       // validation failed (no token / channel / msg)
-        started++;
-        // First fire: immediately but stagger each job by FIRE_STAGGER
-        var firstFireOffset = idx * FIRE_STAGGER;
-        job._nextFireAt = now + firstFireOffset;
-        _persistFireAt(id, job._nextFireAt);
-        _showCountdownLine(id, firstFireOffset);
-      });
-
+      toStart.forEach(function(id) { if (startJob(id)) started++; });
       _bulkStarting = false;
 
-      if (started === 0) {
-        log('\u26a0 No jobs could start (check token / channel / message).', 'warn');
-        return;
-      }
-
-      // Start slowmode pollers for each newly-running job
-      toStart.forEach(function(id) {
-        if (jobs[id] && jobs[id].running) _scheduleSlowPoll(id);
-      });
+      if (started === 0) { log('\u26a0 No jobs started \u2014 check channel + message.', 'warn'); return; }
 
       saveJobs();
       updateGlobalStats();
       updateStartAllBtn();
 
-      // Start heartbeat ONCE after all _nextFireAt values are committed
-      startHeartbeat();
+      // Stagger first fires 200 ms apart to avoid hitting Discord all at once
+      var STAGGER = 200;
+      var idx = 0;
+      toStart.forEach(function(id) {
+        if (!jobs[id] || !jobs[id].running) return;
+        jobs[id]._loopTimer = setTimeout(function() { _jobLoop(id); }, idx * STAGGER);
+        idx++;
+      });
 
       log('\u2713 ' + started + ' job(s) running.', 'ok');
     }
@@ -2971,225 +3038,46 @@
     function stopAllJobs() {
       Object.keys(jobs).forEach(function(sid) {
         var id = parseInt(sid);
-        var job = jobs[id];
-        if (job && job.running) stopJob(id);
+        if (jobs[id] && jobs[id].running) stopJob(id);
       });
     }
 
     function updateStartAllBtn() {
       var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
       var startAllBtn = document.getElementById('startAllBtn');
-      var stopAllBtn = document.getElementById('stopAllBtn');
+      var stopAllBtn  = document.getElementById('stopAllBtn');
       if (startAllBtn) startAllBtn.style.display = anyRunning ? 'none' : '';
-      if (stopAllBtn) stopAllBtn.style.display = anyRunning ? '' : 'none';
+      if (stopAllBtn)  stopAllBtn.style.display  = anyRunning ? '' : 'none';
     }
 
-    /* ── GLOBAL HEARTBEAT ENGINE + SEND QUEUE ──────────────────────────────────
-     * A single setInterval polls every 500 ms. Each running job stores
-     * _nextFireAt (absolute ms timestamp). When a job is due, it's pushed into
-     * _sendQueue instead of fired directly.
-     *
-     * SEND QUEUE: Caps concurrent Discord API calls at MAX_CONCURRENT (3) and
-     * enforces a minimum SEND_GAP_MS (400ms) between dispatches. With 40+ jobs
-     * this prevents bursts of simultaneous POSTs that trigger 429s or make iOS
-     * drop the JS thread entirely. Jobs that all become due at once are safely
-     * queued and dispatched one-by-one with rate awareness.
-     * ─────────────────────────────────────────────────────────────────────── */
-    var _heartbeat = null;
-    var _heartbeatFiring = {}; // id -> true when job is queued or in-flight
-
-    var _sendQueue    = [];   // [{id, token, channelId, msg}]
-    var _sendInFlight = 0;    // current concurrent sends
-    var MAX_CONCURRENT = 8;   // max simultaneous Discord API calls (handles 40+ jobs)
-    var SEND_GAP_MS   = 150;  // minimum ms between queue dispatches
-    var _lastDispatch  = 0;   // timestamp of last dispatch
-
-    function _enqueueJob(id) {
-      if (_heartbeatFiring[id]) return; // already queued/in-flight — skip
-      var job = jobs[id];
-      if (!job || !job.running) return;
-      // Use cached values set at startJob() time — never read stale DOM
-      var token     = job._cachedToken     || job._token || globalToken || state.token;
-      var channelId = job._cachedChannelId || '';
-      var msg       = job._cachedMsg       || '';
-      if (!channelId) {
-        log('[Job #' + id + '] \u26a0 No channel selected — skipping.', 'err');
-        return;
-      }
-      _heartbeatFiring[id] = true;
-      _sendQueue.push({ id: id, token: token, channelId: channelId, msg: msg });
-    }
-
-    function _drainQueue() {
-      if (_sendQueue.length === 0) return;
-      if (_sendInFlight >= MAX_CONCURRENT) return;
-      var now = Date.now();
-      if (now - _lastDispatch < SEND_GAP_MS) {
-        // Try again after the gap expires — avoids busy-waiting
-        setTimeout(_drainQueue, SEND_GAP_MS - (now - _lastDispatch) + 10);
-        return;
-      }
-
-      var item = _sendQueue.shift();
-      if (!item) return;
-
-      var job = jobs[item.id];
-      if (!job || !job.running) {
-        // Job was stopped while waiting in the queue — release guard, try next
-        delete _heartbeatFiring[item.id];
-        _drainQueue();
-        return;
-      }
-
-      _sendInFlight++;
-      _lastDispatch = Date.now();
-      _removeCountdownLine(item.id);
-
-      jobSend(item.id, item.token, item.channelId, item.msg).finally(function() {
-        _sendInFlight--;
-        delete _heartbeatFiring[item.id];
-        var j = jobs[item.id];
-        if (j && j.running) {
-          var delayMs = j._delayMs || 5000;
-          j._nextFireAt = Date.now() + delayMs;
-          _persistFireAt(item.id, j._nextFireAt);
-          _showCountdownLine(item.id, delayMs);
-        }
-        // Drain the next queued item after the minimum gap
-        setTimeout(_drainQueue, SEND_GAP_MS);
-      });
-
-      // Try to fill another concurrent slot immediately if one is free
-      if (_sendInFlight < MAX_CONCURRENT && _sendQueue.length > 0) {
-        setTimeout(_drainQueue, SEND_GAP_MS);
-      }
-    }
-
-    /* ── SLOWMODE POLLER ───────────────────────────────────────────────────────
-     * For each running job, re-fetch the channel's rate_limit_per_user every
-     * SLOW_POLL_MS. If it changed, update job._delayMs and log a notice.
-     * This keeps the app in sync with Discord channel setting changes in realtime.
-     * ─────────────────────────────────────────────────────────────────────── */
-    var SLOW_POLL_MS = 60000; // re-check slowmode every 60 s
-    var _slowPollTimers = {}; // jobId -> setTimeout handle
-
-    function _scheduleSlowPoll(id) {
-      _clearSlowPoll(id);
-      _slowPollTimers[id] = setTimeout(function() {
-        delete _slowPollTimers[id];
-        var job = jobs[id];
-        if (!job || !job.running) return;
-        var tok = job._token || globalToken || state.token;
-        var channelId = document.getElementById('jchannel-id-' + id);
-        var chIdVal = (channelId && channelId.value.trim()) || job._cachedChannelId || '';
-        if (!tok || !chIdVal) return;
-        fetch('https://discord.com/api/v10/channels/' + chIdVal, {
-          headers: { Authorization: tok }
-        }).then(function(res) {
-          if (!res.ok) return;
-          return res.json();
-        }).then(function(ch) {
-          if (!ch || !job.running) return;
-          var slowSec = ch.rate_limit_per_user || 0;
-          var prev    = job._liveSlow || 0;
-          job._liveSlow = slowSec;
-          // Update the channel status badge with fresh info
-          var statusEl = document.getElementById('jch-status-' + id);
-          if (statusEl && ch.name) {
-            var slowBadge = slowSec > 0
-              ? ' <span style="display:inline-flex;align-items:center;gap:3px;' +
-                'background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.4);' +
-                'border-radius:5px;padding:1px 6px;font-size:9px;color:#fbbf24;font-weight:700;">' +
-                '\u23f1 ' + _fmtDuration(slowSec) + ' slowmode</span>'
-              : '';
-            statusEl.innerHTML = '<span style="color:var(--green);font-weight:600;">\u2713 #' +
-              _esc(ch.name) + '</span>' + slowBadge;
-          }
-          // If slowmode changed, update delay and log
-          if (slowSec !== prev) {
-            if (slowSec > 0 && job._delayMs < slowSec * 1000) {
-              var newDelay = (slowSec + 1) * 1000;
-              job._delayMs = newDelay;
-              log('[Job #' + id + '] Slowmode changed to ' + _fmtDuration(slowSec) +
-                ' \u2014 delay auto-updated to ' + _fmtDuration(slowSec + 1) + '.', 'warn');
-            } else if (prev > 0 && slowSec === 0) {
-              log('[Job #' + id + '] Slowmode removed on channel.', 'info');
-            } else if (slowSec > 0) {
-              log('[Job #' + id + '] Slowmode updated: ' + _fmtDuration(slowSec) + '.', 'info');
-            }
-          }
-          // Schedule next poll while job is still running
-          if (job.running) _scheduleSlowPoll(id);
-        }).catch(function() {
-          // Network hiccup — just try again next cycle
-          if (jobs[id] && jobs[id].running) _scheduleSlowPoll(id);
-        });
-      }, SLOW_POLL_MS);
-    }
-
-    function _clearSlowPoll(id) {
-      if (_slowPollTimers[id]) {
-        clearTimeout(_slowPollTimers[id]);
-        delete _slowPollTimers[id];
-      }
-    }
-
-    function startHeartbeat() {
-      if (_heartbeat) return; // already running
-      _heartbeat = setInterval(function() {
-        var ts = Date.now();
-        Object.keys(jobs).forEach(function(sid) {
-          var id = parseInt(sid);
-          var job = jobs[id];
-          if (!job || !job.running) return;
-
-          if (_heartbeatFiring[id]) {
-            // Queued or in-flight — show "Sending..." in countdown label
-            var textEl = document.getElementById('cd-text-' + id);
-            if (textEl && textEl.textContent.indexOf('Sending') === -1)
-              textEl.textContent = '[Job #' + id + '] Sending...';
-            return;
-          }
-
-          if (job._nextFireAt && ts >= job._nextFireAt) {
-            job._nextFireAt = null; // clear so we don't re-enqueue next tick
-            _enqueueJob(id);
-          } else if (job._nextFireAt) {
-            // Update countdown display
-            var rem = Math.ceil((job._nextFireAt - ts) / 1000);
-            var textEl = document.getElementById('cd-text-' + id);
-            if (textEl) textEl.textContent = '[Job #' + id + '] Next run in ' + Math.max(0, rem) + 's...';
-          }
-        });
-
-        // Keep draining the queue every tick in case slots freed up
-        if (_sendQueue.length > 0 && _sendInFlight < MAX_CONCURRENT) {
-          _drainQueue();
-        }
-      }, 500);
-    }
-
-    function stopHeartbeat() {
-      // Only stop if no jobs are running
-      var any = Object.values(jobs).some(function(j){ return j.running; });
-      if (!any && _heartbeat) {
-        clearInterval(_heartbeat);
-        _heartbeat = null;
-      }
-    }
-
-
-    function _showCountdownLine(id, delayMs) {
+    function stopJob(id) {
       var job = jobs[id];
       if (!job) return;
+      job.running = false;
+      if (job._loopTimer) { clearTimeout(job._loopTimer); job._loopTimer = null; }
       _removeCountdownLine(id);
-      var el = document.getElementById('logOutput');
+      document.getElementById('jstart-' + id).disabled = false;
+      document.getElementById('jstop-'  + id).disabled = true;
+      document.getElementById('jdot-'   + id).classList.remove('running');
+      document.getElementById('job-'    + id).classList.remove('job-running');
+      log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
+      saveJobs();
+      updateGlobalStats();
+      updateStartAllBtn();
+      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
+      if (!anyRunning) stopKeepAlive();
+    }
+
+    function _showCountdownLine(id, delayMs) {
+      _removeCountdownLine(id);
+      var el   = document.getElementById('logOutput');
+      if (!el) return;
       var line = document.createElement('div');
       line.className = 'log-line';
       line.id = 'cdline-' + id;
-      var rem = Math.ceil(delayMs / 1000);
+      var txt = delayMs < 0 ? 'Sending...' : ('Next in ' + Math.ceil(delayMs / 1000) + 's');
       line.innerHTML = '<span class="log-time">' + now() + '</span>' +
-        '<span class="log-msg-countdown" id="cd-text-' + id + '">[Job #' + id + '] Next run in ' + rem + 's...</span>';
+        '<span class="log-msg-countdown" id="cd-text-' + id + '">[Job #' + id + '] ' + txt + '</span>';
       el.appendChild(line);
       el.scrollTop = el.scrollHeight;
     }
@@ -3199,44 +3087,8 @@
       if (old) old.remove();
     }
 
-    /* localStorage persistence: save/load nextFireAt so catch-up works
-     * even if iOS fully suspends the page and you reopen Safari later */
-    function _persistFireAt(id, ts) {
-      try { localStorage.setItem('job_fire_' + id, ts); } catch(e) {}
-    }
-    function _clearPersistedFireAt(id) {
-      try { localStorage.removeItem('job_fire_' + id); } catch(e) {}
-    }
-    function _loadPersistedFireAt(id) {
-      try { return parseInt(localStorage.getItem('job_fire_' + id)) || 0; } catch(e) { return 0; }
-    }
-
-    function stopJob(id) {
-      var job = jobs[id];
-      if (!job) return;
-      job.running = false;
-      job._nextFireAt = null;
-      _clearPersistedFireAt(id);
-      _removeCountdownLine(id);
-      delete _heartbeatFiring[id];
-      // Purge any pending queue entry for this job so it never fires after stop
-      _sendQueue = _sendQueue.filter(function(item) { return item.id !== id; });
-      document.getElementById('jstart-' + id).disabled = false;
-      document.getElementById('jstop-' + id).disabled = true;
-      document.getElementById('jdot-' + id).classList.remove('running');
-      document.getElementById('job-' + id).classList.remove('job-running');
-      log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
-      saveJobs();
-      updateGlobalStats();
-      updateStartAllBtn();
-      // Cancel slowmode poller for this job
-      _clearSlowPoll(id);
-      stopHeartbeat();
-      // Stop keep-alive if no jobs are running
-      var anyRunning = Object.values(jobs).some(function(j){ return j.running; });
-      if (!anyRunning) stopKeepAlive();
-    }
-
+    /* jobSend: resolves with retryMs on 429/slowmode, undefined on success/error.
+     * _jobLoop uses the return value to pick the next wait time. */
     function jobSend(id, token, channelId, msg) {
       var job = jobs[id];
       if (!job) return Promise.resolve();
@@ -3244,43 +3096,22 @@
         method: 'POST',
         headers: { Authorization: token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: msg })
-      }).then(function (res) {
+      }).then(function(res) {
         if (res.status === 429) {
-          // Global rate-limit or Discord 429: reschedule, don't count as failure.
-          return res.json().then(function (e) {
-            var retryAfter = (typeof e.retry_after === 'number' ? e.retry_after : 1);
-            var waitMs = Math.ceil(retryAfter * 1000) + 500; // 500 ms safety buffer
-            log('[Job #' + id + '] Rate-limited — rescheduling in ' +
-              retryAfter.toFixed(1) + 's.', 'warn');
-            if (job.running) {
-              job._nextFireAt = Date.now() + waitMs;
-              _persistFireAt(id, job._nextFireAt);
-              _showCountdownLine(id, waitMs);
-            }
-            return;
+          return res.json().then(function(e) {
+            var ra = typeof e.retry_after === 'number' ? e.retry_after : 1;
+            var wait = Math.ceil(ra * 1000) + 500;
+            log('[Job #' + id + '] Rate-limited \u2014 retry in ' + ra.toFixed(1) + 's.', 'warn');
+            return wait;
           });
         }
         if (!res.ok) {
-          return res.json().then(function (body) {
-            // Discord error code 20016 = slowmode active for this user.
-            // Treat exactly like a 429: reschedule after retry_after (or
-            // job delay), do NOT count as a failure — it's a transient cooldown.
+          return res.json().then(function(body) {
             if (body.code === 20016) {
-              var retryAfter = (typeof body.retry_after === 'number' ? body.retry_after : 0);
-              // If Discord gives us a retry_after, honor it; otherwise fall back
-              // to the job's own delay (user will hit it again on the next cycle).
-              var waitMs = retryAfter > 0
-                ? Math.ceil(retryAfter * 1000) + 500
-                : (job._delayMs || 5000);
-              log('[Job #' + id + '] Slowmode — retrying in ' +
-                (waitMs / 1000).toFixed(1) + 's.', 'warn');
-              if (job.running) {
-                job._nextFireAt = Date.now() + waitMs;
-                _persistFireAt(id, job._nextFireAt);
-                _showCountdownLine(id, waitMs);
-              }
-              // Resolve cleanly — heartbeat will retry
-              return;
+              var ra = typeof body.retry_after === 'number' ? body.retry_after : 0;
+              var wait = ra > 0 ? Math.ceil(ra * 1000) + 500 : (job._delayMs || 5000);
+              log('[Job #' + id + '] Slowmode \u2014 retry in ' + (wait/1000).toFixed(1) + 's.', 'warn');
+              return wait;
             }
             throw new Error(body.message || 'HTTP ' + res.status);
           }).catch(function(e) {
@@ -3288,13 +3119,13 @@
             throw new Error('HTTP ' + res.status);
           });
         }
-        // Success
         job.sent++;
         updateJobStats(id);
-        var flat = msg.replace(/\n/g, ' ');
+        var flat    = msg.replace(/\n/g, ' ');
         var preview = flat.length > 35 ? flat.slice(0, 35) + '\u2026' : flat;
         log('[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
-      }).catch(function (e) {
+        // return undefined -> _jobLoop uses job._delayMs
+      }).catch(function(e) {
         if (!job) return;
         job.failed++;
         updateJobStats(id);
@@ -3331,8 +3162,8 @@
     function clearAllData() {
       if (!confirm('Clear all saved data?\nThis removes your token, all jobs, and resets the app.')) return;
       // Stop everything first
-      Object.keys(jobs).forEach(function(sid) { try { stopJob(parseInt(sid)); } catch(e){} });
-      try { localStorage.clear(); } catch(e) {}
+      Object.keys(jobs).forEach(function (sid) { try { stopJob(parseInt(sid)); } catch (e) { } });
+      try { localStorage.clear(); } catch (e) { }
       location.reload();
     }
 
@@ -3515,9 +3346,9 @@
      * in the job card and auto-runs a verify check.
      * ─────────────────────────────────────────────────────────────────────── */
     var _pickerJobId = null;      // which job the picker is for
-    var _pickerOpen  = false;
-    var _guildCache  = null;      // cached guild list after first load
-    var _chCache     = {};        // channelCache[guildId] = [...channels]
+    var _pickerOpen = false;
+    var _guildCache = null;      // cached guild list after first load
+    var _chCache = {};        // channelCache[guildId] = [...channels]
 
     function openChannelPicker(jobId) {
       var tok = (jobs[jobId] && jobs[jobId]._token) || globalToken || state.token;
@@ -3526,7 +3357,7 @@
         return;
       }
       _pickerJobId = jobId;
-      _pickerOpen  = true;
+      _pickerOpen = true;
       // Always clear channel cache so slowmode values are fresh from Discord
       _chCache = {};
 
@@ -3536,23 +3367,23 @@
       overlay.id = 'pickerOverlay';
       overlay.innerHTML = [
         '<div class="picker-sheet" id="pickerSheet">',
-          '<div class="picker-handle"></div>',
-          '<div class="picker-header">',
-            '<span class="picker-title">&#127758; Pick a Channel</span>',
-            '<button class="picker-close" onclick="closeChannelPicker()">&#10005;</button>',
-          '</div>',
-          '<input class="picker-search" id="pickerSearch" placeholder="&#128269; Search servers or channels..." autocomplete="off" autocorrect="off" spellcheck="false" />',
-          '<div class="picker-body" id="pickerBody">',
-            '<div class="picker-loading">',
-              '<span class="picker-loading-spin">&#9881;</span>',
-              'Loading your servers...',
-            '</div>',
-          '</div>',
+        '<div class="picker-handle"></div>',
+        '<div class="picker-header">',
+        '<span class="picker-title">&#127758; Pick a Channel</span>',
+        '<button class="picker-close" onclick="closeChannelPicker()">&#10005;</button>',
+        '</div>',
+        '<input class="picker-search" id="pickerSearch" placeholder="&#128269; Search servers or channels..." autocomplete="off" autocorrect="off" spellcheck="false" />',
+        '<div class="picker-body" id="pickerBody">',
+        '<div class="picker-loading">',
+        '<span class="picker-loading-spin">&#9881;</span>',
+        'Loading your servers...',
+        '</div>',
+        '</div>',
         '</div>'
       ].join('');
 
       // Close on backdrop tap
-      overlay.addEventListener('click', function(e) {
+      overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeChannelPicker();
       });
 
@@ -3560,7 +3391,7 @@
 
       // Attach search handler
       var searchEl = document.getElementById('pickerSearch');
-      searchEl.addEventListener('input', function() {
+      searchEl.addEventListener('input', function () {
         _pickerFilterGuilds(searchEl.value.trim().toLowerCase());
       });
 
@@ -3571,7 +3402,7 @@
     function closeChannelPicker() {
       var overlay = document.getElementById('pickerOverlay');
       if (overlay) overlay.remove();
-      _pickerOpen  = false;
+      _pickerOpen = false;
       _pickerJobId = null;
     }
 
@@ -3582,19 +3413,19 @@
       }
       fetch('https://discord.com/api/v10/users/@me/guilds', {
         headers: { Authorization: tok }
-      }).then(function(res) {
-        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+      }).then(function (res) {
+        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
         return res.json();
-      }).then(function(guilds) {
+      }).then(function (guilds) {
         // Sort: servers where user has owner/admin first
-        guilds.sort(function(a, b) {
+        guilds.sort(function (a, b) {
           var aP = (a.owner || (a.permissions & 8)) ? 1 : 0;
           var bP = (b.owner || (b.permissions & 8)) ? 1 : 0;
           return bP - aP || a.name.localeCompare(b.name);
         });
         _guildCache = guilds;
         _pickerRenderGuilds(guilds);
-      }).catch(function(e) {
+      }).catch(function (e) {
         var body = document.getElementById('pickerBody');
         if (body) body.innerHTML = '<div class="picker-loading" style="color:var(--red);">' +
           '&#10007; Failed to load servers:<br>' + e.message + '</div>';
@@ -3611,20 +3442,20 @@
       }
 
       body.innerHTML = '';
-      guilds.forEach(function(g) {
+      guilds.forEach(function (g) {
         var iconHtml = g.icon
           ? '<img src="https://cdn.discordapp.com/icons/' + g.id + '/' + g.icon + '.webp?size=64" alt="" loading="lazy">'
           : _guildInitials(g.name);
 
         var row = document.createElement('div');
         row.className = 'guild-row';
-        row.dataset.guildId   = g.id;
+        row.dataset.guildId = g.id;
         row.dataset.guildName = g.name.toLowerCase();
         row.innerHTML = [
           '<div class="guild-icon">' + iconHtml + '</div>',
           '<div class="guild-info">',
-            '<div class="guild-name">' + _esc(g.name) + '</div>',
-            '<div class="guild-meta">' + (g.owner ? '&#9733; Owner' : 'Member') + '</div>',
+          '<div class="guild-name">' + _esc(g.name) + '</div>',
+          '<div class="guild-meta">' + (g.owner ? '&#9733; Owner' : 'Member') + '</div>',
           '</div>',
           '<span class="guild-chevron" id="gchev-' + g.id + '">&#8250;</span>'
         ].join('');
@@ -3633,7 +3464,7 @@
         channels.className = 'guild-channels';
         channels.id = 'gch-' + g.id;
 
-        row.addEventListener('click', function() {
+        row.addEventListener('click', function () {
           _pickerToggleGuild(g.id);
         });
 
@@ -3644,16 +3475,16 @@
 
     function _pickerToggleGuild(guildId) {
       var chDiv = document.getElementById('gch-' + guildId);
-      var chev  = document.getElementById('gchev-' + guildId);
+      var chev = document.getElementById('gchev-' + guildId);
       if (!chDiv) return;
 
       var isOpen = chDiv.classList.contains('open');
 
       // Close all other open guild panels
-      document.querySelectorAll('.guild-channels.open').forEach(function(el) {
+      document.querySelectorAll('.guild-channels.open').forEach(function (el) {
         el.classList.remove('open');
       });
-      document.querySelectorAll('.guild-chevron.open').forEach(function(el) {
+      document.querySelectorAll('.guild-chevron.open').forEach(function (el) {
         el.classList.remove('open');
       });
 
@@ -3663,7 +3494,7 @@
       if (chev) chev.classList.add('open');
 
       // Scroll into view
-      setTimeout(function() {
+      setTimeout(function () {
         chDiv.previousElementSibling.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 60);
 
@@ -3678,13 +3509,13 @@
       var tok = (jobs[_pickerJobId] && jobs[_pickerJobId]._token) || globalToken || state.token;
       fetch('https://discord.com/api/v10/guilds/' + guildId + '/channels', {
         headers: { Authorization: tok }
-      }).then(function(res) {
-        if (!res.ok) return res.json().then(function(e){ throw new Error(e.message || 'HTTP ' + res.status); });
+      }).then(function (res) {
+        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || 'HTTP ' + res.status); });
         return res.json();
-      }).then(function(channels) {
+      }).then(function (channels) {
         _chCache[guildId] = channels;
         _pickerRenderChannels(guildId, channels);
-      }).catch(function(e) {
+      }).catch(function (e) {
         if (chDiv) chDiv.innerHTML = '<div class="ch-loading" style="color:var(--red);">&#10007; ' + e.message + '</div>';
       });
     }
@@ -3694,7 +3525,7 @@
       if (!chDiv) return;
 
       // Filter text channels only (type 0 = GUILD_TEXT, type 5 = GUILD_ANNOUNCEMENT)
-      var textChannels = allChannels.filter(function(c) {
+      var textChannels = allChannels.filter(function (c) {
         return c.type === 0 || c.type === 5;
       });
 
@@ -3702,11 +3533,11 @@
       var categories = {}; // catId -> { name, position, channels: [] }
       var noCat = [];
 
-      allChannels.filter(function(c){ return c.type === 4; }).forEach(function(cat) {
+      allChannels.filter(function (c) { return c.type === 4; }).forEach(function (cat) {
         categories[cat.id] = { name: cat.name, position: cat.position, channels: [] };
       });
 
-      textChannels.forEach(function(c) {
+      textChannels.forEach(function (c) {
         if (c.parent_id && categories[c.parent_id]) {
           categories[c.parent_id].channels.push(c);
         } else {
@@ -3723,17 +3554,17 @@
       }
 
       // Uncategorised first
-      noCat.sort(function(a,b){ return a.position - b.position; }).forEach(function(c) {
+      noCat.sort(function (a, b) { return a.position - b.position; }).forEach(function (c) {
         html += _pickerChannelHtml(c);
       });
 
       // Then categories sorted by position
       Object.values(categories)
-        .sort(function(a,b){ return a.position - b.position; })
-        .forEach(function(cat) {
+        .sort(function (a, b) { return a.position - b.position; })
+        .forEach(function (cat) {
           if (cat.channels.length === 0) return;
           html += '<div class="cat-label">' + _esc(cat.name) + '</div>';
-          cat.channels.sort(function(a,b){ return a.position - b.position; }).forEach(function(c) {
+          cat.channels.sort(function (a, b) { return a.position - b.position; }).forEach(function (c) {
             html += _pickerChannelHtml(c);
           });
         });
@@ -3741,10 +3572,10 @@
       chDiv.innerHTML = html;
 
       // Attach pick button listeners
-      chDiv.querySelectorAll('.ch-pick-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+      chDiv.querySelectorAll('.ch-pick-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
           e.stopPropagation();
-          var chId   = btn.dataset.chid;
+          var chId = btn.dataset.chid;
           var chName = btn.dataset.chname;
           _pickerSelectChannel(chId, chName);
         });
@@ -3782,16 +3613,16 @@
     function _pickerFilterGuilds(query) {
       if (!query) {
         // Show all, collapse channels
-        document.querySelectorAll('.guild-row').forEach(function(r){ r.style.display = ''; });
-        document.querySelectorAll('.guild-channels').forEach(function(c){ c.classList.remove('open'); });
-        document.querySelectorAll('.guild-chevron').forEach(function(c){ c.classList.remove('open'); });
+        document.querySelectorAll('.guild-row').forEach(function (r) { r.style.display = ''; });
+        document.querySelectorAll('.guild-channels').forEach(function (c) { c.classList.remove('open'); });
+        document.querySelectorAll('.guild-chevron').forEach(function (c) { c.classList.remove('open'); });
         return;
       }
-      document.querySelectorAll('.guild-row').forEach(function(row) {
+      document.querySelectorAll('.guild-row').forEach(function (row) {
         var gName = (row.dataset.guildName || '').toLowerCase();
         row.style.display = gName.includes(query) ? '' : 'none';
         // Hide corresponding channel div too
-        var gid  = row.dataset.guildId;
+        var gid = row.dataset.guildId;
         var chDiv = document.getElementById('gch-' + gid);
         if (chDiv) chDiv.style.display = gName.includes(query) ? '' : 'none';
       });
@@ -3799,7 +3630,7 @@
 
     function _guildInitials(name) {
       return name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ')
-        .filter(Boolean).slice(0, 2).map(function(w){ return w[0].toUpperCase(); }).join('')
+        .filter(Boolean).slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join('')
         || name[0].toUpperCase();
     }
 
@@ -3822,7 +3653,7 @@
       }
 
       var raw = null;
-      try { raw = JSON.parse(localStorage.getItem('dc_jobs')); } catch(e) {}
+      try { raw = JSON.parse(localStorage.getItem('dc_jobs')); } catch (e) { }
 
       if (!raw || !raw.list || raw.list.length === 0) {
         // No saved state — just add one blank job as before
@@ -3834,16 +3665,16 @@
       jobCounter = raw.counter || 0;
 
       // Rebuild each saved job
-      raw.list.forEach(function(saved) {
+      raw.list.forEach(function (saved) {
         // Override jobCounter so renderJob uses the original ID
         jobCounter = saved.id - 1;
         var id = addJob({
           channelId: saved.channelId || '',
-          msg:       saved.msg,
-          delay:     saved.delay,
-          unit:      saved.unit,
-          sent:      saved.sent   || 0,
-          failed:    saved.failed || 0
+          msg: saved.msg,
+          delay: saved.delay,
+          unit: saved.unit,
+          sent: saved.sent || 0,
+          failed: saved.failed || 0
         });
         // Update the stats display immediately
         updateJobStats(id);
@@ -3851,7 +3682,7 @@
       });
 
       // Restore jobCounter to the true max so next addJob() gets a fresh ID
-      var maxId = raw.list.reduce(function(m, s){ return Math.max(m, s.id); }, 0);
+      var maxId = raw.list.reduce(function (m, s) { return Math.max(m, s.id); }, 0);
       jobCounter = Math.max(jobCounter, maxId);
 
       // Restore previously selected server and populate channel dropdowns
@@ -3860,7 +3691,7 @@
         var selEl = document.getElementById('serverPickerSelected');
         if (selEl) selEl.textContent = 'Loading...';
         _loadServerList();
-        _loadServerChannels(raw.selectedGuildId, function() {
+        _loadServerChannels(raw.selectedGuildId, function () {
           if (_serverGuildCache) {
             for (var gi = 0; gi < _serverGuildCache.length; gi++) {
               if (_serverGuildCache[gi].id === raw.selectedGuildId) {
@@ -3870,7 +3701,7 @@
               }
             }
           }
-          Object.keys(jobs).forEach(function(sid) { _refreshJobChannels(parseInt(sid)); });
+          Object.keys(jobs).forEach(function (sid) { _refreshJobChannels(parseInt(sid)); });
         });
       }
 
