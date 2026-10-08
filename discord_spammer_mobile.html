@@ -2963,11 +2963,24 @@
       if (!job) return false;
 
       var token     = job._token || globalToken || state.token;
+
+      // ── Channel ID resolution (robust) ──────────────────────────────────────
+      // Priority: hidden field → select dropdown current value → job cached value
+      // Always sync hidden field from the select so startJob never sees stale data.
       var hidEl     = document.getElementById('jchannel-id-' + id);
       var selEl     = document.getElementById('jchannel-'    + id);
-      var channelId = (hidEl && hidEl.value.trim()) ||
-                      (selEl && selEl.value && selEl.value.trim()) || '';
-      if (hidEl && !hidEl.value && channelId) hidEl.value = channelId;
+
+      // Sync: if the select has a valid value, push it into the hidden field
+      if (selEl && selEl.value && selEl.value.trim()) {
+        if (hidEl) hidEl.value = selEl.value.trim();
+      }
+
+      var channelId = '';
+      if (hidEl && hidEl.value.trim()) channelId = hidEl.value.trim();
+      if (!channelId && selEl && selEl.value && selEl.value.trim()) channelId = selEl.value.trim();
+      if (!channelId && job._savedChannelId) channelId = job._savedChannelId;
+      if (!channelId && job._cachedChannelId) channelId = job._cachedChannelId;
+      // ────────────────────────────────────────────────────────────────────────
 
       var msgEl     = document.getElementById('jmsg-'       + id);
       var delayEl   = document.getElementById('jdelay-'     + id);
@@ -2978,9 +2991,9 @@
       var delayMs   = delayNum * delayMult * 1000;
       var delayLabel = delayNum + (delayMult === 1 ? 's' : delayMult === 60 ? 'min' : 'h');
 
-      if (!token)      { if (!_bulkStarting) alert('Job #' + id + ': Load a token (Auth tab).'); return false; }
+      if (!token)      { if (!_bulkStarting) alert('Job #' + id + ': Load a token (Auth tab).'); log('[Job #' + id + '] \u26a0 No token \u2014 skipped.', 'err'); return false; }
       if (!channelId)  { if (!_bulkStarting) alert('Job #' + id + ': Select a channel.'); log('[Job #' + id + '] \u26a0 No channel \u2014 skipped.', 'err'); return false; }
-      if (!msg.trim()) { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); return false; }
+      if (!msg.trim()) { if (!_bulkStarting) alert('Job #' + id + ': Enter a message.'); log('[Job #' + id + '] \u26a0 No message \u2014 skipped.', 'err'); return false; }
 
       job._cachedToken     = token;
       job._cachedChannelId = channelId;
@@ -3017,30 +3030,57 @@
       });
       if (toStart.length === 0) { log('\u26a0 No stopped jobs to start.', 'warn'); return; }
 
-      startKeepAlive();   // must be synchronous (user gesture context)
+      // ── Pre-sync all channel IDs from select dropdowns BEFORE validation ──
+      // This is critical: if the page was restored from localStorage, the hidden
+      // channel-id field might lag behind the select element's current value.
+      toStart.forEach(function(id) {
+        var hidEl = document.getElementById('jchannel-id-' + id);
+        var selEl = document.getElementById('jchannel-'    + id);
+        if (selEl && selEl.value && selEl.value.trim()) {
+          if (hidEl) hidEl.value = selEl.value.trim();
+        }
+        // Also restore _savedChannelId from hidden field if available
+        var job = jobs[id];
+        if (job && hidEl && hidEl.value.trim() && !job._savedChannelId) {
+          job._savedChannelId = hidEl.value.trim();
+        }
+      });
+
+      startKeepAlive();  // must be synchronous (user gesture context)
       switchTab('monitor');
 
       _bulkStarting = true;
       var started = 0;
-      toStart.forEach(function(id) { if (startJob(id)) started++; });
+      var startedIds = [];
+      toStart.forEach(function(id) {
+        if (startJob(id)) { started++; startedIds.push(id); }
+      });
       _bulkStarting = false;
 
-      if (started === 0) { log('\u26a0 No jobs started \u2014 check channel + message.', 'warn'); return; }
+      if (started === 0) { log('\u26a0 No jobs started \u2014 check channel + message fields.', 'warn'); return; }
 
       saveJobs();
       updateGlobalStats();
       updateStartAllBtn();
 
-      // Stagger first fires 200 ms apart to avoid hitting Discord all at once
-      var STAGGER = 200;
-      var idx = 0;
-      toStart.forEach(function(id) {
-        if (!jobs[id] || !jobs[id].running) return;
-        jobs[id]._loopTimer = setTimeout(function() { _jobLoop(id); }, idx * STAGGER);
-        idx++;
+      // Stagger first fires 400 ms apart — enough breathing room for slowmode channels.
+      // Use startedIds (not toStart) so we only schedule jobs that actually started.
+      // Fix closure-in-loop: wrap in IIFE to capture correct id & idx per iteration.
+      var STAGGER = 400;
+      startedIds.forEach(function(id, idx) {
+        (function(jobId, delay) {
+          if (jobs[jobId] && jobs[jobId]._loopTimer) {
+            clearTimeout(jobs[jobId]._loopTimer);
+          }
+          if (jobs[jobId]) {
+            jobs[jobId]._loopTimer = setTimeout(function() {
+              _jobLoop(jobId);
+            }, delay);
+          }
+        })(id, idx * STAGGER);
       });
 
-      log('\u2713 ' + started + ' job(s) running.', 'ok');
+      log('\u2713 ' + started + ' job(s) started. Firing staggered (' + STAGGER + 'ms apart).', 'ok');
     }
 
     function stopAllJobs() {
@@ -3107,8 +3147,9 @@
       }).then(function(res) {
         if (res.status === 429) {
           return res.json().then(function(e) {
-            var ra = typeof e.retry_after === 'number' ? e.retry_after : 1;
-            var wait = Math.ceil(ra * 1000) + 500;
+            // retry_after can be a string OR number depending on Discord API version
+            var ra = parseFloat(e.retry_after) || 1;
+            var wait = Math.ceil(ra * 1000) + 600;
             log('[Job #' + id + '] Rate-limited \u2014 retry in ' + ra.toFixed(1) + 's.', 'warn');
             return wait;
           });
@@ -3116,15 +3157,14 @@
         if (!res.ok) {
           return res.json().then(function(body) {
             if (body.code === 20016) {
-              var ra = typeof body.retry_after === 'number' ? body.retry_after : 0;
-              var wait = ra > 0 ? Math.ceil(ra * 1000) + 500 : (job._delayMs || 5000);
+              // Slowmode hit — retry_after can be string or number
+              var ra = parseFloat(body.retry_after) || 0;
+              var wait = ra > 0 ? Math.ceil(ra * 1000) + 600 : (job._delayMs || 5000);
               log('[Job #' + id + '] Slowmode \u2014 retry in ' + (wait/1000).toFixed(1) + 's.', 'warn');
-              return wait;
+              return wait; // IMPORTANT: this propagates up to _jobLoop
             }
+            // Other HTTP error — throw so .catch handles it
             throw new Error(body.message || 'HTTP ' + res.status);
-          }).catch(function(e) {
-            if (e.message && e.message !== 'HTTP ' + res.status) throw e;
-            throw new Error('HTTP ' + res.status);
           });
         }
         job.sent++;
@@ -3134,10 +3174,11 @@
         log('[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
         // return undefined -> _jobLoop uses job._delayMs
       }).catch(function(e) {
-        if (!job) return;
+        if (!job || !jobs[id]) return;
         job.failed++;
         updateJobStats(id);
-        log('[Job #' + id + '] Failed: ' + e.message, 'err');
+        log('[Job #' + id + '] Error: ' + e.message, 'err');
+        // Do NOT rethrow — resolve undefined so _jobLoop retries with normal delay
       });
     }
 
