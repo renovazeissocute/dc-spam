@@ -2998,6 +2998,14 @@
       document.getElementById('job-'    + id).classList.add('job-running');
 
       log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
+
+      // Kick off the loop immediately when started individually.
+      // startAllJobs() sets _bulkStarting=true and schedules its own
+      // staggered loops after this call, so skip here in that case.
+      if (!_bulkStarting) {
+        _jobLoop(id);
+      }
+
       return true;
     }
 
