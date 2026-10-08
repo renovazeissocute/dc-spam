@@ -3063,24 +3063,45 @@
       updateGlobalStats();
       updateStartAllBtn();
 
-      // Stagger first fires 400 ms apart — enough breathing room for slowmode channels.
-      // Use startedIds (not toStart) so we only schedule jobs that actually started.
-      // Fix closure-in-loop: wrap in IIFE to capture correct id & idx per iteration.
-      var STAGGER = 400;
-      startedIds.forEach(function(id, idx) {
-        (function(jobId, delay) {
-          if (jobs[jobId] && jobs[jobId]._loopTimer) {
-            clearTimeout(jobs[jobId]._loopTimer);
-          }
-          if (jobs[jobId]) {
-            jobs[jobId]._loopTimer = setTimeout(function() {
-              _jobLoop(jobId);
-            }, delay);
-          }
-        })(id, idx * STAGGER);
+      // ── Batched start: fire BATCH_SIZE jobs at a time, with BATCH_DELAY between batches ──
+      // 5 jobs worked fine, 10 did not — so we chunk into groups of 5.
+      // Within each batch, jobs stagger STAGGER ms apart (same as before).
+      // After the last job in a batch fires, we wait BATCH_DELAY ms before
+      // kicking off the next batch — giving Discord / the browser time to breathe.
+      var BATCH_SIZE  = 5;
+      var STAGGER     = 400;   // ms between jobs inside one batch
+      var BATCH_DELAY = 2500;  // ms gap after a batch finishes before next batch starts
+
+      // Split into chunks
+      var batches = [];
+      for (var bi = 0; bi < startedIds.length; bi += BATCH_SIZE) {
+        batches.push(startedIds.slice(bi, bi + BATCH_SIZE));
+      }
+
+      // Schedule each batch. Batch 0 offset = 0ms, Batch 1 offset = (5*400+2500) = 4500ms, etc.
+      batches.forEach(function(batch, batchIdx) {
+        var batchOffset = batchIdx * (BATCH_SIZE * STAGGER + BATCH_DELAY);
+        batch.forEach(function(jobId, jobIdx) {
+          var fireDelay = batchOffset + jobIdx * STAGGER;
+          (function(jid, delay) {
+            if (jobs[jid] && jobs[jid]._loopTimer) {
+              clearTimeout(jobs[jid]._loopTimer);
+            }
+            if (jobs[jid]) {
+              jobs[jid]._loopTimer = setTimeout(function() {
+                _jobLoop(jid);
+              }, delay);
+            }
+          })(jobId, fireDelay);
+        });
       });
 
-      log('\u2713 ' + started + ' job(s) started. Firing staggered (' + STAGGER + 'ms apart).', 'ok');
+      if (batches.length > 1) {
+        log('\u2713 ' + started + ' job(s) split into ' + batches.length + ' set(s) of max ' +
+          BATCH_SIZE + '. Next set starts ~' + ((BATCH_SIZE * STAGGER + BATCH_DELAY) / 1000).toFixed(1) + 's later.', 'ok');
+      } else {
+        log('\u2713 ' + started + ' job(s) started. Firing staggered (' + STAGGER + 'ms apart).', 'ok');
+      }
     }
 
     function stopAllJobs() {
