@@ -781,6 +781,210 @@
       opacity: 0.8;
     }
 
+    /* JOB SETS */
+    .job-set {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .job-set.set-running {
+      border-color: rgba(34, 197, 94, 0.5);
+      box-shadow: 0 0 22px rgba(34, 197, 94, 0.07);
+    }
+
+    .job-set-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .set-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--discord));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .set-title {
+      font-size: 13px;
+      font-weight: 700;
+      flex: 1;
+      color: var(--text);
+    }
+
+    .set-slots {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 7px;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+
+    .set-slots.full {
+      color: var(--yellow);
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .set-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .set-btn:active { opacity: 0.75; }
+
+    .set-btn-start {
+      background: linear-gradient(135deg, #16a34a, var(--green));
+      color: #fff;
+      box-shadow: 0 2px 8px var(--green-glow);
+    }
+
+    .set-btn-stop {
+      background: linear-gradient(135deg, #b91c1c, var(--red));
+      color: #fff;
+      box-shadow: 0 2px 8px var(--red-glow);
+    }
+
+    .set-btn-add {
+      background: rgba(99, 102, 241, 0.18);
+      color: var(--primary);
+      border: 1px solid var(--border-active) !important;
+    }
+
+    .set-btn-remove {
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 15px;
+      padding: 4px 7px;
+    }
+
+    .set-btn-remove:active { color: var(--red); }
+
+    .set-jobs {
+      padding: 10px 12px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .set-jobs .job-card {
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* PER-SET LOG */
+    .set-log-wrap {
+      border-top: 1px solid var(--border);
+      background: #070710;
+      display: none;
+    }
+
+    .set-log-wrap.open {
+      display: block;
+    }
+
+    .set-log-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border-bottom: 1px solid rgba(99,102,241,0.12);
+    }
+
+    .set-log-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .set-log-clear {
+      font-size: 10px;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 5px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .set-log-output {
+      height: 140px;
+      overflow-y: auto;
+      padding: 6px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .set-log-output::-webkit-scrollbar { width: 2px; }
+    .set-log-output::-webkit-scrollbar-thumb {
+      background: rgba(99,102,241,0.3);
+      border-radius: 2px;
+    }
+
+    .set-btn-log {
+      background: rgba(99,102,241,0.12);
+      color: var(--text-muted);
+      border: 1px solid var(--border) !important;
+      font-size: 10px;
+      padding: 3px 8px;
+    }
+
+    .set-btn-log.active {
+      color: var(--primary);
+      border-color: var(--border-active) !important;
+      background: rgba(99,102,241,0.2);
+    }
+
+    .add-set-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: var(--radius);
+      border: 1.5px dashed rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.06);
+      color: var(--primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
+      letter-spacing: 0.2px;
+    }
+
+    .add-set-btn:active {
+      background: rgba(99, 102, 241, 0.14);
+      transform: scale(0.98);
+    }
+
     .job-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -2133,7 +2337,7 @@
       </div>
 
       <div class="jobs-header">
-        <div class="jobs-title">&#9889; Active Jobs</div>
+        <div class="jobs-title">&#9889; Job Sets</div>
         <div style="display:flex;gap:6px;">
           <button class="btn-add-job" id="startAllBtn" onclick="startAllJobs()"
             style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 2px 10px rgba(34,197,94,0.3);">&#9654;
@@ -2141,10 +2345,10 @@
           <button class="btn-add-job" id="stopAllBtn" onclick="stopAllJobs()"
             style="background:linear-gradient(135deg,#b91c1c,#ef4444);box-shadow:0 2px 10px rgba(239,68,68,0.3);display:none;">&#9209;
             All</button>
-          <button class="btn-add-job" onclick="addJob()">+ Add</button>
         </div>
       </div>
       <div id="jobsContainer"></div>
+      <button class="add-set-btn" onclick="addSet()">&#43; Add Job Set</button>
     </div>
 
     <!-- MONITOR TAB -->
@@ -2683,9 +2887,17 @@
       try {
         var data = {
           counter: jobCounter,
+          setCounter: setCounter,
+          sets: [],
           list: [],
           selectedGuildId: _selectedGuildId
         };
+        // Save sets structure
+        Object.keys(sets).forEach(function(ssid) {
+          var set = sets[parseInt(ssid)];
+          data.sets.push({ id: set.id, jobs: set.jobs.slice() });
+        });
+        // Save individual jobs
         Object.keys(jobs).forEach(function (sid) {
           var id = parseInt(sid);
           var job = jobs[id];
@@ -2695,6 +2907,7 @@
           var unitEl = document.getElementById('jdelayunit-' + id);
           data.list.push({
             id: id,
+            setId: job.setId || null,
             channelId: channelIdEl ? channelIdEl.value : '',
             msg: msgEl ? msgEl.value : '',
             delay: delayEl ? delayEl.value : '5',
@@ -2716,15 +2929,176 @@
       try { return localStorage.getItem('dc_token') || ''; } catch (e) { return ''; }
     }
 
-    function addJob(opts) {
+    /* ── JOB SETS ────────────────────────────────────────────────────────────
+     * A "set" groups up to MAX_JOBS_PER_SET (5) jobs.
+     * Each set has its own Start Set / Stop Set button.
+     * startAllJobs() / stopAllJobs() iterate over all sets.
+     * ─────────────────────────────────────────────────────────────────────── */
+    var MAX_JOBS_PER_SET = 5;
+    var sets = {};       // keyed by setId
+    var setCounter = 0;
+
+    function addSet(opts) {
+      var sid = ++setCounter;
+      sets[sid] = { id: sid, jobs: [] };
+      renderSet(sid, opts && opts.name);
+      // Optionally pre-populate jobs
+      if (opts && opts.jobs) {
+        opts.jobs.forEach(function(jOpts) {
+          addJobToSet(sid, jOpts);
+        });
+      } else {
+        // default: one blank job
+        addJobToSet(sid);
+      }
+      _scheduleSave();
+      return sid;
+    }
+
+    function renderSet(sid, name) {
+      var container = document.getElementById('jobsContainer');
+      var div = document.createElement('div');
+      div.className = 'job-set';
+      div.id = 'set-' + sid;
+      var label = name || ('Set ' + sid);
+      div.innerHTML = [
+        '<div class="job-set-header" id="set-hdr-' + sid + '">',
+        '<div class="set-icon">' + sid + '</div>',
+        '<div class="set-title">' + _esc(label) + '</div>',
+        '<span class="set-slots" id="set-slots-' + sid + '">0/' + MAX_JOBS_PER_SET + '</span>',
+        '<button class="set-btn set-btn-start" id="set-start-' + sid + '" onclick="startSet(' + sid + ')">&#9654; Start</button>',
+        '<button class="set-btn set-btn-stop" id="set-stop-' + sid + '" onclick="stopSet(' + sid + ')" style="display:none;">&#9209; Stop</button>',
+        '<button class="set-btn set-btn-add" id="set-addjob-' + sid + '" onclick="addJobToSet(' + sid + ')" title="Add job">+ Job</button>',
+        '<button class="set-btn set-btn-log" id="set-logbtn-' + sid + '" onclick="toggleSetLog(' + sid + ')" title="Toggle log">&#128202; Log</button>',
+        '<button class="set-btn set-btn-remove" onclick="removeSet(' + sid + ')" title="Remove set">&#10005;</button>',
+        '</div>',
+        '<div class="set-jobs" id="set-jobs-' + sid + '"></div>',
+        '<div class="set-log-wrap" id="set-log-wrap-' + sid + '">',
+        '<div class="set-log-bar">',
+        '<span class="set-log-title">&#128202; Set ' + sid + ' Log</span>',
+        '<button class="set-log-clear" onclick="clearSetLog(' + sid + ')">Clear</button>',
+        '</div>',
+        '<div class="set-log-output" id="set-log-' + sid + '"></div>',
+        '</div>'
+      ].join('');
+      container.appendChild(div);
+      _updateSetSlots(sid);
+    }
+
+    function _updateSetSlots(sid) {
+      var set = sets[sid];
+      if (!set) return;
+      var count = set.jobs.length;
+      var el = document.getElementById('set-slots-' + sid);
+      if (el) {
+        el.textContent = count + '/' + MAX_JOBS_PER_SET;
+        el.classList.toggle('full', count >= MAX_JOBS_PER_SET);
+      }
+      // Disable add-job button when full
+      var addBtn = document.getElementById('set-addjob-' + sid);
+      if (addBtn) addBtn.disabled = count >= MAX_JOBS_PER_SET;
+    }
+
+    function removeSet(sid) {
+      var set = sets[sid];
+      if (!set) return;
+      // Stop + remove all jobs in set
+      set.jobs.slice().forEach(function(jid) { removeJob(jid, true); });
+      delete sets[sid];
+      var el = document.getElementById('set-' + sid);
+      if (el) el.remove();
+      updateGlobalStats();
+      saveJobs();
+    }
+
+    function startSet(sid) {
+      var set = sets[sid];
+      if (!set) return;
+      var toStart = set.jobs.filter(function(jid) { return jobs[jid] && !jobs[jid].running; });
+      if (toStart.length === 0) { log('\u26a0 Set ' + sid + ': no stopped jobs.', 'warn'); return; }
+
+      // Sync channel IDs before validation
+      toStart.forEach(function(id) {
+        var hidEl = document.getElementById('jchannel-id-' + id);
+        var selEl = document.getElementById('jchannel-' + id);
+        if (selEl && selEl.value && selEl.value.trim()) {
+          if (hidEl) hidEl.value = selEl.value.trim();
+        }
+        var job = jobs[id];
+        if (job && hidEl && hidEl.value.trim() && !job._savedChannelId) {
+          job._savedChannelId = hidEl.value.trim();
+        }
+      });
+
+      startKeepAlive();
+
+      _bulkStarting = true;
+      var started = 0;
+      var startedIds = [];
+      toStart.forEach(function(id) {
+        if (startJob(id)) { started++; startedIds.push(id); }
+      });
+      _bulkStarting = false;
+
+      if (started === 0) { log('\u26a0 Set ' + sid + ': check channel + message fields.', 'warn'); return; }
+
+      // Stagger starts within the set
+      var STAGGER = 400;
+      startedIds.forEach(function(jid, idx) {
+        if (jobs[jid] && jobs[jid]._loopTimer) clearTimeout(jobs[jid]._loopTimer);
+        if (jobs[jid]) {
+          jobs[jid]._loopTimer = setTimeout(function() { _jobLoop(jid); }, idx * STAGGER);
+        }
+      });
+
+      log('\u2713 Set ' + sid + ': ' + started + ' job(s) started.', 'ok');
+      saveJobs(); updateGlobalStats(); updateStartAllBtn(); _updateSetHeader(sid);
+    }
+
+    function stopSet(sid) {
+      var set = sets[sid];
+      if (!set) return;
+      set.jobs.forEach(function(jid) {
+        if (jobs[jid] && jobs[jid].running) stopJob(jid);
+      });
+      _updateSetHeader(sid);
+    }
+
+    function _updateSetHeader(sid) {
+      var set = sets[sid];
+      if (!set) return;
+      var anyRunning = set.jobs.some(function(jid) { return jobs[jid] && jobs[jid].running; });
+      var setEl = document.getElementById('set-' + sid);
+      var startBtn = document.getElementById('set-start-' + sid);
+      var stopBtn  = document.getElementById('set-stop-'  + sid);
+      if (setEl) setEl.classList.toggle('set-running', anyRunning);
+      if (startBtn) startBtn.style.display = anyRunning ? 'none' : '';
+      if (stopBtn)  stopBtn.style.display  = anyRunning ? '' : 'none';
+    }
+
+    function addJobToSet(sid, opts) {
+      var set = sets[sid];
+      if (!set) return;
+      if (set.jobs.length >= MAX_JOBS_PER_SET) {
+        log('\u26a0 Set ' + sid + ' is full (max ' + MAX_JOBS_PER_SET + ' jobs). Add a new set.', 'warn');
+        return;
+      }
+      var id = addJob(opts, sid);
+      set.jobs.push(id);
+      _updateSetSlots(sid);
+      return id;
+    }
+
+    function addJob(opts, setId) {
       var id = ++jobCounter;
       jobs[id] = {
         id: id,
+        setId: setId || null,
         running: false,
         timer: null, countdownTimer: null,
         sent: 0, failed: 0, startTime: null
       };
-      renderJob(id);
+      renderJob(id, setId);
       // Pre-fill from saved opts if provided
       if (opts) {
         var channelIdEl = document.getElementById('jchannel-id-' + id);
@@ -2733,7 +3107,6 @@
         var unitEl = document.getElementById('jdelayunit-' + id);
         if (channelIdEl && opts.channelId) {
           channelIdEl.value = opts.channelId;
-          // Restore selected option in the dropdown when channels load
           jobs[id]._savedChannelId = opts.channelId;
         }
         if (msgEl && opts.msg) msgEl.value = opts.msg;
@@ -2751,19 +3124,26 @@
       return id;
     }
 
-    function removeJob(id) {
-      if (jobs[id] && jobs[id].running) {
-        stopJob(id);
-      }
+    function removeJob(id, _fromSet) {
+      if (jobs[id] && jobs[id].running) stopJob(id);
+      var sid = jobs[id] && jobs[id].setId;
       delete jobs[id];
       var el = document.getElementById('job-' + id);
       if (el) el.remove();
+      // Remove from set's job list
+      if (!_fromSet && sid && sets[sid]) {
+        sets[sid].jobs = sets[sid].jobs.filter(function(jid) { return jid !== id; });
+        _updateSetSlots(sid);
+        _updateSetHeader(sid);
+      }
       updateGlobalStats();
       saveJobs();
     }
 
-    function renderJob(id) {
-      var container = document.getElementById('jobsContainer');
+    function renderJob(id, setId) {
+      var container = setId
+        ? document.getElementById('set-jobs-' + setId)
+        : document.getElementById('jobsContainer');
       var div = document.createElement('div');
       div.className = 'job-card';
       div.id = 'job-' + id;
@@ -3010,7 +3390,7 @@
       document.getElementById('jdot-'   + id).classList.add('running');
       document.getElementById('job-'    + id).classList.add('job-running');
 
-      log('[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
+      logJob(id, '[Job #' + id + '] Started \u2014 ch:' + channelId + ' delay:' + delayLabel, 'info');
 
       // Kick off the loop immediately when started individually.
       // startAllJobs() sets _bulkStarting=true and schedules its own
@@ -3023,85 +3403,59 @@
     }
 
     function startAllJobs() {
-      var toStart = [];
-      Object.keys(jobs).forEach(function(sid) {
-        var id = parseInt(sid);
-        if (jobs[id] && !jobs[id].running) toStart.push(id);
-      });
-      if (toStart.length === 0) { log('\u26a0 No stopped jobs to start.', 'warn'); return; }
+      // Start each set in sequence with a delay between sets
+      var setIds = Object.keys(sets).map(Number);
+      if (setIds.length === 0) { log('\u26a0 No job sets found.', 'warn'); return; }
 
-      // ── Pre-sync all channel IDs from select dropdowns BEFORE validation ──
-      // This is critical: if the page was restored from localStorage, the hidden
-      // channel-id field might lag behind the select element's current value.
-      toStart.forEach(function(id) {
-        var hidEl = document.getElementById('jchannel-id-' + id);
-        var selEl = document.getElementById('jchannel-'    + id);
-        if (selEl && selEl.value && selEl.value.trim()) {
-          if (hidEl) hidEl.value = selEl.value.trim();
-        }
-        // Also restore _savedChannelId from hidden field if available
-        var job = jobs[id];
-        if (job && hidEl && hidEl.value.trim() && !job._savedChannelId) {
-          job._savedChannelId = hidEl.value.trim();
-        }
-      });
-
-      startKeepAlive();  // must be synchronous (user gesture context)
+      startKeepAlive(); // must be synchronous (user gesture context)
       switchTab('monitor');
 
-      _bulkStarting = true;
-      var started = 0;
-      var startedIds = [];
-      toStart.forEach(function(id) {
-        if (startJob(id)) { started++; startedIds.push(id); }
-      });
-      _bulkStarting = false;
-
-      if (started === 0) { log('\u26a0 No jobs started \u2014 check channel + message fields.', 'warn'); return; }
-
-      saveJobs();
-      updateGlobalStats();
-      updateStartAllBtn();
-
-      // ── Batched start: fire BATCH_SIZE jobs at a time, with BATCH_DELAY between batches ──
-      // 5 jobs worked fine, 10 did not — so we chunk into groups of 5.
-      // Within each batch, jobs stagger STAGGER ms apart (same as before).
-      // After the last job in a batch fires, we wait BATCH_DELAY ms before
-      // kicking off the next batch — giving Discord / the browser time to breathe.
-      var BATCH_SIZE  = 5;
-      var STAGGER     = 400;   // ms between jobs inside one batch
-      var BATCH_DELAY = 2500;  // ms gap after a batch finishes before next batch starts
-
-      // Split into chunks
-      var batches = [];
-      for (var bi = 0; bi < startedIds.length; bi += BATCH_SIZE) {
-        batches.push(startedIds.slice(bi, bi + BATCH_SIZE));
-      }
-
-      // Schedule each batch. Batch 0 offset = 0ms, Batch 1 offset = (5*400+2500) = 4500ms, etc.
-      batches.forEach(function(batch, batchIdx) {
-        var batchOffset = batchIdx * (BATCH_SIZE * STAGGER + BATCH_DELAY);
-        batch.forEach(function(jobId, jobIdx) {
-          var fireDelay = batchOffset + jobIdx * STAGGER;
-          (function(jid, delay) {
-            if (jobs[jid] && jobs[jid]._loopTimer) {
-              clearTimeout(jobs[jid]._loopTimer);
+      var SET_GAP = 2500; // ms between sets
+      var totalStarted = 0;
+      setIds.forEach(function(sid, sIdx) {
+        setTimeout(function() {
+          var set = sets[sid];
+          if (!set) return;
+          var toStart = set.jobs.filter(function(jid) { return jobs[jid] && !jobs[jid].running; });
+          // Sync channel IDs
+          toStart.forEach(function(id) {
+            var hidEl = document.getElementById('jchannel-id-' + id);
+            var selEl = document.getElementById('jchannel-'    + id);
+            if (selEl && selEl.value && selEl.value.trim()) {
+              if (hidEl) hidEl.value = selEl.value.trim();
             }
+            var job = jobs[id];
+            if (job && hidEl && hidEl.value.trim() && !job._savedChannelId) {
+              job._savedChannelId = hidEl.value.trim();
+            }
+          });
+          _bulkStarting = true;
+          var startedIds = [];
+          toStart.forEach(function(id) {
+            if (startJob(id)) startedIds.push(id);
+          });
+          _bulkStarting = false;
+          totalStarted += startedIds.length;
+          // Stagger within set
+          var STAGGER = 400;
+          startedIds.forEach(function(jid, idx) {
+            if (jobs[jid] && jobs[jid]._loopTimer) clearTimeout(jobs[jid]._loopTimer);
             if (jobs[jid]) {
-              jobs[jid]._loopTimer = setTimeout(function() {
-                _jobLoop(jid);
-              }, delay);
+              jobs[jid]._loopTimer = setTimeout(function() { _jobLoop(jid); }, idx * STAGGER);
             }
-          })(jobId, fireDelay);
-        });
+          });
+          if (startedIds.length > 0) {
+            log('\u2713 Set ' + sid + ': ' + startedIds.length + ' job(s) started.', 'ok');
+            _updateSetHeader(sid);
+          }
+        }, sIdx * SET_GAP);
       });
 
-      if (batches.length > 1) {
-        log('\u2713 ' + started + ' job(s) split into ' + batches.length + ' set(s) of max ' +
-          BATCH_SIZE + '. Next set starts ~' + ((BATCH_SIZE * STAGGER + BATCH_DELAY) / 1000).toFixed(1) + 's later.', 'ok');
-      } else {
-        log('\u2713 ' + started + ' job(s) started. Firing staggered (' + STAGGER + 'ms apart).', 'ok');
-      }
+      setTimeout(function() {
+        if (totalStarted === 0) log('\u26a0 No jobs started \u2014 check channel + message fields.', 'warn');
+        saveJobs(); updateGlobalStats(); updateStartAllBtn();
+        log('\u2713 All sets queued. Each set starts ' + (SET_GAP/1000).toFixed(1) + 's apart.', 'ok');
+      }, 50);
     }
 
     function stopAllJobs() {
@@ -3129,7 +3483,7 @@
       document.getElementById('jstop-'  + id).disabled = true;
       document.getElementById('jdot-'   + id).classList.remove('running');
       document.getElementById('job-'    + id).classList.remove('job-running');
-      log('[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
+      logJob(id, '[Job #' + id + '] Stopped. Sent:' + job.sent + ' Failed:' + job.failed, 'warn');
       saveJobs();
       updateGlobalStats();
       updateStartAllBtn();
@@ -3139,21 +3493,46 @@
 
     function _showCountdownLine(id, delayMs) {
       _removeCountdownLine(id);
-      var el   = document.getElementById('logOutput');
-      if (!el) return;
-      var line = document.createElement('div');
-      line.className = 'log-line';
-      line.id = 'cdline-' + id;
       var txt = delayMs < 0 ? 'Sending...' : ('Next in ' + Math.ceil(delayMs / 1000) + 's');
-      line.innerHTML = '<span class="log-time">' + now() + '</span>' +
+      var lineHtml = '<span class="log-time">' + now() + '</span>' +
         '<span class="log-msg-countdown" id="cd-text-' + id + '">[Job #' + id + '] ' + txt + '</span>';
-      el.appendChild(line);
-      el.scrollTop = el.scrollHeight;
+      // Global log
+      var el = document.getElementById('logOutput');
+      if (el) {
+        var line = document.createElement('div');
+        line.className = 'log-line';
+        line.id = 'cdline-' + id;
+        line.innerHTML = lineHtml;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+      }
+      // Set log countdown
+      var job = jobs[id];
+      var sid = job && job.setId;
+      if (sid) {
+        var sel = document.getElementById('set-log-' + sid);
+        if (sel) {
+          // Update existing countdown in set log or append
+          var existing = sel.querySelector('#scdline-' + id);
+          if (existing) {
+            existing.querySelector('.log-msg-countdown').textContent = '[Job #' + id + '] ' + txt;
+          } else {
+            var sline = document.createElement('div');
+            sline.className = 'log-line';
+            sline.id = 'scdline-' + id;
+            sline.innerHTML = lineHtml;
+            sel.appendChild(sline);
+            sel.scrollTop = sel.scrollHeight;
+          }
+        }
+      }
     }
 
     function _removeCountdownLine(id) {
       var old = document.getElementById('cdline-' + id);
       if (old) old.remove();
+      var sold = document.getElementById('scdline-' + id);
+      if (sold) sold.remove();
     }
 
     /* jobSend: resolves with retryMs on 429/slowmode, undefined on success/error.
@@ -3171,20 +3550,18 @@
             // retry_after can be a string OR number depending on Discord API version
             var ra = parseFloat(e.retry_after) || 1;
             var wait = Math.ceil(ra * 1000) + 600;
-            log('[Job #' + id + '] Rate-limited \u2014 retry in ' + ra.toFixed(1) + 's.', 'warn');
+            logJob(id, '[Job #' + id + '] Rate-limited \u2014 retry in ' + ra.toFixed(1) + 's.', 'warn');
             return wait;
           });
         }
         if (!res.ok) {
           return res.json().then(function(body) {
             if (body.code === 20016) {
-              // Slowmode hit — retry_after can be string or number
               var ra = parseFloat(body.retry_after) || 0;
               var wait = ra > 0 ? Math.ceil(ra * 1000) + 600 : (job._delayMs || 5000);
-              log('[Job #' + id + '] Slowmode \u2014 retry in ' + (wait/1000).toFixed(1) + 's.', 'warn');
-              return wait; // IMPORTANT: this propagates up to _jobLoop
+              logJob(id, '[Job #' + id + '] Slowmode \u2014 retry in ' + (wait/1000).toFixed(1) + 's.', 'warn');
+              return wait;
             }
-            // Other HTTP error — throw so .catch handles it
             throw new Error(body.message || 'HTTP ' + res.status);
           });
         }
@@ -3192,14 +3569,12 @@
         updateJobStats(id);
         var flat    = msg.replace(/\n/g, ' ');
         var preview = flat.length > 35 ? flat.slice(0, 35) + '\u2026' : flat;
-        log('[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
-        // return undefined -> _jobLoop uses job._delayMs
+        logJob(id, '[Job #' + id + '] Sent #' + job.sent + ': "' + preview + '"', 'ok');
       }).catch(function(e) {
         if (!job || !jobs[id]) return;
         job.failed++;
         updateJobStats(id);
-        log('[Job #' + id + '] Error: ' + e.message, 'err');
-        // Do NOT rethrow — resolve undefined so _jobLoop retries with normal delay
+        logJob(id, '[Job #' + id + '] Error: ' + e.message, 'err');
       });
     }
 
@@ -3241,15 +3616,61 @@
       return new Date().toLocaleTimeString('en-GB', { hour12: false });
     }
 
-    function log(msg, type) {
+    /* Write a line to the global log (Monitor tab) and optionally to a set log */
+    function log(msg, type, setId) {
       type = type || 'info';
+      // Global log
       var el = document.getElementById('logOutput');
+      if (el) {
+        var line = document.createElement('div');
+        line.className = 'log-line';
+        line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-' + type + '">' + msg + '</span>';
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+        while (el.children.length > 500) el.removeChild(el.children[0]);
+      }
+      // Per-set log (if known)
+      if (setId) _logToSet(setId, msg, type);
+    }
+
+    /* Log a message to a specific set's mini log, auto-detecting setId from jobId */
+    function logJob(jobId, msg, type) {
+      var job = jobs[jobId];
+      var sid = job && job.setId;
+      log(msg, type, sid || null);
+    }
+
+    function _logToSet(sid, msg, type) {
+      var el = document.getElementById('set-log-' + sid);
+      if (!el) return;
       var line = document.createElement('div');
       line.className = 'log-line';
-      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-' + type + '">' + msg + '</span>';
+      line.innerHTML = '<span class="log-time">' + now() + '</span><span class="log-msg-' + (type||'info') + '">' + msg + '</span>';
       el.appendChild(line);
       el.scrollTop = el.scrollHeight;
-      while (el.children.length > 300) el.removeChild(el.children[0]);
+      while (el.children.length > 200) el.removeChild(el.children[0]);
+      // Flash the log button to indicate new activity
+      var btn = document.getElementById('set-logbtn-' + sid);
+      if (btn && !btn._flashTimer) {
+        btn.style.color = 'var(--green)';
+        btn._flashTimer = setTimeout(function() {
+          btn.style.color = '';
+          btn._flashTimer = null;
+        }, 600);
+      }
+    }
+
+    function toggleSetLog(sid) {
+      var wrap = document.getElementById('set-log-wrap-' + sid);
+      var btn  = document.getElementById('set-logbtn-' + sid);
+      if (!wrap) return;
+      var isOpen = wrap.classList.toggle('open');
+      if (btn) btn.classList.toggle('active', isOpen);
+    }
+
+    function clearSetLog(sid) {
+      var el = document.getElementById('set-log-' + sid);
+      if (el) el.innerHTML = '';
     }
 
     function clearLog() {
@@ -3710,14 +4131,13 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    /* ── INIT: restore saved jobs, or add a blank default ── */
+    /* ── INIT: restore saved jobs / sets, or add a blank default ── */
     (function initJobs() {
       // Restore saved token into the input field
       var savedTok = loadSavedToken();
       if (savedTok) {
         var tokInput = document.getElementById('tokenInput');
         if (tokInput) tokInput.value = savedTok;
-        // Pre-populate global token so jobs can start without re-verifying
         globalToken = savedTok;
         state.token = savedTok;
       }
@@ -3725,38 +4145,75 @@
       var raw = null;
       try { raw = JSON.parse(localStorage.getItem('dc_jobs')); } catch (e) { }
 
-      if (!raw || !raw.list || raw.list.length === 0) {
-        // No saved state — just add one blank job as before
-        addJob();
+      // ── New format: has sets array ────────────────────────────────────────
+      if (raw && raw.sets && raw.sets.length > 0) {
+        jobCounter  = raw.counter  || 0;
+        setCounter  = raw.setCounter || 0;
+
+        // Build a jobId -> saved-opts lookup
+        var savedJobMap = {};
+        (raw.list || []).forEach(function(s) { savedJobMap[s.id] = s; });
+
+        raw.sets.forEach(function(savedSet) {
+          var sid = savedSet.id;
+          // Ensure setCounter tracks the highest id
+          if (sid > setCounter) setCounter = sid;
+          sets[sid] = { id: sid, jobs: [] };
+          renderSet(sid);
+          savedSet.jobs.forEach(function(jid) {
+            var s = savedJobMap[jid];
+            if (!s) return;
+            jobCounter = s.id - 1;
+            var id = addJob({
+              channelId: s.channelId || '',
+              msg: s.msg, delay: s.delay, unit: s.unit,
+              sent: s.sent || 0, failed: s.failed || 0
+            }, sid);
+            sets[sid].jobs.push(id);
+            updateJobStats(id);
+            _updateSetSlots(sid);
+          });
+        });
+
+        // Restore jobCounter to the true max
+        var maxId = (raw.list || []).reduce(function(m, s) { return Math.max(m, s.id); }, 0);
+        jobCounter = Math.max(jobCounter, maxId);
+
+        log('\u21bb Restored ' + raw.sets.length + ' set(s) / ' + (raw.list||[]).length + ' job(s). Press Start to run.', 'info');
+
+      } else if (raw && raw.list && raw.list.length > 0) {
+        // ── Legacy format: flat job list — migrate into one set per 5 jobs ──
+        jobCounter = raw.counter || 0;
+        var allSaved = raw.list;
+        for (var li = 0; li < allSaved.length; li += MAX_JOBS_PER_SET) {
+          var chunk = allSaved.slice(li, li + MAX_JOBS_PER_SET);
+          var sid = ++setCounter;
+          sets[sid] = { id: sid, jobs: [] };
+          renderSet(sid);
+          chunk.forEach(function(s) {
+            jobCounter = s.id - 1;
+            var id = addJob({
+              channelId: s.channelId || '',
+              msg: s.msg, delay: s.delay, unit: s.unit,
+              sent: s.sent || 0, failed: s.failed || 0
+            }, sid);
+            sets[sid].jobs.push(id);
+            updateJobStats(id);
+            _updateSetSlots(sid);
+          });
+        }
+        var maxId2 = allSaved.reduce(function(m, s) { return Math.max(m, s.id); }, 0);
+        jobCounter = Math.max(jobCounter, maxId2);
+        log('\u21bb Migrated ' + allSaved.length + ' saved job(s) into sets. Press Start to run.', 'info');
+
+      } else {
+        // Fresh start — one blank set
+        addSet();
         return;
       }
 
-      // Restore saved counter so IDs never collide
-      jobCounter = raw.counter || 0;
-
-      // Rebuild each saved job
-      raw.list.forEach(function (saved) {
-        // Override jobCounter so renderJob uses the original ID
-        jobCounter = saved.id - 1;
-        var id = addJob({
-          channelId: saved.channelId || '',
-          msg: saved.msg,
-          delay: saved.delay,
-          unit: saved.unit,
-          sent: saved.sent || 0,
-          failed: saved.failed || 0
-        });
-        // Update the stats display immediately
-        updateJobStats(id);
-        // Don't auto-restart — user must press Start manually after a refresh
-      });
-
-      // Restore jobCounter to the true max so next addJob() gets a fresh ID
-      var maxId = raw.list.reduce(function (m, s) { return Math.max(m, s.id); }, 0);
-      jobCounter = Math.max(jobCounter, maxId);
-
       // Restore previously selected server and populate channel dropdowns
-      if (raw.selectedGuildId && (globalToken || state.token)) {
+      if (raw && raw.selectedGuildId && (globalToken || state.token)) {
         _selectedGuildId = raw.selectedGuildId;
         var selEl = document.getElementById('serverPickerSelected');
         if (selEl) selEl.textContent = 'Loading...';
@@ -3774,7 +4231,5 @@
           Object.keys(jobs).forEach(function (sid) { _refreshJobChannels(parseInt(sid)); });
         });
       }
-
-      log('\u21bb Restored ' + raw.list.length + ' saved job(s). Press Start to run.', 'info');
     })();
   </script>
